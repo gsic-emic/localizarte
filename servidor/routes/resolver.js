@@ -17,27 +17,28 @@ limitations under the License.
 /**
  * Creación de las rutas del servidor.
  * autor: Pablo
- * version: 20210422
+ * version: 20210428
  */
 
 var express = require('express');
 var Ruter = express.Router();
 
-const contexts = require('../resources/contexts/contexts');
-const context = require('../resources/contexts/context');
+const Contexts = require('../resources/contexts/contexts');
+const Context = require('../resources/contexts/context');
+const Tasks = require('../resources/tasks/tasks');
 
 //Paths
 const recursos = {
-    contextos: '/contexts/',
-    contexto: '/contexts/:context',
-    tareas: '/tasks/',
-    tarea: '/tasks/:task',
-    rutas: '/rutes/',
-    ruta: '/rutes/:rute',
-    respuestas: '/answers/',
-    respuesta: '/answers/:answer',
-    users: '/users/',
-    user: '/users/:user'
+  contextos: '/contexts/',
+  contexto: '/contexts/:context',
+  tareas: '/tasks/',
+  tarea: '/tasks/:task',
+  rutas: '/rutes/',
+  ruta: '/rutes/:rute',
+  respuestas: '/answers/',
+  respuesta: '/answers/:answer',
+  users: '/users/',
+  user: '/users/:user'
 };
 
 //Se envía el código de estado para una operación no implementada
@@ -45,15 +46,20 @@ const envia405 = (req, res) => res.status(405).send('Operación no implementada 
 
 //Contextos
 Ruter.route(recursos.contextos)
-    .get((req,res) => contexts.obtenContextos(req, res))
-    .post((req,res) => contexts.nuevoContexto(req, res))
-    .all(envia405);
+  .get((req, res) => Contexts.obtenContextos(req, res))
+  .post((req, res) => Contexts.nuevoContexto(req, res))
+  .all(envia405);
 
 //Contexto
 Ruter.route(recursos.contexto)
-    .get((req, res) => context.dameContexto(req, res))
-    .put((req, res) => context.actualizaContexto(req, res))
-    .delete((req, res) => context.eliminaContexto(req, res))
-    .all(envia405);
+  .get((req, res) => Context.dameContexto(req, res))
+  .put((req, res) => Context.actualizaContexto(req, res))
+  .delete((req, res) => Context.eliminaContexto(req, res))
+  .all(envia405);
+
+//Tareas
+Ruter.route(recursos.tareas)
+  .get((req, res) => Tasks.dameTareas(req, res))
+  .all(envia405);
 
 module.exports = Ruter;

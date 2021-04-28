@@ -17,5 +17,37 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con la colección "tareas".
  * autor: Pablo García Zarza
- * version: 20210422
+ * version: 20210428
  */
+
+const Queries = require('../../util/queries');
+const Auxiliar = require('../../util/auxiliar');
+const Http = require('http');
+
+function dameTareas(req, res) {
+  try {
+    var contexto = req.query.context;
+    if(contexto){
+      contexto = contexto.trim();
+      const options = Auxiliar.creaOptions(Queries.tareasContexto(contexto));
+      consulta = function (response) {
+        var chunks = [];
+        response.on('data', function (chunk) {
+          chunks.push(chunk);
+        });
+        response.on('end', function () {
+          var resultados = Auxiliar.procesaJSONSparql(
+            ['task', 'aT', 'thumb', 'aTR'],
+            Buffer.concat(chunks).toString());
+          if (resultados && resultados.length > 0) res.json(resultados);
+          else res.sendStatus(204);
+        });
+      };
+      Http.request(options, consulta).end();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+module.exports = {dameTareas}

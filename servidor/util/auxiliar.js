@@ -17,8 +17,88 @@ limitations under the License.
 /**
  * Funciones auxiliares.
  * autor: Pablo García Zarza
- * version: 20210422
+ * version: 20210428
  */
+
+/**
+ * Objeto con las palabras claves usadas en el cliente para referirse a 
+ * propiedades del repositorio de triplas. También tiene el tipo del valor
+ * de la propiedad
+ */
+const equivalencias = {
+  'tipo': {
+    'prop': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+    'tipo': 'uri'
+  },
+  'lat': {
+    'prop': 'http://www.w3.org/2003/01/geo/wgs84_pos#lat',
+    'tipo': 'decimal'
+  },
+  'long': {
+    'prop': 'http://www.w3.org/2003/01/geo/wgs84_pos#long',
+    'tipo': 'decimal'
+  },
+  'titulo': {
+    'prop': 'http://www.w3.org/2000/01/rdf-schema#label',
+    'tipo': 'string'
+  },
+  'descr': {
+    'prop': 'http://www.w3.org/2000/01/rdf-schema#comment',
+    'tipo': 'string'
+  },
+  'autor': {
+    'prop': 'http://purl.org/dc/elements/1.1/creator',
+    'tipo': 'string'
+  },
+  'hasContext': {
+    'prop': 'https://casuallearn.gsic.uva.es/property/hasContext',
+    'tipo': 'uri'
+  },
+  'imagen': {
+    'prop': 'https://casuallearn.gsic.uva.es/property/image',
+    'tipo': 'uri'
+  },
+  'thumb': {
+    'prop': 'http://es.dbpedia.org/ontology/thumbnail',
+    'tipo': 'uri'
+  },
+  'aTR': {
+    'prop': 'https://casuallearn.gsic.uva.es/property/associatedTextResource',
+    'tipo': 'string'
+  },
+  'aT': {
+    'prop': 'https://casuallearn.gsic.uva.es/property/answerType',
+    'tipo': 'uri'
+  },
+  'cP': {
+    'prop': 'https://casuallearn.gsic.uva.es/property/cognitiveProcess',
+    'tipo': 'uri'
+  },
+  'kD': {
+    'prop': 'https://casuallearn.gsic.uva.es/property/knowledgeDimension',
+    'tipo': 'uri'
+  },
+  'topic': {
+    'prop': 'http://purl.org/dc/elements/1.1/subject',
+    'tipo': 'string'
+  },
+  'iri': {
+    'prop': 'iri',
+    'tipo': 'uri'
+  },
+  'ctx': {
+    'prop': 'https://casuallearn.gsic.uva.es/ontology/physicalSpace',
+    'tipo': 'uri'
+  },
+  'license': {
+    'prop': 'http://purl.org/dc/terms/license',
+    'tipo': 'uri'
+  },
+  'task':{
+    'prop': 'https://casuallearn.gsic.uva.es/ontology/task',
+    'tipo': 'uri'
+  }
+}
 
 /**
  * Función para crear los datos necesarios para realizar una consulta
@@ -28,13 +108,13 @@ limitations under the License.
  * @param {String} pass Contraseña
  * @returns 
  */
-function creaOptionsAuth(query,user,pass) {
-    return {
-        host: '127.0.0.1',
-        path: '/sparql-auth?default-graph-uri=&query=' + query,
-        port: 8890,
-        headers: {'Accept':'application/sparql-results+json','Authorization':'Basic ' + Buffer.from(user+':'+pass).toString('base64')}
-      };
+function creaOptionsAuth(query, user, pass) {
+  return {
+    host: '127.0.0.1',
+    path: '/sparql-auth?query=' + query,
+    port: 8890,
+    headers: { 'Accept': 'application/sparql-results+json', 'Authorization': 'Basic ' + Buffer.from(user + ':' + pass).toString('base64') }
+  };
 }
 
 /**
@@ -44,16 +124,17 @@ function creaOptionsAuth(query,user,pass) {
  * @returns Conjunto de datos con los que crear una consulta
  */
 function creaOptions(query) {
-    return {
-        host: '127.0.0.1',
-        path: '/sparql?default-graph-uri=&query=' + query,
-        port: 8890,
-        headers: {'Accept':'application/sparql-results+json'}
-      };
+  return {
+    host: '127.0.0.1',
+    path: '/sparql?default-graph-uri=&query=' + query,
+    port: 8890,
+    headers: { 'Accept': 'application/sparql-results+json' }
+  };
 }
 
 /**
- * Función para procesar un JSONObject que provenga de un punto SPARQL. Comprueba 
+ * Función para procesar un JSONObject que provenga de un punto SPARQL cuando 
+ * se establezcan las variables que se quieran consultar. Comprueba 
  * que se han obtenido todas las variables solicitadas por el usuario. Devuelve 
  * un JSONArray con los resultados correctamente formateados o null si ha 
  * ocurrido algún problema.
@@ -63,30 +144,60 @@ function creaOptions(query) {
  * @returns Datos que se han obtenido del servidor correctamente formateados
  */
 function procesaJSONSparql(nombreVariables, resultados) {
-    resultados = JSON.parse(resultados);
-    var variables = resultados.head.vars;
-    var continuaProcesado = true;
-    for(let valor of nombreVariables.values()){
-        if(!variables.includes(valor)){
-            continuaProcesado = false;
+  resultados = JSON.parse(resultados);
+  var variables = resultados.head.vars;
+  var continuaProcesado = true;
+  for (let valor of nombreVariables.values()) {
+    if (!variables.includes(valor)) {
+      continuaProcesado = false;
+      break;
+    }
+  }
+  if (continuaProcesado) {
+    var datos = resultados.results.bindings;
+    var salida = [];
+    var intermedio;
+    if (Object.keys(nombreVariables).length == 2 && nombreVariables.includes('propiedad') && nombreVariables.includes('valor')) {
+      intermedio = {};
+      var posicion;
+      for (let dato of datos.values()) {
+        posicion = -1;
+        let i = 0;
+        let equi;
+        for (let d of Object.keys(equivalencias)) {
+          equi = equivalencias[d];
+          if (equi['prop'] == dato.propiedad.value) {
+            posicion = i;
             break;
+          } else {
+            ++i;
+          }
         }
-    }
-    if(continuaProcesado){
-        var datos = resultados.results.bindings;
-        var salida = [];
-        var intermedio;
-        for(let dato of datos.values()){
-            intermedio = {};
-            for(let variable of nombreVariables){
-                intermedio[variable] = dato[variable].value;
-            }
-            salida.push(intermedio);
+        if (posicion > -1) {
+          //intermedio[equi['prop']] = dato.valor.value;
+          intermedio[(Object.keys(equivalencias))[posicion]] = dato.valor.value;
         }
-        return salida;
-    }else{
-        return null;
+      }
+      if (Object.keys(intermedio).length > 0)
+        salida.push(intermedio);
+    } else {
+      for (let dato of datos.values()) {
+        intermedio = {};
+        for (let variable of nombreVariables) {
+          try {
+            //intermedio[(equivalencias[variable])['prop']] = dato[variable].value;
+            intermedio[variable] = dato[variable].value;
+          } catch (e) {
+            intermedio[variable] = dato[variable].value;
+          }
+        }
+        salida.push(intermedio);
+      }
     }
+    return salida;
+  } else {
+    return null;
+  }
 }
 
 /**
@@ -96,7 +207,7 @@ function procesaJSONSparql(nombreVariables, resultados) {
  * @returns Verdadero si el valor es válido
  */
 function latitudValida(lat) {
-    return typeof lat === 'number' && lat > -90 && lat <= 90;
+  return typeof lat === 'number' && lat > -90 && lat <= 90;
 }
 
 /**
@@ -106,7 +217,7 @@ function latitudValida(lat) {
  * @returns Verdadero si el valor es válido
  */
 function longitudValida(long) {
-    return typeof long === 'number' && long >= -180 && long < 180;
+  return typeof long === 'number' && long >= -180 && long < 180;
 }
 
 /**
@@ -117,8 +228,7 @@ function longitudValida(long) {
  * @returns Número transformado
  */
 function numeroStringIRI(numero) {
-    return numero.toString().replace('.','').replace('-','');
+  return numero.toString().replace('.', '').replace('-', '');
 }
 
-
-module.exports = {creaOptions,creaOptionsAuth,procesaJSONSparql,longitudValida,latitudValida,numeroStringIRI}
+module.exports = { creaOptions, creaOptionsAuth, procesaJSONSparql, longitudValida, latitudValida, numeroStringIRI, equivalencias }
