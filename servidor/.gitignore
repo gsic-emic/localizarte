@@ -62,3 +62,4 @@ typings/
 
 # Directorio de vscode
 .vscode
+.eslintrc.json

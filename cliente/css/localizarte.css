@@ -1,0 +1,58 @@
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../fonts/OpenSans-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'Comfortaa';
+    src: url('../fonts/Comfortaa-Medium.ttf');
+}
+
+body{
+    font-family: 'Open Sans', sans-serif;
+}
+
+.mapa {
+    height: 94vh;
+    width: 100%;
+}
+
+.navegacion{
+    height: 6vh;
+}
+
+.imagen {
+    width: 300px;
+    height: auto;
+    padding: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.titulo {
+    font-family: 'Comfortaa', cursive;
+}
+
+.descripcion {
+    padding: 10px;
+}
+
+.leaflet-popup-content {
+    text-align: center;
+}
+
+@media screen and (max-width: 450px){
+    .mapa {
+        height: 90vh;
+    }
+    
+    .navegacion{
+        height: 10vh;
+    }
+
+    .imagen {
+        width: 220px;
+
+    }
+}
