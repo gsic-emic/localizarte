@@ -17,5 +17,137 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con la colección "tareas".
  * autor: Pablo García Zarza
- * version: 20210422
+ * version: 20210503
  */
+
+const Http = require('http');
+const Queries = require('../../util/queries');
+const Auxiliar = require('../../util/auxiliar');
+
+/**
+ * Método para obtener las tareas incluidas en un contexto.
+ *
+ * @param {Object} req Request
+ * @param {Object} res Response
+ */
+function dameTareas(req, res) {
+  try {
+    let { context } = req.query;
+    if (context) {
+      context = context.trim();
+      const options = Auxiliar.creaOptions(Queries.tareasContexto(context));
+      const consulta = function (response) {
+        const chunks = [];
+        response.on('data', (chunk) => {
+          chunks.push(chunk);
+        });
+        response.on('end', () => {
+          const resultados = Auxiliar.procesaJSONSparql(
+            ['task', 'aT', 'thumb', 'aTR'],
+            Buffer.concat(chunks).toString(),
+          );
+          if (resultados && resultados.length > 0) res.json(resultados);
+          else res.sendStatus(204);
+        });
+      };
+      Http.request(options, consulta).end();
+    } else { res.status(400).send('Se tiene que enviar el identificador de un contexto como parámetro: URL/tasks?constest=<IRIcontext>'); }
+  } catch (error) {
+    res.sendStatus(500);
+  }
+}
+
+/**
+ * Función para crear una nueva tarea en el sistema. Se crea un identificador único en base al
+ * contexto y al título que proporcione el usuario.
+ *
+ * @param {Object} req Request
+ * @param {Object} res Response
+ */
+function creaTarea(req, res) {
+  try {
+    const { body } = req;
+    // Obligatorios: contexto, titulo, descripcion textual de la tarea, tipo respuesta, autor
+    if (body && body.hasContext && body.titulo && body.aTR && body.aT && body.autor) {
+      const hasContext = body.hasContext.trim();
+      const titulo = body.titulo.trim();
+      const aTR = body.aTR.trim();
+      const aT = body.aT.trim();
+      const autor = body.autor.trim();
+      if (!Auxiliar.isEmpty(hasContext) && !Auxiliar.isEmpty(titulo)
+       && !Auxiliar.isEmpty(aTR) && !Auxiliar.isEmpty(aT) && !Auxiliar.isEmpty(autor)) {
+        // Antes de continuar compruebo si existe el contexto y obtengo su nombre para crear el IRI
+        let options = Auxiliar.creaOptions(Queries.tituloContexto(hasContext));
+        let consulta = function (resp) {
+          let datos = [];
+          resp.on('data', (dato) => {
+            datos.push(dato);
+          });
+          resp.on('end', () => {
+            let resultados = Auxiliar.procesaJSONSparql(['titulo'], Buffer.concat(datos).toString());
+            if (resultados) {
+              resultados = resultados.pop();
+              if (resultados && resultados.titulo) {
+                // Creo el IRI para la nueva tarea
+                const iri = Auxiliar.nuevoIriTarea(resultados.titulo, titulo);
+                // Compruebo que el iri no exista ya:
+                options = Auxiliar.creaOptions(Queries.tipoIRI(iri));
+                consulta = function (resp1) {
+                  datos = [];
+                  resp1.on('data', (dato) => {
+                    datos.push(dato);
+                  });
+                  resp1.on('end', () => {
+                    resultados = Auxiliar.procesaJSONSparql(['tipo'], Buffer.concat(datos).toString());
+                    if (resultados.length == 0) {
+                      // La tarea se puede crear ya el identificador no está en uso
+                      const datosTarea = {
+                        iri,
+                      };
+                      for (const t in body) {
+                        datosTarea[t] = body[t].trim();
+                      }
+                      options = Auxiliar.creaOptionsAuth(Queries.nuevaTarea(datosTarea), 'pablo', 'pablo');
+                      consulta = function (respIns) {
+                        datos = [];
+                        respIns.on('data', (dato) => {
+                          datos.push(dato);
+                        });
+                        respIns.on('end', () => {
+                          resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(datos).toString());
+                          if (resultados.length > 0) {
+                            res.location(iri);
+                            res.sendStatus(201);
+                          } else {
+                            res.status(503).send('El repositorio no ha podido almacenar la nueva tarea');
+                          }
+                        });
+                      };
+                      Http.request(options, consulta).end();
+                    } else {
+                      res.status(403).send('El identificador de la tarea ya se está utilizando en el repositorio');
+                    }
+                  });
+                };
+                Http.request(options, consulta).end();
+              } else {
+                res.status(400).send('El contexto al que se intenta asociar la tarea no existe o no dispone de título');
+              }
+            } else {
+              res.status(400).send('El contexto al que se intenta asociar la tarea no existe');
+            }
+          });
+        };
+        Http.request(options, consulta).end();
+      } else {
+        res.status(400).send('La petición tiene que tener los siguientes campos en el cuerpo de la petición: hasConstext, titulo, aTR, , tR, autor. No pueden estar vacíos.');
+      }
+    } else {
+      res.status(400).send('La petición tiene que tener los siguientes campos en el cuerpo de la petición: hasConstext, titulo, aTR, , tR, autor');
+    }
+  } catch (e) {
+    res.sendStatus(500);
+  }
+}
+
+module.exports = { dameTareas, creaTarea };
