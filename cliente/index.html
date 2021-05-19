@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="./css/localizarte.css">
 
     <link rel="stylesheet" href="./libraries/leaflet-1.7.1/leaflet.css" />
+    <link rel="stylesheet" href="./libraries/Leaflet.markercluster-1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="./css/clusteres.css">
+    <!--<link rel=" stylesheet " href="./libraries/Leaflet.markercluster-1.4.1/dist/MarkerCluster.Default.css " />-->
     <title>LocalizARTE</title>
 </head>
 
@@ -31,7 +34,8 @@
                 <div class="modal-body">
                     <div class="d-md-flex flex-md-row py-1">
                         <div class="text-center p-1 order-md-1">
-                            <img class="imagen" id="imagenPuntoInteres" alt="Imagen Punto Interés" style="display: none;">
+                            <img class="imagen" id="imagenPuntoInteres" alt="Imagen Punto Interés"
+                                style="display: none;">
                             <div class="col g-2 align-items-center">
                                 <div class="row-sm-1 my-1">
                                     <button class="btn btn-warning" id="modificarPI">Modificar</button>
@@ -51,13 +55,55 @@
         </div>
     </div>
 
+    <div class="modal fade" id="confirmarBorrar" tabindex="-1" role="dialog" aria-labelledby="confirmarBorrarE"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="tituloConfirmacion"></h3>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 id="mensajeConfirmacion"></h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="aceptaBorrar">Borrar</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-absolute top-0 end-0 p-3" style="z-index: 1500;margin:auto">
+        <div id="notificacionLateral" class="toast hide text-white bg-primary" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <small id="mensajeNotificacionLateral"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="notificacionLateralError" class="toast hide text-white bg-danger" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <small id="mensajeNotificacionLateralError"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" id="nuevoPuntoInteres">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title titulo" id="tituloPuntoInteres">Nuevo punto de interés</h3>
+                    <h3 class="modal-title titulo" id="tituloModalNPI"></h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                        id="cerrarModalMarcador"></button>
+                        id="cerrarModalNPI"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formNPI">
@@ -77,6 +123,17 @@
                                 <label for="descrNPI" class="form-label">Descripción*</label>
                                 <textarea class="form-control" id="descrNPI" name="descrNPI"
                                     placeholder="Descripción del punto de interés"></textarea>
+                            </div>
+                        </div>
+                        <div class="row g-1 align-items-center mx-1 mb-4">
+                            <div class="col-sm-12">
+                                <label for="fuentesNPI" class="form-label">Fuentes de información</label>
+                                <input type="text" id="fuentesNPI" class="form-control"
+                                    placeholder="Escribe aquí las URLs de las fuentes de donde has obtenido la información">
+                                <small class="text-muted">
+                                    Si la información la has obtenido de varias fuentes sepáralas con el carácter
+                                    <b>;</b>. Las fuentes pueden ser expresadas mediante URLs o con cadenas de texto.
+                                </small>
                             </div>
                         </div>
                         <div class="row g-2 align-items-center mx-1 mb-4">
@@ -120,9 +177,19 @@
         </div>
     </div>
 
-    <!-- <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script> -->
+
+    <div class="botonFlotante" id="seguir" onclick="seguir();">
+        <img src="resources/centrar.svg" id="imagenSeguir">
+    </div>
+
     <script src="./libraries/bootstrap-5.0.0-dist/js/bootstrap.min.js"></script>
     <script src="./libraries/leaflet-1.7.1/leaflet.js"></script>
+    <script src="./libraries/Leaflet.markercluster-1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="./libraries/mustache.js-4.2.0/mustache.js"></script>
+
+    <script src="./js/config.js" type="text/javascript"></script>
+    <script src="./js/util.js" type="text/javascript"></script>
+
     <script src="./js/contexts.js" type="text/javascript"></script>
     <script src="./js/mapa.js" type="text/javascript"></script>
 </body>

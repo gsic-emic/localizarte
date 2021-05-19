@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones auxiliares.
  * autor: Pablo García Zarza
- * version: 20210505
+ * version: 20210519
  */
 
 /**
@@ -92,11 +92,15 @@ const equivalencias = {
   },
   license: {
     prop: 'http://purl.org/dc/terms/license',
-    tipo: 'uri',
+    tipo: 'uriString',
   },
   task: {
     prop: 'https://casuallearn.gsic.uva.es/ontology/task',
     tipo: 'uri',
+  },
+  fuente: {
+    prop: 'http://www.w3.org/2000/01/rdf-schema#seeAlso',
+    tipo: 'uriString',
   },
 };
 
@@ -175,7 +179,11 @@ function procesaJSONSparql(nombreVariables, resultados) {
         }
         if (posicion > -1) {
           // intermedio[equi['prop']] = dato.valor.value;
-          intermedio[(Object.keys(equivalencias))[posicion]] = dato.valor.value;
+          if (intermedio[(Object.keys(equivalencias))[posicion]]) {
+            intermedio[(Object.keys(equivalencias))[posicion]] = intermedio[(Object.keys(equivalencias))[posicion]] + ' ;' + dato.valor.value;
+          } else {
+            intermedio[(Object.keys(equivalencias))[posicion]] = dato.valor.value;
+          }
         }
       }
       if (Object.keys(intermedio).length > 0) { salida.push(intermedio); }
@@ -185,7 +193,11 @@ function procesaJSONSparql(nombreVariables, resultados) {
         for (const variable of nombreVariables) {
           try {
             // intermedio[(equivalencias[variable])['prop']] = dato[variable].value;
-            intermedio[variable] = dato[variable].value;
+            if (intermedio[variable]) {
+              intermedio[variable] = intermedio[variable] + ';' + dato[variable].value;
+            } else {
+              intermedio[variable] = dato[variable].value;
+            }
           } catch (e) {
             //intermedio[variable] = dato[variable].value;
             continue;
@@ -252,6 +264,20 @@ function nuevoIriTarea(nombreContexto, nombreTarea) {
   return `https://casuallearn.gsic.uva.es/${nombreContexto.trim().replace(/\s/g, '_')}/${nombreTarea.trim().replace(/\s/g, '').toLowerCase()}`;
 }
 
+/**
+ * https://stackoverflow.com/a/5717133
+ * @param {String} str 
+ */
+ function validURL(str) {
+  const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+      '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+      '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+      '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+  return !!pattern.test(str);
+}
+
 module.exports = {
   creaOptions,
   creaOptionsAuth,
@@ -262,4 +288,5 @@ module.exports = {
   equivalencias,
   isEmpty,
   nuevoIriTarea,
+  validURL,
 };

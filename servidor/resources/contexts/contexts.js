@@ -1,4 +1,3 @@
-/* eslint-disable guard-for-in */
 /*
 Copyright 2021 GSIC-EMIC Research Group, Universidad de Valladolid (Spain)
 
@@ -18,7 +17,7 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con la colección "contextos".
  * autor: Pablo García Zarza
- * version: 20210429
+ * version: 20210519
  */
 
 const Http = require('http');
@@ -69,15 +68,17 @@ function obtenContextos(req, res) {
 }
 
 /**
- * Método para crear un nuevo contexto en el sistema. En esta prueba solo recibo latitud,
- * longitud, titulo, descripción y autor. Posteriormente se podrán incluir más campos.
+ * Método para crear un nuevo contexto en el sistema. Los datos base son latitud (lat),
+ * longitud (long), titulo (titulo), descripción (descr) y autor (autor). Puede incluir
+ * más campos como imágen (imagen) y licencia (licencia) o fuentes de información (fuentes).
+ * Las fuentes de información pueden ser varias (vendrán en un jsonarray). Cada elemento del
+ * jsonarray (jsonobject) tendrá typo (url o string) y value.
  *
  * @param {Request} req Request
  * @param {Response} res Response
  */
 function nuevoContexto(req, res) {
   try {
-    console.log(req.body);
     const nCtx = req.body;
     // Compruebo que se han enviado los datos básicos
     if (nCtx && nCtx.lat && nCtx.long && nCtx.titulo && nCtx.descr && nCtx.autor) {
@@ -91,8 +92,8 @@ function nuevoContexto(req, res) {
         && titulo && descr && autor) {
         // Creo la posible IRI y compruebo que no exista en el repositorio
         const iri = `https://casuallearn.gsic.uva.es/context/${titulo.replace(/ /g, '_')
-          }/${Auxiliar.numeroStringIRI(long)
-          }/${Auxiliar.numeroStringIRI(lat)}`;
+        }/${Auxiliar.numeroStringIRI(long)
+        }/${Auxiliar.numeroStringIRI(lat)}`;
         console.log(iri);
         let options = Auxiliar.creaOptions(Queries.tipoIRI(iri));
         const consulta = (response) => {
@@ -114,7 +115,7 @@ function nuevoContexto(req, res) {
                     datosContexto[t] = nCtx[t];
                     break;
                   default:
-                    datosContexto[t] = nCtx[t].trim();
+                    datosContexto[t] = (nCtx[t] === 'string')?nCtx[t].trim():nCtx[t];
                     break;
                 }
               }

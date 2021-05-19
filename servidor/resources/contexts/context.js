@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con el recurso "contexto".
  * autor: Pablo García Zarza
- * version: 20210429
+ * version: 20210519
  */
 
 const Http = require('http');
@@ -47,7 +47,7 @@ function dameContexto(req, res) {
     if (iri) {
       if (typeof iri === 'string') {
         const options = Auxiliar.creaOptions(Queries.todaInfo(iri));
-        const consulta = function (response) {
+        const consulta = (response) => {
           const chunks = [];
           response.on('data', (chunk) => {
             chunks.push(chunk);
@@ -150,13 +150,17 @@ function actualizaContexto(req, res) {
             const { actual } = body;
             // Ahora compruebo que son iguales
             let iguales = true;
-            for (const enviado in actual) {
-              // let enviadoT = (Auxiliar.equivalencias[enviado])['prop'];
-              if (!resultados[enviado] || resultados[enviado] != actual[enviado]) {
-                res.status(400).send('Los datos actuales no coinciden con los del repositorio');
-                iguales = false;
-                break;
+            if (Object.keys(actual).length == Object.keys(resultados).length) {
+              for (const enviado in actual) {
+                if (!resultados[enviado] || resultados[enviado] != actual[enviado]) {
+                  res.status(400).send('Los datos actuales no coinciden con los del repositorio');
+                  iguales = false;
+                  break;
+                }
               }
+            } else {
+              res.status(400).send('Los datos actuales no coinciden con los del repositorio');
+              iguales = false;
             }
             if (iguales) {
               /* Si llego aquí es que la información actual del usuario era correcta. Ahora tengo
@@ -172,7 +176,10 @@ function actualizaContexto(req, res) {
               for (const mod in modificados) {
                 if (!actual[mod]) {
                   inserciones[mod] = modificados[mod];
-                } else if (modificados[mod].trim() == '') { eliminaciones[mod] = resultados[(Auxiliar.equivalencias[mod]).prop]; } else {
+                } else if (modificados[mod].trim() == '') { 
+                  //eliminaciones[mod] = resultados[(Auxiliar.equivalencias[mod]).prop]; 
+                  eliminaciones[mod] = resultados[mod]; 
+                } else {
                   actualizaciones[mod] = {
                     anterior: actual[mod],
                     nuevo: modificados[mod],

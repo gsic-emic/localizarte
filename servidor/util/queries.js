@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable guard-for-in */
 /*
 Copyright 2021 GSIC-EMIC Research Group, Universidad de Valladolid (Spain)
 
@@ -17,7 +19,7 @@ limitations under the License.
 /**
  * Formateo de las consultas SPARQL.
  * autor: Pablo García Zarza
- * version: 202100505
+ * version: 202100519
  */
 
 const Mustache = require('mustache');
@@ -60,6 +62,27 @@ function tipoIRI(id) {
 }
 
 /**
+ * Función para obtener un valor en el formato adecuado para introducirlo en
+ * el repositorio de triplas.
+ *
+ * @param {String} tipo Formato que se desea para el valor
+ * @param {Object} valor Valor a introducir
+ * @returns Valor formateado adecuado
+ */
+function formatoTiposDatos(tipo, valor) {
+  switch (tipo) {
+    case 'string':
+      return `'''${valor}''' `;
+    case 'decimal':
+      return `${valor} `;
+    case 'uriString':
+      return (Auxiliar.validURL(valor)) ? `<${valor}> ` : `'''${valor}''' `;
+    default:
+      return `<${valor}> `;
+  }
+}
+
+/**
  * Función para crear la query con la que insertar datos de un objeto en el repositorio de
  * triplas.
  *
@@ -74,18 +97,33 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
   let propiedad;
   for (const t in datosObjeto) {
     try {
-      if (t != 'iri') {
-        propiedad = (Auxiliar.equivalencias[t]).prop;
-        if (primero) {
-          primero = false;
-        } else {
-          query += '; ';
-        }
-        query += `<${propiedad}> ${
-          formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, datosObjeto[t])}`;
+      switch (t) {
+        case 'iri':
+          break;
+        case 'fuentes':
+          const { fuentes } = datosObjeto;
+          propiedad = (Auxiliar.equivalencias.fuente).prop;
+          fuentes.forEach((fuente) => {
+            if (primero) {
+              primero = false;
+            } else {
+              query += '; ';
+            }
+            query += `<${propiedad}> ${(Auxiliar.validURL(fuente.value)) ? `<${fuente.value}> ` : `'''${fuente.value}''' `}`;
+          });
+          break;
+        default:
+          propiedad = (Auxiliar.equivalencias[t]).prop;
+          if (primero) {
+            primero = false;
+          } else {
+            query += '; ';
+          }
+          query += `<${propiedad}> ${formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, datosObjeto[t])}`;
+          break;
       }
     } catch (e) {
-      continue;
+      console.log(e);
     }
   }
   query += '}';
@@ -174,25 +212,6 @@ function eliminaTarea(iri) {
 }
 
 /**
- * Función para obtener un valor en el formato adecuado para introducirlo en
- * el repositorio de triplas.
- *
- * @param {String} tipo Formato que se desea para el valor
- * @param {Object} valor Valor a introducir
- * @returns Valor formateado adecuado
- */
-function formatoTiposDatos(tipo, valor) {
-  switch (tipo) {
-    case 'string':
-      return `'''${valor}''' `;
-    case 'decimal':
-      return `${valor} `;
-    default:
-      return `<${valor}> `;
-  }
-}
-
-/**
  * Función para obtener una parte de una query para hacer una inserción o una eliminación
  *
  * @param {Object} array Datos con los que se completará la petición
@@ -205,14 +224,35 @@ function formatoTiposDatos(tipo, valor) {
  */
 function contenidoInsertDelete(array, extra, tama2, final) {
   let query = '';
-  const tama = Object.keys(array).length;
+  let tama = Object.keys(array).length;
+  let v = 0;
+  if ('fuente' in array) {
+    if (extra) {
+      v = Object.keys(((array['fuente'])[extra]).split(';')).length;
+    } else {
+      v = Object.keys(array['fuente'].split(';')).length;
+    }
+  }
   let d;
   let valor;
   for (let i = 0; i < tama; i++) {
     d = Object.keys(array)[i];
-    query += `<${(Auxiliar.equivalencias[d]).prop}> `;
-    valor = (extra) ? (array[d])[extra] : (array[d]);
-    query += formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valor);
+    if (d === 'fuente') {
+      const fue = (extra)?(array[d])[extra].split(';'):array[d].split(';');
+      let t = 0;
+      fue.forEach(f => {
+        query += `<http://www.w3.org/2000/01/rdf-schema#seeAlso> `;
+        query += formatoTiposDatos('uriString', f.trim());
+        if(t < (v - 1)){
+          query += `; `;
+        }
+        ++t;
+      });
+    } else {
+      query += `<${(Auxiliar.equivalencias[d]).prop}> `;
+      valor = (extra) ? (array[d])[extra] : (array[d]);
+      query += formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valor);
+    }
     if (final) {
       if (i != (tama - 1)) query += '; ';
     } else if (tama2 || i < (tama - 1)) query += '; ';
@@ -244,6 +284,7 @@ function actualizaValoresContexto(iri, inserciones, eliminaciones, modificacione
     query += contenidoInsertDelete(inserciones, null, tama2, false);
     query += contenidoInsertDelete(modificaciones, 'nuevo', tama2, true);
   }
+  console.log(query);
   return encodeURIComponent(query);
 }
 
@@ -276,9 +317,9 @@ function tareasContexto(iriContexto) {
  */
 function tituloContexto(iri) {
   const query = `${'select ?titulo where { '
-  + '<'}${iri}> `
-  + 'a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; '
-  + 'rdfs:label ?titulo }';
+    + '<'}${iri}> `
+    + 'a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; '
+    + 'rdfs:label ?titulo }';
   return encodeURIComponent(query);
 }
 
