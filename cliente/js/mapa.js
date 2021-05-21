@@ -92,7 +92,7 @@ function inicio() {
     }).addTo(map);
 
     //Posición inicial
-    map.setView(posicionCyL, 4.5);//4.5
+    map.setView(position, 18);//4.5
 
     // El mapa se ve desplazado
     map.on('moveend', () => {

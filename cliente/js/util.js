@@ -132,3 +132,7 @@ function notificaLateralError(mensaje){
     document.getElementById('mensajeNotificacionLateralError').innerHTML = mensaje;
     toast.show();
 }
+
+function modalOpen(modal) {
+    return modal.className.includes('show'); 
+}

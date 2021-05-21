@@ -10,20 +10,25 @@
 
 body{
     font-family: 'Open Sans', sans-serif;
+    /*padding-top: 50px;*/
 }
 
 .mapa {
-    height: 94vh;
+    /*height: 100%;*/
+    position:absolute;
+    top: 50px;
+    bottom: 0;
     width: 100%;
 }
 
 .navegacion{
-    height: 6vh;
+    height: 50px;
+    position: relative;
 }
 
 .imagen {
-    width: 300px;
-    height: auto;
+    max-width: 300px;
+    max-height: 300px;
     padding: 10px;
     display: block;
     margin-left: auto;
@@ -51,16 +56,8 @@ body{
 }
 
 @media screen and (max-width: 450px){
-    .mapa {
-        height: 90vh;
-    }
-    
-    .navegacion{
-        height: 10vh;
-    }
-
     .imagen {
-        width: 220px;
+        max-width: 220px;
     }
 
     .toast {

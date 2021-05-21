@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión de los contextos.
  * autor: Pablo García Zarza
- * version: 20210519
+ * version: 20210520
  */
 
 /** Icono personalizado para los marcadores */
@@ -192,7 +192,8 @@ function pintaPOIs(zona) {
                             }
                         }
                         return L.divIcon({ html: '<div><span>' + numeroHijos + '<span></div>', className: tipo, iconSize: new L.Point(40, 40) });
-                    }
+                    },
+                    maxClusterRadius: 40
                 }
             );
         }
@@ -207,6 +208,8 @@ function pintaPOIs(zona) {
     }
 }
 
+let modalInfo = false;
+
 /**
  * Función para crear un marcador para un punto de interés.
  * 
@@ -215,7 +218,9 @@ function pintaPOIs(zona) {
 function markerPoP(poi) {
     let marker = L.marker(poi.posicion, { icon: iconoMarcadores });
     marker.on('click', () => {
-        let modal = new bootstrap.Modal(document.getElementById('puntoInteres'));
+        const puntoInteresModal = document.getElementById('puntoInteres');
+        const modal = new bootstrap.Modal(puntoInteresModal);
+        tareasContexto(poi.ctx);
         const titulo = document.getElementById('tituloPuntoInteres');
         titulo.innerText = poi.titulo;
         const imagen = document.getElementById('imagenPuntoInteres');
@@ -233,10 +238,13 @@ function markerPoP(poi) {
 
         if (poi.descr) {
             const descripcion = document.getElementById('descripcionPuntoInteres');
-            descripcion.innerHTML = poi.descr;
+            descripcion.innerHTML = poi.descr.replaceAll('<a ', '<a target="_blank" ');
         }
 
-        document.getElementById('cerrarModalMarcador').onclick = () => cerrarPI();
+        document.getElementById('cerrarModalMarcador').onclick = () => {
+            modal.hide();
+            cerrarPI()
+        };
         document.getElementById('eliminarPI').onclick = () => {
             confirmarEliminacion(poi, 'Eliminación punto de interés', '¿Estás seguro de eliminar el punto de interés?');
             modal.hide();
@@ -597,7 +605,8 @@ function creacionNuevoContexto(pos) {
     cuerpo = cuerpo + '<div class="mt-2"><h6 style="text-align: left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div>';
     popup = L.popup(
         autoClose = true,
-        closeButton = false
+        closeButton = false,
+        maxWidth = 300
     ).setLatLng(pos.latlng).setContent(cabecera + cuerpo).openOn(map);
 }
 
@@ -704,7 +713,7 @@ function pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completad
             if (resultados) {
                 const paraMostrar = masCercanos(puntoOrigen, resultados);
                 if (popup && popup.isOpen()) {
-                    let nuevoContenido = '<div class="mt-3"><h6 style="text-align: left";>Agregar nuevo POI basado en:</h6><div class="list-group">';
+                    let nuevoContenido = '<div class="mt-3"><h6 style="text-align: left";>Agregar nuevo POI basado en:</h6><div class="list-group justify-content-center" style="max-width:280px;">';
                     let ta = window.performance.now();
                     paraMostrar.forEach(lugar => {
                         infoNuevoContexto[ta] = lugar;

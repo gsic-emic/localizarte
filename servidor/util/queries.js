@@ -238,12 +238,12 @@ function contenidoInsertDelete(array, extra, tama2, final) {
   for (let i = 0; i < tama; i++) {
     d = Object.keys(array)[i];
     if (d === 'fuente') {
-      const fue = (extra)?(array[d])[extra].split(';'):array[d].split(';');
+      const fue = (extra) ? (array[d])[extra].split(';') : array[d].split(';');
       let t = 0;
       fue.forEach(f => {
         query += `<http://www.w3.org/2000/01/rdf-schema#seeAlso> `;
         query += formatoTiposDatos('uriString', f.trim());
-        if(t < (v - 1)){
+        if (t < (v - 1)) {
           query += `; `;
         }
         ++t;
@@ -299,13 +299,9 @@ function actualizaValoresTareas(iri, inserciones, eliminaciones, modificaciones)
  * @returns La query para realizar una consulta sobre las tareas de un contexto
  */
 function tareasContexto(iriContexto) {
-  const query = `${'prefix cl: <https://casuallearn.gsic.uva.es/property/> '
-    + 'select ?task ?aT ?aTR ?thumb where { '
-    + '?task a <https://casuallearn.gsic.uva.es/ontology/task>; '
-    + 'cl:hasContext <'}${iriContexto}>; `
-    + 'cl:answerType ?aT; '
-    + 'cl:associatedTextResource ?aTR. '
-    + 'optional{?task <http://es.dbpedia.org/ontology/thumbnail> ?thumb} } ';
+  const query = Mustache.render(
+    'prefix cl: <https://casuallearn.gsic.uva.es/property/> select ?task ?aT ?aTR ?thumb ?spa ?title where { ?task a <https://casuallearn.gsic.uva.es/ontology/task>; cl:hasContext <{{{iriContexto}}}>; cl:answerType ?aT; cl:associatedTextResource ?aTR ; cl:space ?spa . optional{?task <http://es.dbpedia.org/ontology/thumbnail> ?thumb .} optional{?task <https://casuallearn.gsic.uva.es/property/title> ?title} } ',
+    { iriContexto: iriContexto });
   return encodeURIComponent(query);
 }
 

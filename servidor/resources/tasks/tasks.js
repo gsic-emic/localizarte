@@ -43,7 +43,7 @@ function dameTareas(req, res) {
         });
         response.on('end', () => {
           const resultados = Auxiliar.procesaJSONSparql(
-            ['task', 'aT', 'thumb', 'aTR'],
+            ['task', 'aT', 'thumb', 'aTR', 'spa', 'title'],
             Buffer.concat(chunks).toString(),
           );
           if (resultados && resultados.length > 0) res.json(resultados);
