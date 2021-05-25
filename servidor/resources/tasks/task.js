@@ -17,12 +17,25 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con el recurso "tarea".
  * autor: Pablo García Zarza
- * version: 20210503
+ * version: 20210525
  */
 
 const Http = require('http');
+const Mustache = require('mustache');
 const Auxiliar = require('../../util/auxiliar');
 const Queries = require('../../util/queries');
+const Configuracion = require('../../util/config');
+
+function creaIri(a, b) {
+  if (a && b) {
+    return Mustache.render('https://casuallearn.gsic.uva.es/{{{a}}}/{{{b}}}',
+      {
+        a: a,
+        b: b
+      }
+    );
+  }
+}
 
 /**
  * Función para obtener toda la información de una tarea
@@ -32,8 +45,8 @@ const Queries = require('../../util/queries');
  */
 function dameTarea(req, res) {
   try {
-    if (req.body && req.body.iri) {
-      const { iri } = req.body;
+    const iri = creaIri(req.params.a, req.params.b);
+    if (iri) {
       const options = Auxiliar.creaOptions(Queries.todaInfo(iri));
       const consulta = function (respuesta) {
         const datos = [];
@@ -69,7 +82,7 @@ function actualizaTarea(req, res) {
   try {
     const { body } = req;
     if (body && body.actual && body.actual.iri && body.modificados) {
-      const { iri } = body.actual;
+      const iri = creaIri(req.params.a, req.params.b);
       let options = Auxiliar.creaOptions(Queries.todaInfo(iri));
       let consulta = (respuestaC) => {
         let datos = [];
@@ -83,23 +96,28 @@ function actualizaTarea(req, res) {
             result.iri = iri;
             const { actual } = body;
             let iguales = true;
-            for (const enviado in actual) {
-              if(!result[enviado] || result[enviado] != actual[enviado]) {
-                iguales = false;
-                break;
+            if (Object.keys(actual).length === Object.keys(result).length) {
+              for (const enviado in actual) {
+                if (!result[enviado] || result[enviado] != actual[enviado]) {
+                  iguales = false;
+                  break;
+                }
               }
+            } else {
+              res.status(400).send('Los datos actuales no coinciden con los del repositorio');
+              iguales = false
             }
             if (iguales) {
               const { modificados } = body;
-              const insercciones = {};
+              const inserciones = {};
               const eliminaciones = {};
               const actualizaciones = {};
 
-              for ( const mod in modificados ) {
+              for (const mod in modificados) {
                 if (!actual[mod]) {
-                  insercciones[mod] = modificados[mod];
+                  inserciones[mod] = modificados[mod];
                 } else if (Auxiliar.isEmpty(modificados[mod].trim())) {
-                  eliminaciones[mod] = resultados[(Auxiliar.equivalencias[mod]).prop];
+                  eliminaciones[mod] = resultados[mod];
                 } else {
                   actualizaciones[mod] = {
                     anterior: actual[mod],
@@ -107,9 +125,13 @@ function actualizaTarea(req, res) {
                   };
                 }
               }
-              options = Auxiliar.creaOptionsAuth(Queries.actualizaValoresTareas(
-                iri, insercciones, eliminaciones, actualizaciones,
-              ), 'pablo', 'pablo');
+              options = Auxiliar.creaOptionsAuth(
+                Queries.actualizaValoresTareas(
+                  iri, inserciones, eliminaciones, actualizaciones,
+                ),
+                Configuracion.usuarioSPARQLAuth,
+                Configuracion.contrasenhaSPARQLAuth
+              );
               consulta = (responseB) => {
                 datos = [];
                 responseB.on('data', (dato) => {
@@ -151,8 +173,8 @@ function actualizaTarea(req, res) {
  */
 function eliminaTarea(req, res) {
   try {
-    if (req.body && req.body.iri) {
-      const iri = (req.body.iri).trim();
+    const iri = creaIri(req.params.a, req.params.b);
+    if (iri) {
       // Compruebo si existe en el repositorio y obtengo su info (para comprobar el autor)
       if (typeof iri === 'string' && !Auxiliar.isEmpty(iri)) {
         let options = Auxiliar.creaOptions(Queries.todaInfo(iri));
@@ -166,7 +188,11 @@ function eliminaTarea(req, res) {
             if (resultados.length > 0) {
               resultados = resultados.pop();
               // Por ahora solo nos interesa que exista. En un futuro se harán más comprobaciones
-              options = Auxiliar.creaOptionsAuth(Queries.eliminaTarea(iri), 'pablo', 'pablo');
+              options = Auxiliar.creaOptionsAuth(
+                Queries.eliminaTarea(iri),
+                Configuracion.usuarioSPARQLAuth,
+                Configuracion.contrasenhaSPARQLAuth
+              );
               consulta = (responseB) => {
                 datos = [];
                 responseB.on('data', (dato) => {

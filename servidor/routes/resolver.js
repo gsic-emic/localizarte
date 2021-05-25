@@ -35,7 +35,7 @@ const recursos = {
   /* contexto: '/contexts/:context', */
   contexto: '/contexts/:a/:b/:c',
   tareas: '/tasks/',
-  tarea: '/tasks/:task',
+  tarea: '/tasks/:a/:b',
   rutas: '/rutes/',
   ruta: '/rutes/:rute',
   respuestas: '/answers/',

@@ -17,12 +17,14 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con la colección "contextos".
  * autor: Pablo García Zarza
- * version: 20210519
+ * version: 20210525
  */
 
 const Http = require('http');
+const Mustache = require('mustache');
 const Queries = require('../../util/queries');
 const Auxiliar = require('../../util/auxiliar');
+const Configuracion = require('../../util/config');
 
 /**
  * Método para obtener los contextos de una zona. Como queries el cliente deberá proporcionar la
@@ -91,9 +93,13 @@ function nuevoContexto(req, res) {
       if (Auxiliar.latitudValida(lat) && Auxiliar.longitudValida(long)
         && titulo && descr && autor) {
         // Creo la posible IRI y compruebo que no exista en el repositorio
-        const iri = `https://casuallearn.gsic.uva.es/context/${titulo.replace(/ /g, '_')
-        }/${Auxiliar.numeroStringIRI(long)
-        }/${Auxiliar.numeroStringIRI(lat)}`;
+        const iri = Mustache.render(
+          'https://casuallearn.gsic.uva.es/context/{{{titulo}}}/{{{long}}}/{{{lat}}}',
+          {
+            titulo: titulo.replace(/ /g, '_'),
+            long: long,
+            lat: lat
+          });
         console.log(iri);
         let options = Auxiliar.creaOptions(Queries.tipoIRI(iri));
         const consulta = (response) => {
@@ -115,11 +121,15 @@ function nuevoContexto(req, res) {
                     datosContexto[t] = nCtx[t];
                     break;
                   default:
-                    datosContexto[t] = (nCtx[t] === 'string')?nCtx[t].trim():nCtx[t];
+                    datosContexto[t] = (nCtx[t] === 'string') ? nCtx[t].trim() : nCtx[t];
                     break;
                 }
               }
-              options = Auxiliar.creaOptionsAuth(Queries.nuevoContexto(datosContexto), 'pablo', 'pablo');
+              options = Auxiliar.creaOptionsAuth(
+                Queries.nuevoContexto(datosContexto),
+                Configuracion.usuarioSPARQLAuth,
+                Configuracion.contrasenhaSPARQLAuth
+              );
               // Realizo la inserción en el repositorio
               const insercion = (responseI) => {
                 chunks = [];

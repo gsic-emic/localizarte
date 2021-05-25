@@ -41,7 +41,10 @@ function tareasContexto(iriContexto) {
                     notificaLateralError('Error interno del servidor');
                     return null;
                 default:
-                    notificaLateralError('Error desconocido: ' + respuesta.status);
+                    notificaLateralError(mustache.render(
+                        'Error desconocido: {{{status}}}',
+                        { status: respuesta.status })
+                    );
                     return null;
             }
         })
@@ -51,7 +54,6 @@ function tareasContexto(iriContexto) {
                 if (resultados.length === 0) {
                     espacioTareas.innerHTML = '<h6>POI sin tareas asociadas</h6>';
                 } else {
-                    /*{task: 'https://casuallearn.gsic.uva.es/IBENSA_Fábrica_de_tejidos_y_sacos_de_yute/lee', aT: 'https://casuallearn.gsic.uva.es/answerType/noAnswer', thumb: 'https://arquitecturava.es/wp-content/uploads/2016/05/aVA-Ruben_HC-14.jpg', aTR: '<a href="https://arquitecturava.es/proyectos-v…ntigua fábrica de tejidos y sacos de Yute.</a>'}*/
                     let ids = Math.trunc(window.performance.now() * 1000000000);
                     let numero = 1;
                     for (let i = 0; i < resultados.length; i++) {
@@ -69,7 +71,7 @@ function tareasContexto(iriContexto) {
                             resultado.muestra = true;
                         }
                         if (resultado.muestra) {
-                            resultado.title = mustache.render('Tarea #{{{numero}}}{{#title}} - {{{title}}}{{/title}}', { numero: numero, title:resultado.title });
+                            resultado.title = mustache.render('Tarea #{{{numero}}}{{#title}} - {{{title}}}{{/title}}', { numero: numero, title: resultado.title });
                             ++numero;
                             resultado.id = 'b' + ids;
                             resultado.idh = 'h' + ids;
@@ -79,7 +81,7 @@ function tareasContexto(iriContexto) {
                         resultados.splice(i, 1, resultado);
                     }
                     const salida = mustache.render(
-                        '{{#resultados}}{{#muestra}}<div id="{{{idh}}}" class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{{id}}}" aria-expanded="false" aria-controls="{{{id}}}"><img class="px-3" src="{{{icon}}}" style="witdth:40;height:40">{{{title}}}</button></h2><div id="{{{id}}}" class="accordion-collapse collapse" aria-labelledby="{{{idh}}}" data-bs-parent="#acordeon"><div class="accordion-body"><div class="d-md-flex flex-md-row py-1 row g-3"><div class="row pb-2">{{{aTR}}}</div><div class="row py-1 bg-light g-2"><div class="row justify-content"><h6>Gestión de la tarea</h6></div><div class="row g-2 align-items-center justify-content-around my-1"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-danger">Eliminar tarea</button></div><div class="col my-1 d-flex justify-content-center"><button class="btn btn-warning">Modificar tarea</button></div></div></div><div class="row g-1 py-2"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-success">Realizar tarea</button></div></div></div></div></div>{{/muestra}}{{/resultados}}',
+                        '{{#resultados}}{{#muestra}}<div id="{{{idh}}}" class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{{id}}}" aria-expanded="false" aria-controls="{{{id}}}"><img class="px-3" src="{{{icon}}}" style="witdth:40;height:40">{{{title}}}</button></h2><div id="{{{id}}}" class="accordion-collapse collapse" aria-labelledby="{{{idh}}}" data-bs-parent="#acordeon"><div class="accordion-body"><div class="d-md-flex flex-md-row py-1 row g-3"><div class="row pb-2"><p>{{{aTR}}}</p></div><div class="row py-1 bg-light g-2"><div class="row justify-content"><h6>Gestión de la tarea</h6></div><div class="row g-2 align-items-center justify-content-around my-1"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-danger">Eliminar tarea</button></div><div class="col my-1 d-flex justify-content-center"><button class="btn btn-warning">Modificar tarea</button></div></div></div><div class="row g-1 py-2"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-success">Realizar tarea</button></div></div></div></div></div>{{/muestra}}{{/resultados}}',
                         { resultados: resultados }
                     );
                     espacioTareas.innerHTML = mustache.render(
@@ -90,4 +92,14 @@ function tareasContexto(iriContexto) {
             }
         })
         .catch(error => console.log('error', error));
+}
+
+function nuevaTarea(idPoi) {
+    const modal = new bootstrap.Modal(document.getElementById('nuevaTareaModal'));
+    document.getElementById("formNT").reset();
+    const camposTarea = [
+        document.getElementById("tituloNT"),
+        document.getElementById("textoAsociadoNT")
+    ];
+    modal.show();
 }

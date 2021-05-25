@@ -17,12 +17,14 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con el recurso "contexto".
  * autor: Pablo García Zarza
- * version: 20210519
+ * version: 20210525
  */
 
 const Http = require('http');
+const Mustache = require('mustache');
 const Queries = require('../../util/queries');
 const Auxiliar = require('../../util/auxiliar');
+const Configuracion = require('../../util/config');
 
 /**
  * Método para controlar las consultas que hagan los usuarios para obtener la información de
@@ -35,14 +37,19 @@ const Auxiliar = require('../../util/auxiliar');
 
 function creaIri(a, b, c) {
   if (a && b && c) {
-    return `https://casuallearn.gsic.uva.es/context/${a}/${b}/${c}`;
+    return Mustache.render(
+      'https://casuallearn.gsic.uva.es/context/{{{a}}}/{{{b}}}/{{{c}}}',
+      {
+        a: a,
+        b: b,
+        c: c
+      });
   }
   return null;
 }
 
 function dameContexto(req, res) {
   try {
-    // let iri = req.body;
     const iri = creaIri(req.params.a, req.params.b, req.params.c);
     if (iri) {
       if (typeof iri === 'string') {
@@ -98,7 +105,11 @@ function eliminaContexto(req, res) {
               resultados = resultados.pop();
               resultados.iri = iri;
               // Ya tenemos toda la información a eliminar
-              options = Auxiliar.creaOptionsAuth(Queries.eliminaContexto(resultados), 'pablo', 'pablo');
+              options = Auxiliar.creaOptionsAuth(
+                Queries.eliminaContexto(resultados),
+                Configuracion.usuarioSPARQLAuth,
+                Configuracion.contrasenhaSPARQLAuth
+              );
               // Realizo la eliminación
               const borrado = (responseB) => {
                 chunks = [];
@@ -144,7 +155,7 @@ function actualizaContexto(req, res) {
         });
         response.on('end', () => {
           let resultados = Auxiliar.procesaJSONSparql(['propiedad', 'valor'], Buffer.concat(chunks).toString());
-          if (resultados.length > 0) {
+          if (resultados && resultados.length > 0) {
             resultados = resultados.pop();
             resultados.iri = iri;
             const { actual } = body;
@@ -176,9 +187,9 @@ function actualizaContexto(req, res) {
               for (const mod in modificados) {
                 if (!actual[mod]) {
                   inserciones[mod] = modificados[mod];
-                } else if (modificados[mod].trim() == '') { 
+                } else if (modificados[mod].trim() == '') {
                   //eliminaciones[mod] = resultados[(Auxiliar.equivalencias[mod]).prop]; 
-                  eliminaciones[mod] = resultados[mod]; 
+                  eliminaciones[mod] = resultados[mod];
                 } else {
                   actualizaciones[mod] = {
                     anterior: actual[mod],
@@ -186,11 +197,15 @@ function actualizaContexto(req, res) {
                   };
                 }
               }
-              const query = Queries.actualizaValoresContexto(
-                iri, inserciones, eliminaciones, actualizaciones,
-              );
+
               // Realizo la petición al punto sparql
-              options = Auxiliar.creaOptionsAuth(query, 'pablo', 'pablo');
+              options = Auxiliar.creaOptionsAuth(
+                Queries.actualizaValoresContexto(
+                  iri, inserciones, eliminaciones, actualizaciones,
+                ),
+                Configuracion.usuarioSPARQLAuth,
+                Configuracion.contrasenhaSPARQLAuth
+              );
               const borrado = (responseB) => {
                 chunks = [];
                 responseB.on('data', (chunk) => {
@@ -219,4 +234,8 @@ function actualizaContexto(req, res) {
   }
 }
 
-module.exports = { dameContexto, eliminaContexto, actualizaContexto };
+module.exports = {
+  dameContexto,
+  eliminaContexto,
+  actualizaContexto
+};

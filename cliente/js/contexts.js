@@ -151,7 +151,9 @@ function peticionZona(punto, zona) {
             }
         })
         .catch(error => {
-            notificaLateralError('Se ha producido un error al descargar la zona: ' + error);
+            notificaLateralError(mustache.render(
+                'Se ha producido un error al descargar la zona: {{{error}}}',
+                { error: error }));
             console.log('error', error)
         })
         .finally(() => { //Siempre decremento por si tengo que pintar
@@ -176,22 +178,26 @@ function pintaPOIs(zona) {
             markers = L.markerClusterGroup(
                 {//Icono personaliza para las agrupaciones
                     iconCreateFunction: (cluster) => {
-                        let tipo = 'marker-cluster marker-cluster-';
                         const numeroHijos = cluster.getChildCount();
+                        let tipo;
                         if (numeroHijos <= 10) {
-                            tipo += '10';
+                            tipo = '10';
                         } else {
                             if (numeroHijos <= 25) {
-                                tipo += '25';
+                                tipo = '25';
                             } else {
                                 if (numeroHijos <= 50) {
-                                    tipo += '50';
+                                    tipo = '50';
                                 } else {
-                                    tipo += '100';
+                                    tipo = '100';
                                 }
                             }
                         }
-                        return L.divIcon({ html: '<div><span>' + numeroHijos + '<span></div>', className: tipo, iconSize: new L.Point(40, 40) });
+                        return L.divIcon({
+                            html: mustache.render('<div><span>{{{numeroHijos}}}</span></div>', { numeroHijos: numeroHijos }),
+                            className: mustache.render('marker-cluster marker-cluster-{{{tipo}}}', { tipo: tipo }),
+                            iconSize: new L.Point(40, 40)
+                        });
                     },
                     maxClusterRadius: 40
                 }
@@ -245,14 +251,22 @@ function markerPoP(poi) {
             modal.hide();
             cerrarPI()
         };
+
         document.getElementById('eliminarPI').onclick = () => {
             confirmarEliminacion(poi, 'Eliminación punto de interés', '¿Estás seguro de eliminar el punto de interés?');
             modal.hide();
         };
+
         document.getElementById('modificarPI').onclick = () => {
             modal.hide();
             modificarPI(poi)
         };
+        
+        document.getElementById('agregarTarea').onclick = () => {
+            modal.hide();
+            nuevaTarea(poi.ctx);
+        }
+
         modal.show();
     }, { once: true });
     markers.addLayer(marker);
@@ -312,7 +326,9 @@ function eliminarPI(poi) {
                 if (response.status === 200) {
                     return response.text();
                 }
-                notificaLateralError('No se ha podido completar el borrado: ' + response.status);
+                notificaLateralError(mustache.render(
+                    'No se ha podido completar el borrado: {{{status}}}',
+                    { status: response.status }));
                 return null;
             })
             .then(result => {
@@ -323,7 +339,9 @@ function eliminarPI(poi) {
                 }
             })
             .catch(error => {
-                notificaLateralError('Se ha producido un error: ' + error);
+                notificaLateralError(mustache.render(
+                    'Se ha producido un error: {{{error}}}',
+                    { error: error }));
                 console.log('error', error)
             });
     }
@@ -346,7 +364,9 @@ function modificarPI(poi) {
                 case 200:
                     return response.json();
                 default:
-                    notificaLateralError('Se ha producido un error al intentar obtener la información del repositorio: ' + response.status);
+                    notificaLateralError(mustache.render(
+                        'Se ha producido un error al intentar obtener la información del repositorio: {{{status}}}',
+                        { status: response.status }));
                     return null;
             }
         })
@@ -442,7 +462,7 @@ function modificarPI(poi) {
                                 campo.className = 'form-control is-invalid';
                             }
                         } else {
-                            if(campo.value && campo.value.trim() !== '') {
+                            if (campo.value && campo.value.trim() !== '') {
                                 campo.className = 'form-control is-valid';
                             }
                         }
@@ -539,7 +559,9 @@ function modificarPI(poi) {
                                         case 503:
                                             notificaLateralError('El repositorio no puede atender a esta petición en este momento.');
                                         default:
-                                            notificaLateralError('Se ha producido un error desconocido: ' + response.status);
+                                            notificaLateralError(mustache.render(
+                                                'Se ha producido un error desconocido: {{{status}}}',
+                                                { status: response.status }));
                                             return null;
                                     }
                                 })
@@ -570,7 +592,9 @@ function modificarPI(poi) {
                                     }
                                 })
                                 .catch(error => {
-                                    notificaLateralError('Se ha producido un error al actualizar el POI: ' + error);
+                                    notificaLateralError(mustache.render(
+                                        'Se ha producido un error al actualizar el POI: {{{error}}}',
+                                        { error: error }));
                                     console.log('error', error)
                                 });
                         } else {
@@ -582,7 +606,9 @@ function modificarPI(poi) {
             }
         }, { once: true })
         .catch(error => {
-            notificaLateralError('Se ha producido un error al obtener la información del POI: ' + error);
+            notificaLateralError(mustache.render(
+                'Se ha producido un error al obtener la información del POI: {{{error}}}',
+                { error: error }));
             console.log('error', error)
         });
 }
@@ -595,14 +621,18 @@ function modificarPI(poi) {
 function creacionNuevoContexto(pos) {
     const lat = Number((pos.latlng.lat).toFixed(5));
     const lng = Number((pos.latlng.lng).toFixed(5));
-    const cabecera = '<h4>Punto (' + lat + ', ' + lng + ')</h4>';
+    const cabecera = mustache.render(
+        '<h4>Punto ({{{lat}}},{{{lng}}})</h4>',
+        { lat: lat, lng: lng });
     let ta = window.performance.now();
     infoNuevoContexto[ta] = { lat: lat, lng: lng };
-    let cuerpo = '<div class="list-group">'
-        + '<a class="list-group-item list-group-item-action active" aria-current="true" href="javascript:modalNPI(' + ta + ');">Agregar nuevo POI</a>'
-        + '</div>';
-    peticionCrafts(lat, lng, cabecera + cuerpo);
-    cuerpo = cuerpo + '<div class="mt-2"><h6 style="text-align: left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div>';
+    let cuerpo = mustache.render(
+        '<div class="list-group"><a class="list-group-item list-group-item-action active" aria-current="true" href="javascript:modalNPI({{{ta}}});">Agregar nuevo POI</a></div>',
+        { ta: ta });
+    peticionCrafts(lat, lng, mustache.render('{{{cabecera}}}{{{cuerpo}}}', { cabecera: cabecera, cuerpo: cuerpo }));
+    cuerpo = mustache.render(
+        '{{{cuerpo}}}<div class="mt-2"><h6 style="text-align: left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+        { cuerpo: cuerpo });
     popup = L.popup(
         autoClose = true,
         closeButton = false,
@@ -620,7 +650,9 @@ function creacionNuevoContexto(pos) {
  */
 function peticionCrafts(lat, lng, contenidoPopup) {
     const myHeaders = new Headers();
-    myHeaders.append('Authorization', 'Bearer ' + tokenCraftLocalizarte);
+    myHeaders.append('Authorization', mustache.render(
+        'Bearer {{{token}}}',
+        { token: tokenCraftLocalizarte }));
     let completadoEn = false;
     let completadoEs = false;
     let resultadosEn = null;
@@ -705,7 +737,9 @@ function peticionCrafts(lat, lng, contenidoPopup) {
 function pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
     if ((completadoEn && !completadoEs) || (!completadoEn && resultadosEs)) {
         if (popup && popup.isOpen()) {
-            popup.setContent(contenidoPopup + '<div class="mt-2"><h6 style="text-align:left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div></div></div>');
+            popup.setContent(mustache.render(
+                '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                { contenidoPopup: contenidoPopup }));
         }
     } else {
         if (completadoEn && completadoEs) {
@@ -717,14 +751,19 @@ function pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completad
                     let ta = window.performance.now();
                     paraMostrar.forEach(lugar => {
                         infoNuevoContexto[ta] = lugar;
-                        nuevoContenido += '<a class="list-group-item list-group-item-action text-truncate" aria-current="true" href="javascript:modalNPI(' + ta + ');">' + lugar['lab'] + '</a>';
+                        nuevoContenido = mustache.render(
+                            '{{{nuevoContenido}}}<a class="list-group-item list-group-item-action text-truncate" aria-current="true" href="javascript:modalNPI({{{ta}}});">{{{etiqueta}}}</a>',
+                            { nuevoContenido: nuevoContenido, ta: ta, etiqueta: lugar['lab'] });
                         ++ta;
                     });
-                    nuevoContenido += '</div></div>';
-                    popup.setContent(contenidoPopup + nuevoContenido);
+                    popup.setContent(mustache.render(
+                        '{{{contenidoPopup}}}{{{nuevoContenido}}}</div></div>',
+                        { contenidoPopup: contenidoPopup, nuevoContenido: nuevoContenido }));
                 }
             } else {
-                popup.setContent(contenidoPopup + '<div class="mt-2"><h6 style="text-align:left">No existen puntos para sugerir.</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div></div>');
+                popup.setContent(mustache.render(
+                    '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">No existen puntos para sugerir.</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                    { contenidoPopup: contenidoPopup }));
             }
         }
     }
@@ -805,7 +844,7 @@ function modalNPI(id) {
         const longitud = document.getElementById('longitudNPI');
         const botonEnviar = document.getElementById('enviarNPI');
         document.getElementById('tituloModalNPI').innerText = 'Nuevo punto de interés';
-        
+
 
         const camposObligatorios = [
             document.getElementById('tituloNPI'),
@@ -888,7 +927,7 @@ function modalNPI(id) {
                         campo.className = 'form-control is-invalid';
                     }
                 } else {
-                    if(campo.value && campo.value.trim() !== '') {
+                    if (campo.value && campo.value.trim() !== '') {
                         campo.className = 'form-control is-valid';
                     }
                 }
@@ -962,7 +1001,7 @@ function modalNPI(id) {
                 envio.autor = 'pablogz@gsic.uva.es';
 
                 //Envío los datos al servidor para que los agregue
-                let direccion = direccionServidor + '/contexts';
+                const direccion = mustache.render('{{{direccionServidor}}}/contexts', { direccionServidor: direccionServidor });
                 let myHeaders = new Headers();
                 myHeaders.append("Content-Type", "application/json");
                 const requestOptions = {
@@ -1046,7 +1085,9 @@ function peticionInfoPoi(iri, guardaPinta, modal) {
             }
         })
         .catch(error => {
-            notificaLateralError('Se ha producido un error al descargar la información del POI: ' + error);
+            notificaLateralError(mustache.render(
+                'Se ha producido un error al descargar la información del POI: {{{error}}}',
+                { error: error }));
             console.log('error', error)
         });
 }

@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones auxiliares.
  * autor: Pablo García Zarza
- * version: 20210519
+ * version: 20210525
  */
 
 /**
@@ -25,6 +25,10 @@ limitations under the License.
  * propiedades del repositorio de triplas. También tiene el tipo del valor
  * de la propiedad
  */
+
+const Configuracion = require('./config');
+
+/** Equivalencias cliente al servidor */
 const equivalencias = {
   tipo: {
     prop: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
@@ -102,7 +106,75 @@ const equivalencias = {
     prop: 'http://www.w3.org/2000/01/rdf-schema#seeAlso',
     tipo: 'uriString',
   },
+  title: {
+    prop: 'https://casuallearn.gsic.uva.es/property/title',
+    tipo: 'string'
+  },
+  spa: {
+    prop: 'https://casuallearn.gsic.uva.es/property/space',
+    tipo: 'uri',
+  },
+  tRTexto: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/text',
+    tipo: 'uri'
+  },
+  tRMultiFotosTexto: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/multiplePhotosAndText',
+    tipo: 'uri',
+  },
+  tRFoto: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/photo',
+    tipo: 'uri',
+  },
+  tRFotoTexto: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/photoAndText',
+    tipo: 'uri',
+  },
+  tRMultiFotos: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/multiplePhotos',
+    tipo: 'uri',
+  },
+  tRTextoCorto: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/shortText',
+    tipo: 'uri',
+  },
+  tRSinRespuesta: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/noAnswer',
+    tipo: 'uri',
+  },
+  tRVideo: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/video',
+    tipo: 'uri',
+  },
+  tRVideoTexto: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/videoAndText',
+    tipo: 'uri',
+  },
+  tRVF: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/trueFalse',
+    tipo: 'uri',
+  },
+  tRMcq: {
+    prop: 'https://casuallearn.gsic.uva.es/answerType/mcq',
+    tipo: 'uri',
+  },
+  espacioFisico: {
+    prop: 'https://casuallearn.gsic.uva.es/space/physical',
+    tipo: 'uri',
+  },
+  espacioMapaVirtual: {
+    prop: 'https://casuallearn.gsic.uva.es/space/virtualMap',
+    tipo: 'uri',
+  },
+  espacioWeb: {
+    prop: 'https://casuallearn.gsic.uva.es/space/web',
+    tipo: 'uri',
+  }
 };
+
+const tipoRespuetasSoportados = ['tRTexto', 'tRMultiFotosTexto', 'tRMultiFoto', 'tRFotoTexto', 'tRMultiFotos', 'tRTextoCorto', 'tRTextoCorto', 'tRSinRespuesta', 'tRVideo', 'tRVideoTexto', 'tRVF', 'tRMcq'];
+
+const espaciosSoportados = ['espacioFisico', 'espacioMapaVirtual', 'espacioWeb'];
 
 /**
  * Función para crear los datos necesarios para realizar una consulta
@@ -114,9 +186,9 @@ const equivalencias = {
  */
 function creaOptionsAuth(query, user, pass) {
   return {
-    host: '127.0.0.1',
+    host: Configuracion.direccionSPARQL,
     path: `/sparql-auth?query=${query}`,
-    port: 8890,
+    port: Configuracion.puertoSPARQL,
     headers: { Accept: 'application/sparql-results+json', Authorization: `Basic ${Buffer.from(`${user}:${pass}`).toString('base64')}` },
   };
 }
@@ -129,9 +201,9 @@ function creaOptionsAuth(query, user, pass) {
  */
 function creaOptions(query) {
   return {
-    host: '127.0.0.1',
+    host: Configuracion.direccionSPARQL,
     path: `/sparql?default-graph-uri=&query=${query}`,
-    port: 8890,
+    port: Configuracion.puertoSPARQL,
     headers: { Accept: 'application/sparql-results+json' },
   };
 }
@@ -268,13 +340,13 @@ function nuevoIriTarea(nombreContexto, nombreTarea) {
  * https://stackoverflow.com/a/5717133
  * @param {String} str 
  */
- function validURL(str) {
+function validURL(str) {
   const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
-      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-      '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-      '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-      '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+    '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
   return !!pattern.test(str);
 }
 
@@ -289,4 +361,6 @@ module.exports = {
   isEmpty,
   nuevoIriTarea,
   validURL,
+  tipoRespuetasSoportados,
+  espaciosSoportados,
 };

@@ -33,18 +33,7 @@ const Auxiliar = require('./auxiliar');
  */
 function contextosZona(puntos) {
   const query = Mustache.render(
-    'select ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen where {'
-    + '?ctx geo:lat ?lat ; '
-    + 'geo:long ?long ; '
-    + 'rdfs:label ?titulo ; '
-    + 'rdfs:comment ?descr ;'
-    + 'dc:creator ?autor . '
-    + 'optional { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } '
-    + 'filter ('
-    + '(xsd:decimal(?lat) > {{{sur}}}) && '
-    + '(xsd:decimal(?lat) <= {{{norte}}}) && '
-    + '(xsd:decimal(?long) >= {{{oeste}}}) && '
-    + '(xsd:decimal(?long) < {{{este}}})).} ',
+    'select ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen where {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . optional { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } filter ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})).} ',
     puntos,
   );
   return encodeURIComponent(query);
@@ -57,7 +46,9 @@ function contextosZona(puntos) {
  * @returns Query formateada
  */
 function tipoIRI(id) {
-  const query = `select ?tipo where {<${id}> a ?tipo}`;
+  const query = Mustache.render(
+    'select ?tipo where {<{{{id}}}> a ?tipo}',
+    { id: id });
   return encodeURIComponent(query);
 }
 
@@ -91,10 +82,13 @@ function formatoTiposDatos(tipo, valor) {
  * @returns Query con la que realizar la consulta
  */
 function nuevoObjeto(datosObjeto, tipoObjeto) {
-  let query = `${'with <http://localizarte.gsic.uva.es> insert { '
-    + '<'}${datosObjeto.iri}> a <${tipoObjeto}>; `;
+  let query = Mustache.render(
+    'with <http://casuallearn.gsic.uva.es> insert { <{{{iri}}}> a <{{{tipoObjeto}}}>; ',
+    {
+      iri: datosObjeto.iri,
+      tipoObjeto: tipoObjeto
+    });
   let primero = true;
-  let propiedad;
   for (const t in datosObjeto) {
     try {
       switch (t) {
@@ -102,31 +96,69 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
           break;
         case 'fuentes':
           const { fuentes } = datosObjeto;
-          propiedad = (Auxiliar.equivalencias.fuente).prop;
           fuentes.forEach((fuente) => {
             if (primero) {
               primero = false;
             } else {
-              query += '; ';
+              query = Mustache.render(
+                '{{{query}}}; ',
+                { query: query }
+              );
             }
-            query += `<${propiedad}> ${(Auxiliar.validURL(fuente.value)) ? `<${fuente.value}> ` : `'''${fuente.value}''' `}`;
+            query = Mustache.render(
+              '{{{query}}}<{{{propiedad}}}> {{{valor}}} ',
+              {
+                query: query,
+                propiedad: (Auxiliar.equivalencias.fuente).prop,
+                valor: formatoTiposDatos('uriString', fuente.value),
+              }
+            );
           });
           break;
-        default:
-          propiedad = (Auxiliar.equivalencias[t]).prop;
+        case 'aT':
+        case 'espacio':
           if (primero) {
             primero = false;
           } else {
-            query += '; ';
+            query = Mustache.render(
+              '{{{query}}}; ',
+              { query: query }
+            );
           }
-          query += `<${propiedad}> ${formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, datosObjeto[t])}`;
+          query = Mustache.render(
+            '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
+            {
+              query: query,
+              propiedad: Auxiliar.equivalencias[t].prop,
+              valor: formatoTiposDatos('uriString', Auxiliar.equivalencias[datosObjeto[t]].prop)
+            }
+          )
+          break;
+        default:
+          if (primero) {
+            primero = false;
+          } else {
+            query = Mustache.render(
+              '{{{query}}}; ',
+              { query: query }
+            );
+          }
+          query = Mustache.render(
+            '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
+            {
+              query: query,
+              propiedad: (Auxiliar.equivalencias[t]).prop,
+              valor: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, datosObjeto[t]),
+            }
+          );
           break;
       }
     } catch (e) {
       console.log(e);
     }
   }
-  query += '}';
+  query = Mustache.render('{{{query}}}}', { query: query });
+  console.log(query);
   return encodeURIComponent(query);
 }
 
@@ -157,13 +189,7 @@ function nuevaTarea(datosTarea) {
  * @returns Query formateada
  */
 function infoContexto(iriContexto) {
-  const query = `${'select ?lat ?long ?titulo ?descr ?autor ?tipo where {'
-    + '<'}${iriContexto}> a ?tipo ; `
-    + 'geo:lat ?lat ; '
-    + 'geo:long ?long ; '
-    + 'rdfs:label ?titulo ; '
-    + 'rdfs:comment ?descr ;'
-    + 'dc:creator ?autor }';
+  const query = Mustache.render('select ?lat ?long ?titulo ?descr ?autor ?tipo where {<{{{iriContexto}}}> a ?tipo ; geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor }', { iriContexto: iriContexto });
   return encodeURIComponent(query);
 }
 
@@ -174,8 +200,7 @@ function infoContexto(iriContexto) {
  * @returns Query preparada para enviar al punto SPARQL
  */
 function todaInfo(iri) {
-  const query = `${'select ?propiedad ?valor where { '
-    + '<'}${iri}> ?propiedad ?valor }`;
+  const query = Mustache.render('select ?propiedad ?valor where { <{{{iri}}}> ?propiedad ?valor }', { iri: iri });
   return encodeURIComponent(query);
 }
 
@@ -187,8 +212,12 @@ function todaInfo(iri) {
  * @returns Query formateada para solicitar la eliminación de las triplas de ese iri
  */
 function eliminaObjeto(iri, tipo) {
-  const query = `${'with <http://localizarte.gsic.uva.es> '
-    + 'delete where { <'}${iri}> a <${tipo}> ; ?a ?b }`;
+  const query = Mustache.render(
+    'with <http://casuallearn.gsic.uva.es> delete where { <{{{iri}}}> a <{{{tipo}}}> ; ?a ?b }',
+    {
+      iri: iri,
+      tipo: tipo
+    });
   return encodeURIComponent(query);
 }
 
@@ -241,23 +270,42 @@ function contenidoInsertDelete(array, extra, tama2, final) {
       const fue = (extra) ? (array[d])[extra].split(';') : array[d].split(';');
       let t = 0;
       fue.forEach(f => {
-        query += `<http://www.w3.org/2000/01/rdf-schema#seeAlso> `;
+        /*query += `<http://www.w3.org/2000/01/rdf-schema#seeAlso> `;
         query += formatoTiposDatos('uriString', f.trim());
         if (t < (v - 1)) {
           query += `; `;
-        }
+        }*/
+        query = Mustache.render(
+          '{{{query}}}<http://www.w3.org/2000/01/rdf-schema#seeAlso> {{{valor}}}{{{siguiente}}}',
+          {
+            query: query,
+            valor: formatoTiposDatos('uriString', f.trim()),
+            siguiente: (t < (v - 1)) ? '; ' : ''
+          }
+        );
         ++t;
       });
     } else {
-      query += `<${(Auxiliar.equivalencias[d]).prop}> `;
+      /*query += `<${(Auxiliar.equivalencias[d]).prop}> `;
       valor = (extra) ? (array[d])[extra] : (array[d]);
-      query += formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valor);
+      query += formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valor);*/
+      query = Mustache.render(
+        '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
+        {
+          query: query,
+          propiedad: (Auxiliar.equivalencias[d]).prop,
+          valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, (extra) ? (array[d])[extra] : (array[d]))
+        }
+      );
     }
-    if (final) {
+    /*if (final) {
       if (i != (tama - 1)) query += '; ';
-    } else if (tama2 || i < (tama - 1)) query += '; ';
+    } else if (tama2 || i < (tama - 1)) query += '; ';*/
+    if (final) {
+      if (i != (tama - 1)) query = Mustache.render('{{{query}}}; ', { query: query });
+    } else if (tama2 || i < (tama - 1)) query = Mustache.render('{{{query}}}; ', { query: query });
   }
-  if (final) query += '} ';
+  if (final) query = Mustache.render('{{{query}}}} ', { query: query });
   return query;
 }
 
@@ -271,7 +319,7 @@ function contenidoInsertDelete(array, extra, tama2, final) {
  * @returns Query para realizar la solicitud de borrados y creaciones para un iri específico
  */
 function actualizaValoresContexto(iri, inserciones, eliminaciones, modificaciones) {
-  let query = 'with <http://localizarte.gsic.uva.es>';
+  let query = 'with <http://casuallearn.gsic.uva.es>';
   const tama2 = Object.keys(modificaciones).length > 0;
   if (Object.keys(eliminaciones).length > 0 || Object.keys(modificaciones).length > 0) {
     query += 'delete {';
@@ -312,10 +360,7 @@ function tareasContexto(iriContexto) {
  * @returns Query para realizar una consulta sobre la propiedad label de un contexto
  */
 function tituloContexto(iri) {
-  const query = `${'select ?titulo where { '
-    + '<'}${iri}> `
-    + 'a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; '
-    + 'rdfs:label ?titulo }';
+  const query = Mustache.render('select ?titulo where { <{{{iri}}}> a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; rdfs:label ?titulo }', { iri: iri });
   return encodeURIComponent(query);
 }
 
