@@ -140,20 +140,29 @@ function peticionZona(punto, zona) {
         })
         .then(result => {
             if (result) {
-                if (result.length > 0) {
-                    for (let json of result) {
-                        //Agrego la posición para que la carga de POIs sea inmediata
-                        json.posicion = L.latLng(json.lat, json.long);
-                        pois.push(json);
+                let encontrado = false;
+                for (let zona of zonas) {
+                    if (zona.equals(punto)) {
+                        encontrado = true;
+                        break;
                     }
                 }
-                zonas.push(punto);
+                if (!encontrado) {
+                    if (result.length > 0) {
+                        for (let json of result) {
+                            //Agrego la posición para que la carga de POIs sea inmediata
+                            json.posicion = L.latLng(json.lat, json.long);
+                            pois.push(json);
+                        }
+                    }
+                    zonas.push(punto);
+                }
             }
         })
         .catch(error => {
-            notificaLateralError(mustache.render(
+            /*notificaLateralError(mustache.render(
                 'Se ha producido un error al descargar la zona: {{{error}}}',
-                { error: error }));
+                { error: error }));*/
             console.log('error', error)
         })
         .finally(() => { //Siempre decremento por si tengo que pintar
@@ -261,7 +270,7 @@ function markerPoP(poi) {
             modal.hide();
             modificarPI(poi)
         };
-        
+
         document.getElementById('agregarTarea').onclick = () => {
             modal.hide();
             nuevaTarea(poi.ctx);
@@ -659,12 +668,45 @@ function peticionCrafts(lat, lng, contenidoPopup) {
     let resultadosEs = null;
     let puntoOrigen = { lat: lat, lng: lng };
 
-    const direccionEn = mustache.render(
+    const incr = (map.getMaxZoom() - map.getZoom() + 1) / 200;
+
+    /*const direccionEn = mustache.render(
         'https://crafts.gsic.uva.es/apis/localizarte/query?id=places-en&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&limit={{{lim}}}',
-        { lat: lat, lng: lng, incr: 0.005, lim: 20 });
+        {
+            lat: lat,
+            lng: lng,
+            incr: incr,
+            lim: 20
+        }
+    );
     const direccionEs = mustache.render(
         'https://crafts.gsic.uva.es/apis/localizarte/query?id=places-es&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&limit={{{lim}}}',
-        { lat: lat, lng: lng, incr: 0.005, lim: 20 });
+        {
+            lat: lat,
+            lng: lng,
+            incr: incr,
+            lim: 20
+        }
+    );*/
+
+    const direccionEn = mustache.render(
+        'https://crafts.gsic.uva.es/apis/localizarteV2/query?id=places-en&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&isNotType=http://dbpedia.org/ontology/PopulatedPlace&limit={{{lim}}}',
+        {
+            lat: lat,
+            lng: lng,
+            incr: incr,
+            lim: 200
+        }
+    );
+    const direccionEs = mustache.render(
+        'https://crafts.gsic.uva.es/apis/localizarteV2/query?id=places-es&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&isNotType=http://dbpedia.org/ontology/PopulatedPlace&limit={{{lim}}}',
+        {
+            lat: lat,
+            lng: lng,
+            incr: incr,
+            lim: 200
+        }
+    );
 
     const requestOptions = {
         method: 'GET',
@@ -689,11 +731,11 @@ function peticionCrafts(lat, lng, contenidoPopup) {
                 resultadosEn = null;
             }
             completadoEn = true;
-            pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
         })
         .catch(error => {
             resultadosEn = null; completadoEn = true;
-            pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
             console.log('error', error);
         });
 
@@ -714,11 +756,11 @@ function peticionCrafts(lat, lng, contenidoPopup) {
                 resultadosEs = null;
             }
             completadoEs = true;
-            pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
         })
         .catch(error => {
             resultadosEn = null; completadoEn = true;
-            pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
             console.log('error', error);
         });
 }
@@ -734,7 +776,7 @@ function peticionCrafts(lat, lng, contenidoPopup) {
  * @param {Object} puntoOrigen Objeto con la latitud (lat) y longitud (lng) donde ha pulstado el usuario
  * @param {String} contenidoPopup Frase que se está mostrando en el popup 
  */
-function pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
+function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
     if ((completadoEn && !completadoEs) || (!completadoEn && resultadosEs)) {
         if (popup && popup.isOpen()) {
             popup.setContent(mustache.render(
@@ -746,6 +788,136 @@ function pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completad
             const resultados = agrupaResultados(resultadosEn, resultadosEs);
             if (resultados) {
                 const paraMostrar = masCercanos(puntoOrigen, resultados);
+                popup.setContent(mustache.render(
+                    '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 80%;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                    { contenidoPopup: contenidoPopup }));
+
+                let puntosEn = [];
+                let puntosEs = [];
+                
+                paraMostrar.forEach(ele => {
+                    switch (ele.version) {
+                        case 'es':
+                            puntosEs.push({ punto: ele.place.replace('http://es.dbpedia.org/resource/', 'p:') });
+                            break;
+                        case 'en':
+                            puntosEn.push({ punto: ele.place.replace('http://dbpedia.org/resource/', 'p:') });
+                            break;
+                        default:
+                            break;
+                    }
+                });
+
+                const myHeaders = new Headers();
+                myHeaders.append('Authorization', mustache.render(
+                    'Bearer {{{token}}}',
+                    { token: tokenCraftLocalizarte }));
+                let completadoEn = false;
+                let completadoEs = false;
+                let resultadosEn = null;
+                let resultadosEs = null;
+                let infoEs = null, infoEn = null;
+                if (puntosEs.length > 0) {
+                    infoEs = mustache.render(
+                        'https://crafts.gsic.uva.es/apis/localizarteV2/resources?id=Place-es&ns=http://es.dbpedia.org/resource/&nspref=p{{#puntosEs}}&iris={{{punto}}}{{/puntosEs}}',
+                        { puntosEs: puntosEs });
+                } else {
+                    completadoEs = true;
+                }
+                if (puntosEn.length > 0) {
+                    infoEn = mustache.render(
+                        'https://crafts.gsic.uva.es/apis/localizarteV2/resources?id=Place-en&ns=http://dbpedia.org/resource/&nspref=p{{#puntosEn}}&iris={{{punto}}}{{/puntosEn}}',
+                        { puntosEn: puntosEn });
+                } else {
+                    completadoEn = true;
+                }
+
+                if (completadoEn && completadoEs) {
+                    pintaSugerenciaPois(null, true, null, true, puntoOrigen, contenidoPopup);
+                } else {
+                    const requestOptions = {
+                        method: 'GET',
+                        headers: myHeaders,
+                        redirect: 'follow'
+                    };
+
+                    fetch(infoEn, requestOptions)
+                        .then(response => {
+                            switch (response.status) {
+                                case 200:
+                                    return response.json();
+                                default:
+                                    notificaLateralError('Error en la obtención de los POIs de DBpedia.org (info final)');
+                                    return null;
+                            }
+                        })
+                        .then(result => {
+                            console.log(result);/*
+                            if (result && result.results.bindings.length > 0) {
+                                resultadosEn = parseadorResultadosSparql(result.head.vars, result.results.bindings);
+                            } else {
+                                resultadosEn = null;
+                            }
+                            completadoEn = true;
+                            pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);*/
+                        })
+                        .catch(error => {
+                            resultadosEn = null; completadoEn = true;
+                            pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+                            console.log('error', error);
+                        });
+
+                    fetch(infoEs, requestOptions)
+                        .then(response => {
+                            switch (response.status) {
+                                case 200:
+                                    return response.json();
+                                default:
+                                    notificaLateralError('Error en la obtención de los POIs de es.DBpedia.org (info final)');
+                                    return null;
+                            }
+                        })
+                        .then(result => {
+                            console.log(result);/*
+                            if (result && result.results.bindings.length > 0) {
+                                resultadosEs = parseadorResultadosSparql(result.head.vars, result.results.bindings);
+                            } else {
+                                resultadosEs = null;
+                            }
+                            completadoEs = true;
+                            pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);*/
+                        })
+                        .catch(error => {
+                            resultadosEn = null; completadoEn = true;
+                            pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+                            console.log('error', error);
+                        });
+                }
+            } else {
+                popup.setContent(mustache.render(
+                    '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">No existen puntos para sugerir.</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                    { contenidoPopup: contenidoPopup }));
+            }
+        }
+    }
+}
+
+function pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
+    if ((completadoEn && !completadoEs) || (!completadoEn && resultadosEs)) {
+        if (popup && popup.isOpen()) {
+            popup.setContent(mustache.render(
+                '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 90%;" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                { contenidoPopup: contenidoPopup }));
+        }
+    } else {
+        if (completadoEn && completadoEs) {
+            const resultados = agrupaResultados(resultadosEn, resultadosEs);
+            if (resultados) {
+            }
+        }
+    }
+    /*
+                PARA MOSTRAR EN EL POPUP
                 if (popup && popup.isOpen()) {
                     let nuevoContenido = '<div class="mt-3"><h6 style="text-align: left";>Agregar nuevo POI basado en:</h6><div class="list-group justify-content-center" style="max-width:280px;">';
                     let ta = window.performance.now();
@@ -759,15 +931,9 @@ function pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completad
                     popup.setContent(mustache.render(
                         '{{{contenidoPopup}}}{{{nuevoContenido}}}</div></div>',
                         { contenidoPopup: contenidoPopup, nuevoContenido: nuevoContenido }));
-                }
-            } else {
-                popup.setContent(mustache.render(
-                    '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">No existen puntos para sugerir.</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
-                    { contenidoPopup: contenidoPopup }));
-            }
-        }
-    }
+                }*/
 }
+
 
 /**
  * Función para agrupar los resultados obtenidos de las consultas a la DBpedia. Da preferencia 
@@ -778,30 +944,48 @@ function pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completad
  * @returns Resultados agrupados y aplicado la preferencia por la española.
  */
 function agrupaResultados(resultadosEn, resultadosEs) {
-    if (resultadosEn && !resultadosEs)
-        return resultadosEn;
-    if (!resultadosEn && resultadosEs)
-        return resultadosEs;
-    if (!resultadosEn && !resultadosEs)
-        return null;
-    let resultados = [];
-    resultadosEs.forEach(r => resultados.push(r));
-    resultadosEn.forEach(r => {
-        //Tengo que comprobar que la versión en Inglés no me devuelva algo que ya tengo en la española
-        let iri = r['place'];
-        let lab = r['lab'];
-        let encontrado = false;
-        resultadosEs.some(ven => {
-            if (ven['place'] === iri || ven['lab'] === lab) {
-                encontrado = true;
-                return true;
+    let salida = [];
+
+    if (!resultadosEn && !resultadosEs) {
+        salida = null;
+    } else {
+        if (resultadosEn && !resultadosEs) {
+            resultadosEn.forEach(r => {
+                r.version = 'en';
+                salida.push(r);
+            });
+        } else {
+            if (!resultadosEn && resultadosEs) {
+                resultadosEs.forEach(r => {
+                    r.version = 'es';
+                    salida.push(r);
+                });
+            } else {
+                resultadosEs.forEach(r => {
+                    r.version = 'es';
+                    salida.push(r);
+                });
+                resultadosEn.forEach(r => {
+                    //Tengo que comprobar que la versión en Inglés no me devuelva algo que ya tengo en la española
+                    let iri = r['place'];
+                    let encontrado = false;
+                    resultadosEs.some(ven => {
+                        if (ven['place'] === iri) {
+                            encontrado = true;
+                            return true;
+                        }
+                        return false;
+                    });
+                    if (!encontrado) {
+                        r.version = 'en';
+                        salida.push(r);
+                    }
+                });
             }
-            return false;
-        });
-        if (!encontrado)
-            resultados.push(r);
-    });
-    return resultados;
+        }
+    }
+
+    return salida;
 }
 
 /**

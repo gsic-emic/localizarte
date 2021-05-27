@@ -8,22 +8,31 @@
     src: url('../fonts/Comfortaa-Medium.ttf');
 }
 
-body{
+body {
     font-family: 'Open Sans', sans-serif;
     /*padding-top: 50px;*/
 }
 
 .mapa {
     /*height: 100%;*/
-    position:absolute;
-    top: 50px;
+    position: absolute;
+    top: 55px;
     bottom: 0;
     width: 100%;
 }
 
-.navegacion{
-    height: 50px;
-    position: relative;
+.navegacion {
+    min-height: 55px;
+    position: absolute;
+    top:0;
+    right: 0;
+    left: 0;
+    background-color: #0c252d;
+    z-index: 1599;
+}
+
+.modal {
+    z-index: 1600;
 }
 
 .imagen {
@@ -49,17 +58,16 @@ body{
 
 .botonFlotante {
     display: inline;
-    position: fixed; 
-    bottom: 6%; 
-    right: 3%; 
+    position: fixed;
+    bottom: 6%;
+    right: 3%;
     z-index: 1000;
 }
 
-@media screen and (max-width: 450px){
+@media screen and (max-width: 450px) {
     .imagen {
         max-width: 220px;
     }
-
     .toast {
         max-width: 280px;
     }

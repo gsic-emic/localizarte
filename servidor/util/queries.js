@@ -83,7 +83,7 @@ function formatoTiposDatos(tipo, valor) {
  */
 function nuevoObjeto(datosObjeto, tipoObjeto) {
   let query = Mustache.render(
-    'with <http://casuallearn.gsic.uva.es> insert { <{{{iri}}}> a <{{{tipoObjeto}}}>; ',
+    'with <http://localizarte.gsic.uva.es> insert { <{{{iri}}}> a <{{{tipoObjeto}}}>; ',
     {
       iri: datosObjeto.iri,
       tipoObjeto: tipoObjeto
@@ -213,7 +213,7 @@ function todaInfo(iri) {
  */
 function eliminaObjeto(iri, tipo) {
   const query = Mustache.render(
-    'with <http://casuallearn.gsic.uva.es> delete where { <{{{iri}}}> a <{{{tipo}}}> ; ?a ?b }',
+    'with <http://localizarte.gsic.uva.es> delete where { <{{{iri}}}> a <{{{tipo}}}> ; ?a ?b }',
     {
       iri: iri,
       tipo: tipo
@@ -319,7 +319,7 @@ function contenidoInsertDelete(array, extra, tama2, final) {
  * @returns Query para realizar la solicitud de borrados y creaciones para un iri específico
  */
 function actualizaValoresContexto(iri, inserciones, eliminaciones, modificaciones) {
-  let query = 'with <http://casuallearn.gsic.uva.es>';
+  let query = 'with <http://localizarte.gsic.uva.es>';
   const tama2 = Object.keys(modificaciones).length > 0;
   if (Object.keys(eliminaciones).length > 0 || Object.keys(modificaciones).length > 0) {
     query += 'delete {';

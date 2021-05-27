@@ -71,7 +71,43 @@ function tareasContexto(iriContexto) {
                             resultado.muestra = true;
                         }
                         if (resultado.muestra) {
-                            resultado.title = mustache.render('Tarea #{{{numero}}}{{#title}} - {{{title}}}{{/title}}', { numero: numero, title: resultado.title });
+                            let textoAT;
+                            switch (resultado.aT) {
+                                case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotos':
+                                    textoAT = 'Realiza varias fotografías';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotosAndText':
+                                    textoAT = 'Realiza varias fotografías y responde a una pregunta'
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/noAnswer':
+                                    textoAT = 'Información';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/photo':
+                                    textoAT = 'Realiza una fotografía';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/photoAndText':
+                                    textoAT = 'Realiza una fotografía y responde una pregunta';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/shortText':
+                                    textoAT = 'Responde brevemente a una pregunta';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/text':
+                                    textoAT = 'Responde a una pregunta';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/video':
+                                    textoAT = 'Graba un vídeo';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/mcq':
+                                    textoAT = 'Selecciona la respuesta correcta';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/trueFalse':
+                                    textoAT = '¿Verdadero o falso?';
+                                    break;
+                                default:
+                                    textoAT = 'Tipo de pregunta desconocido';
+                                    break;
+                            }
+                            resultado.title = mustache.render('{{{textoAT}}}{{#title}} - {{{title}}}{{/title}}', { textoAT: textoAT, title: resultado.title });
                             ++numero;
                             resultado.id = 'b' + ids;
                             resultado.idh = 'h' + ids;
@@ -81,7 +117,7 @@ function tareasContexto(iriContexto) {
                         resultados.splice(i, 1, resultado);
                     }
                     const salida = mustache.render(
-                        '{{#resultados}}{{#muestra}}<div id="{{{idh}}}" class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{{id}}}" aria-expanded="false" aria-controls="{{{id}}}"><img class="px-3" src="{{{icon}}}" style="witdth:40;height:40">{{{title}}}</button></h2><div id="{{{id}}}" class="accordion-collapse collapse" aria-labelledby="{{{idh}}}" data-bs-parent="#acordeon"><div class="accordion-body"><div class="d-md-flex flex-md-row py-1 row g-3"><div class="row pb-2"><p>{{{aTR}}}</p></div><div class="row py-1 bg-light g-2"><div class="row justify-content"><h6>Gestión de la tarea</h6></div><div class="row g-2 align-items-center justify-content-around my-1"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-danger">Eliminar tarea</button></div><div class="col my-1 d-flex justify-content-center"><button class="btn btn-warning">Modificar tarea</button></div></div></div><div class="row g-1 py-2"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-success">Realizar tarea</button></div></div></div></div></div>{{/muestra}}{{/resultados}}',
+                        '{{#resultados}}{{#muestra}}<div id="{{{idh}}}" class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{{id}}}" aria-expanded="false" aria-controls="{{{id}}}"><img class="px-3" src="{{{icon}}}" style="witdth:40;height:40">{{{title}}}</button></h2><div id="{{{id}}}" class="accordion-collapse collapse" aria-labelledby="{{{idh}}}" data-bs-parent="#acordeon"><div class="accordion-body"><div class="d-md-flex flex-md-row py-1 row g-3"><div class="row pb-2"><p>{{{aTR}}}</p></div><div class="row py-1 bg-light g-2"><div class="row justify-content"><h6>Gestión de la tarea</h6></div><div class="row g-1 align-items-center justify-content-around my-1"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-warning">Modificar tarea</button></div><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-danger">Eliminar tarea</button></div></div></div><div class="row g-1 py-2"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-success">Realizar tarea</button></div></div></div></div></div></div>{{/muestra}}{{/resultados}}',
                         { resultados: resultados }
                     );
                     espacioTareas.innerHTML = mustache.render(
@@ -99,7 +135,93 @@ function nuevaTarea(idPoi) {
     document.getElementById("formNT").reset();
     const camposTarea = [
         document.getElementById("tituloNT"),
-        document.getElementById("textoAsociadoNT")
+        document.getElementById("textoAsociadoNT"),
+        document.getElementsByName("rbEspacio"),
+        document.getElementById("selectTipoRespuesta")
     ];
+    const selector = document.getElementById("selectTipoRespuesta");
+    //selector.setAttribute('disabled', true);
+    ocultarOpcionesEspecificasEspacio(true, true);
+    selector.onchange = () => {
+        switch (selector.value) {
+            case 'trueFalse':
+                ocultarOpcionesEspecificasEspacio(false, true);
+
+                break;
+            case 'mcq':
+                ocultarOpcionesEspecificasEspacio(true, false);
+
+                break;
+            default:
+                ocultarOpcionesEspecificasEspacio(true, true);
+                break;
+        }
+    };
+
+
+    /*document.getElementsByName("rbEspacio").forEach(rb => {
+        rb.onclick = () => {
+            let continua = true;
+            switch (rb.value) {
+                case 'physical':
+                    selector.innerHTML = '<option selected>Selecciona un tipo</option><option value="text">Texto</option><option value="shortText">Texto corto</option><option value="photo">Fotografía</option><option value="photoAndText">Fotografía y texto</option><option value="multiplePhotos">Múltiple fotografías</option><option value="multiplePhotosAndText">Múltiples fotos y texto</option><option value="video">Vídeo</option>';
+                    selector.removeAttribute('disabled');
+                    break;
+                case 'virtualMap':
+                    selector.innerHTML = '<option selected>Selecciona un tipo</option><option value="text">Texto</option><option value="trueFalse">Verdadero o falso</option><option value="mcq">Pregunta opción múltiple</option>';
+                    selector.removeAttribute('disabled');
+                    break;
+                default:
+                    continua = false;
+                    break;
+            }
+            if (continua) {
+                ocultarOpcionesEspecificasEspacio(true, true);
+                selector.onchange = () => {
+                    switch (selector.value) {
+                        case 'trueFalse':
+                            ocultarOpcionesEspecificasEspacio(false, true);
+
+                            break;
+                        case 'mcq':
+                            ocultarOpcionesEspecificasEspacio(true, false);
+
+                            break;
+                        default:
+                            ocultarOpcionesEspecificasEspacio(true, true);
+                            break;
+                    }
+                };
+            }
+        };
+    });*/
+
+    document.getElementById("enviarNT").onclick = (ev) => {
+        ev.preventDefault();
+        console.log("pulsado enviar");
+        //Tengo que comprobar los valores.
+        //Tengo que crear un JSON aceptado por el servidor
+        //Notificar la correcta/incorrecta creacion
+        //Cargar el modal del pi para que el usuario pueda ver el efecto de su acción
+    }
+
     modal.show();
+}
+
+function ocultarOpcionesEspecificasEspacio(tRTF, tRMCQ) {
+    if (tRTF) {
+        document.getElementById("tRverdaderoFalso").setAttribute('hidden', true);
+    } else {
+        document.getElementById("tRverdaderoFalso").removeAttribute('hidden');
+    }
+    if (tRMCQ) {
+        document.getElementById("tRMCQ").setAttribute('hidden', true);
+    } else {
+        document.getElementById("tRMCQ").removeAttribute('hidden');
+    }
+    if (tRTF && tRMCQ) {
+        document.getElementById("tRcamposExtra").setAttribute('hidden', true);
+    } else {
+        document.getElementById("tRcamposExtra").removeAttribute('hidden');
+    }
 }
