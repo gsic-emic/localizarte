@@ -29,6 +29,11 @@ const Context = require('../resources/contexts/context');
 const Tasks = require('../resources/tasks/tasks');
 const Task = require('../resources/tasks/task');
 
+const Users = require('../resources/users/users');
+const Sesiones = require('../resources/users/sesiones');
+const Sesion = require('../resources/users/sesion');
+
+
 // Paths
 const recursos = {
   contextos: '/contexts/',
@@ -42,6 +47,8 @@ const recursos = {
   respuesta: '/answers/:answer',
   users: '/users/',
   user: '/users/:user',
+  sesiones: '/sesiones/',
+  sesion: '/sesiones/:sesion'
 };
 
 // Se envía el código de estado para una operación no implementada
@@ -71,6 +78,19 @@ Ruter.route(recursos.tarea)
   .get((req, res) => Task.dameTarea(req, res))
   .put((req, res) => Task.actualizaTarea(req, res))
   .delete((req, res) => Task.eliminaTarea(req, res))
+  .all(envia405);
+
+Ruter.route(recursos.users)
+  .get((req, res) => Users.dameUsuarios(req, res))
+  .post((req, res) => Users.newUser(req, res))
+  .all(envia405);
+
+Ruter.route(recursos.sesiones)
+  .post((req, res) => Sesiones.login(req, res))
+  .all(envia405);
+
+Ruter.route(recursos.sesion)
+  .delete((req, res) => Sesion.logout(req, res))
   .all(envia405);
 
 module.exports = Ruter;

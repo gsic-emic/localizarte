@@ -48,7 +48,36 @@ function dameTareas(req, res) {
             ['task', 'aT', 'thumb', 'aTR', 'spa', 'title'],
             Buffer.concat(chunks).toString(),
           );
-          if (resultados && resultados.length > 0) res.json(resultados);
+          if (resultados && resultados.length > 0) {
+            let salida = [];
+            let iris = [];
+            console.log(resultados);
+            resultados.forEach(resultado => {
+              if (iris.includes(resultado.task)) {
+                let posicion = -1;
+                salida.some((s, i) => {
+                  if (s.task === resultado.task) {
+                    posicion = i;
+                    return true;
+                  }
+                  return false;
+                });
+                if (posicion > -1) {
+                  if (typeof salida[posicion].spa === 'string') {
+                    salida[posicion].spa = [{ spa: salida[posicion].spa }, { spa: resultado.spa }];
+                  } else {
+                    salida[posicion].spa.push({ spa: resultado.spa });
+                  }
+                }
+              } else {
+                iris.push(resultado.task);
+                resultado.spa = [{ spa: resultado.spa }];
+                salida.push(resultado);
+              }
+            });
+
+            res.json(salida);
+          }
           else res.sendStatus(204);
         });
       };
@@ -72,17 +101,17 @@ function creaTarea(req, res) {
     // Obligatorios: contexto, titulo, descripción textual de la tarea, tipo respuesta, autor, espacio
     // Dependiendo del espacio y el tipo de tarea se pueden tener valores adicionales como respuesta correcta
     // y opciones falsas
-    if (body && body.hasContext && body.titulo && body.aTR && body.aT && body.autor && body.spa) {
+    if (body && body.hasContext && body.title && body.aTR && body.aT && body.autor && body.espacios) {
       const hasContext = body.hasContext.trim();
-      const titulo = body.titulo.trim();
+      const titulo = body.title;
       const aTR = body.aTR.trim();
       const aT = body.aT.trim();
       const autor = body.autor.trim();
-      const spa = body.spa.trim();
+      const { espacios } = body;
       if (!Auxiliar.isEmpty(hasContext) && !Auxiliar.isEmpty(titulo)
         && !Auxiliar.isEmpty(aTR) && !Auxiliar.isEmpty(aT)
-        && !Auxiliar.isEmpty(autor) && !Auxiliar.isEmpty(spa)) {
-        if (Auxiliar.tipoRespuetasSoportados.includes(aT) && Auxiliar.espaciosSoportados.includes(spa)) {
+        && !Auxiliar.isEmpty(autor) && !Auxiliar.isEmpty(espacios)) {
+        if (Auxiliar.tipoRespuetasSoportados.includes(aT) && Auxiliar.compruebaEspacios(espacios)) {
           // Antes de continuar compruebo si existe el contexto y obtengo su nombre para crear el IRI
           let options = Auxiliar.creaOptions(Queries.tituloContexto(hasContext));
           let consulta = function (resp) {
@@ -96,7 +125,23 @@ function creaTarea(req, res) {
                 resultados = resultados.pop();
                 if (resultados && resultados.titulo) {
                   // Creo el IRI para la nueva tarea
-                  const iri = Auxiliar.nuevoIriTarea(resultados.titulo, titulo);
+                  let tituloIRI;
+                  if (titulo.length > 0) {
+                    titulo.some(t => {
+                      tituloIRI = t.value;
+                      if (t.lang === 'es') {
+                        return true;
+                      }
+                      return false;
+                    });
+                  } else {
+                    if (typeof titulo === 'string') {
+                      tituloIRI = titulo;
+                    } else {
+                      tituloIRI = titulo.value;
+                    }
+                  }
+                  const iri = Auxiliar.nuevoIriTarea(hasContext, tituloIRI);
                   // Compruebo que el iri no exista ya:
                   options = Auxiliar.creaOptions(Queries.tipoIRI(iri));
                   consulta = function (resp1) {
@@ -112,7 +157,11 @@ function creaTarea(req, res) {
                           iri,
                         };
                         for (const t in body) {
-                          datosTarea[t] = body[t].trim();
+                          if (typeof body[t] === 'string') {
+                            datosTarea[t] = body[t].trim();
+                          } else {
+                            datosTarea[t] = body[t];
+                          }
                         }
                         options = Auxiliar.creaOptionsAuth(
                           Queries.nuevaTarea(datosTarea),
@@ -128,7 +177,7 @@ function creaTarea(req, res) {
                             resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(datos).toString());
                             if (resultados.length > 0) {
                               res.location(iri);
-                              res.sendStatus(201);
+                              res.status(201).send(JSON.stringify({ iri: iri }));
                             } else {
                               res.status(503).send('El repositorio no ha podido almacenar la nueva tarea');
                             }
@@ -136,7 +185,7 @@ function creaTarea(req, res) {
                         };
                         Http.request(options, consulta).end();
                       } else {
-                        res.status(403).send('El identificador de la tarea ya se está utilizando en el repositorio');
+                        res.status(409).send('El identificador de la tarea ya se está utilizando en el repositorio');
                       }
                     });
                   };
@@ -166,7 +215,7 @@ function creaTarea(req, res) {
       res.status(400).send('La petición tiene que tener los siguientes campos en el cuerpo de la petición: hasConstext, titulo, aTR, , tR, autor');
     }
   } catch (e) {
-    res.sendStatus(500);
+    res.status(500).send('Se ha capturado una excepción en la creación de la tarea en el servidor');
   }
 }
 

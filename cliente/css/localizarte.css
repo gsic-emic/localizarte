@@ -64,6 +64,15 @@ body {
     z-index: 1000;
 }
 
+.interruptorFlotante {
+    background-color: #0c252d;
+    color: white;
+}
+
+.fondoPrimario {
+    background-color: #0c252d;
+}
+
 @media screen and (max-width: 450px) {
     .imagen {
         max-width: 220px;

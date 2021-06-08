@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,16 +15,17 @@ limitations under the License.
 */
 
 /**
- * Funciones auxiliares.
- * autor: Pablo García Zarza
- * version: 20210525
- */
+* Funciones auxiliares.
+* autor: Pablo García Zarza
+* version: 20210525
+*/
 
 /**
- * Objeto con las palabras claves usadas en el cliente para referirse a
- * propiedades del repositorio de triplas. También tiene el tipo del valor
- * de la propiedad
- */
+* Objeto con las palabras claves usadas en el cliente para referirse a
+* propiedades del repositorio de triplas. También tiene el tipo del valor
+* de la propiedad
+*/
+const URI = require("uri-js");
 
 const Configuracion = require('./config');
 
@@ -32,59 +33,78 @@ const Configuracion = require('./config');
 const equivalencias = {
   tipo: {
     prop: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+    abr: 'a',
     tipo: 'uri',
   },
   lat: {
     prop: 'http://www.w3.org/2003/01/geo/wgs84_pos#lat',
+    abr: 'geo:lat',
     tipo: 'decimal',
   },
   long: {
     prop: 'http://www.w3.org/2003/01/geo/wgs84_pos#long',
+    abr: 'geo:long',
     tipo: 'decimal',
   },
   titulo: {
     prop: 'http://www.w3.org/2000/01/rdf-schema#label',
+    abr: 'rdfs:label',
     tipo: 'string',
   },
   descr: {
     prop: 'http://www.w3.org/2000/01/rdf-schema#comment',
+    abr: 'rdfs:comment',
     tipo: 'string',
   },
   autor: {
     prop: 'http://purl.org/dc/elements/1.1/creator',
+    abr: 'dc:creator',
     tipo: 'string',
   },
   hasContext: {
     prop: 'https://casuallearn.gsic.uva.es/property/hasContext',
+    abr: 'clp:hasContext',
     tipo: 'uri',
   },
   imagen: {
     prop: 'https://casuallearn.gsic.uva.es/property/image',
+    abr: 'clp:image',
     tipo: 'uri',
   },
   thumb: {
     prop: 'http://es.dbpedia.org/ontology/thumbnail',
+    abr: 'dbo:thumbnail',
+    tipo: 'uri',
+  },
+  thumbnail: {
+    prop: 'http://es.dbpedia.org/ontology/thumbnail',
+    abr: 'dbo:thumbnail',
     tipo: 'uri',
   },
   aTR: {
     prop: 'https://casuallearn.gsic.uva.es/property/associatedTextResource',
+    abr: 'clp:associatedTextResource',
     tipo: 'string',
   },
   aT: {
     prop: 'https://casuallearn.gsic.uva.es/property/answerType',
+    abr: 'clp:answerType',
     tipo: 'uri',
   },
   cP: {
     prop: 'https://casuallearn.gsic.uva.es/property/cognitiveProcess',
+    abr: 'clp:cognitiveProcess',
     tipo: 'uri',
   },
   kD: {
     prop: 'https://casuallearn.gsic.uva.es/property/knowledgeDimension',
+    abr: 'clp:knowledgeDimension',
     tipo: 'uri',
   },
   topic: {
     prop: 'http://purl.org/dc/elements/1.1/subject',
-    tipo: 'string',
+    abr: 'dc:subject',
+    tipo: 'uriString',
   },
   iri: {
     prop: 'iri',
@@ -92,6 +112,7 @@ const equivalencias = {
   },
   ctx: {
     prop: 'https://casuallearn.gsic.uva.es/ontology/physicalSpace',
+    abr: 'clo:physicalSpace',
     tipo: 'uri',
   },
   license: {
@@ -100,18 +121,22 @@ const equivalencias = {
   },
   task: {
     prop: 'https://casuallearn.gsic.uva.es/ontology/task',
+    abr: 'clo:task',
     tipo: 'uri',
   },
   fuente: {
     prop: 'http://www.w3.org/2000/01/rdf-schema#seeAlso',
+    abr: 'rdfs:seeAlso',
     tipo: 'uriString',
   },
   title: {
     prop: 'https://casuallearn.gsic.uva.es/property/title',
+    abr: 'clp:title',
     tipo: 'string'
   },
   spa: {
     prop: 'https://casuallearn.gsic.uva.es/property/space',
+    abr: 'clp:space',
     tipo: 'uri',
   },
   tRTexto: {
@@ -169,6 +194,20 @@ const equivalencias = {
   espacioWeb: {
     prop: 'https://casuallearn.gsic.uva.es/space/web',
     tipo: 'uri',
+  },
+  broader: {
+    prop: 'http://www.w3.org/2004/02/skos/core#broader',
+    tipo: 'uri',
+  },
+  categoria: {
+    prop: 'http://www.w3.org/2004/02/skos/core#Concept',
+    abr: 'skos:Concept',
+    tipo: 'uri',
+  },
+  licencia: {
+    prop: 'http://purl.org/dc/elements/1.1/rights',
+    abr: 'dc:rights',
+    tipo: 'uri',
   }
 };
 
@@ -177,13 +216,38 @@ const tipoRespuetasSoportados = ['tRTexto', 'tRMultiFotosTexto', 'tRMultiFoto', 
 const espaciosSoportados = ['espacioFisico', 'espacioMapaVirtual', 'espacioWeb'];
 
 /**
- * Función para crear los datos necesarios para realizar una consulta
- *
- * @param {String} query Consulta que se desea realizar
- * @param {String} user Usuario
- * @param {String} pass Contraseña
- * @returns Objeto con la información para realizar la consulta
- */
+* Función para comprobar si los espacios que ha enviado el cliente están soportados
+*
+* @param {Object} spa Puede ser un objeto o directamente un String
+*/
+function compruebaEspacios(spa) {
+  try {
+    if (typeof spa !== 'string') {
+      let soportados = true;
+      spa.some(espacio => {
+        if (!espaciosSoportados.includes(espacio.spa)) {
+          soportados = false;
+          return true;
+        }
+        return false;
+      });
+      return soportados;
+    } else {
+      return espaciosSoportados.includes(spa);
+    }
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+* Función para crear los datos necesarios para realizar una consulta
+*
+* @param {String} query Consulta que se desea realizar
+* @param {String} user Usuario
+* @param {String} pass Contraseña
+* @returns Objeto con la información para realizar la consulta
+*/
 function creaOptionsAuth(query, user, pass) {
   return {
     host: Configuracion.direccionSPARQL,
@@ -194,11 +258,11 @@ function creaOptionsAuth(query, user, pass) {
 }
 
 /**
- * Función para crear el set de datos con el que se realiza un consulta al punto SPARQL
- *
- * @param {String} query Consulta que se desea realizar
- * @returns Conjunto de datos con los que crear una consulta
- */
+* Función para crear el set de datos con el que se realiza un consulta al punto SPARQL
+*
+* @param {String} query Consulta que se desea realizar
+* @returns Conjunto de datos con los que crear una consulta
+*/
 function creaOptions(query) {
   return {
     host: Configuracion.direccionSPARQL,
@@ -209,16 +273,16 @@ function creaOptions(query) {
 }
 
 /**
- * Función para procesar un JSONObject que provenga de un punto SPARQL cuando
- * se establezcan las variables que se quieran consultar. Comprueba
- * que se han obtenido todas las variables solicitadas por el usuario. Devuelve
- * un JSONArray con los resultados correctamente formateados o null si ha
- * ocurrido algún problema.
- *
- * @param {Object} nombreVariables Array de identificadores de la consulta
- * @param {JSONObject} resultados Respuesta obtenida del servidor
- * @returns Datos que se han obtenido del servidor correctamente formateados
- */
+* Función para procesar un JSONObject que provenga de un punto SPARQL cuando
+* se establezcan las variables que se quieran consultar. Comprueba
+* que se han obtenido todas las variables solicitadas por el usuario. Devuelve
+* un JSONArray con los resultados correctamente formateados o null si ha
+* ocurrido algún problema.
+*
+* @param {Object} nombreVariables Array de identificadores de la consulta
+* @param {JSONObject} resultados Respuesta obtenida del servidor
+* @returns Datos que se han obtenido del servidor correctamente formateados
+*/
 function procesaJSONSparql(nombreVariables, resultados) {
   const r = JSON.parse(resultados);
   const variables = r.head.vars;
@@ -284,62 +348,62 @@ function procesaJSONSparql(nombreVariables, resultados) {
 }
 
 /**
- * Función para comprobar si la latitud es un valor válido
- *
- * @param {Number} lat Latitud
- * @returns Verdadero si el valor es válido
- */
+* Función para comprobar si la latitud es un valor válido
+*
+* @param {Number} lat Latitud
+* @returns Verdadero si el valor es válido
+*/
 function latitudValida(lat) {
   return typeof lat === 'number' && lat > -90 && lat <= 90;
 }
 
 /**
- * Función para comprobar si la longitud es un valor válido
- *
- * @param {Number} long Longitud
- * @returns Verdadero si el valor es válido
- */
+* Función para comprobar si la longitud es un valor válido
+*
+* @param {Number} long Longitud
+* @returns Verdadero si el valor es válido
+*/
 function longitudValida(long) {
   return typeof long === 'number' && long >= -180 && long < 180;
 }
 
 /**
- * Función para transformar un número en un String con el formato
- * utilizado en el repositorio de triplas de CL
- *
- * @param {Float} numero Número que se va a transformar
- * @returns Número transformado
- */
+* Función para transformar un número en un String con el formato
+* utilizado en el repositorio de triplas de CL
+*
+* @param {Float} numero Número que se va a transformar
+* @returns Número transformado
+*/
 function numeroStringIRI(numero) {
   return numero.toString().replace('.', '').replace('-', '');
 }
 
 /**
- * Función para averiguar si una cadena de texto está vacía o es nula.
- *
- * @param {String} string Cadena de texto
- * @returns Verdadero si el string está vacío o es nulo y false en cualquier otro caso
- */
+* Función para averiguar si una cadena de texto está vacía o es nula.
+*
+* @param {String} string Cadena de texto
+* @returns Verdadero si el string está vacío o es nulo y false en cualquier otro caso
+*/
 function isEmpty(string) {
   return string === '';
 }
 
 /**
- * Función para crear el identificador de una tarea con el nombre del contexto y
- * el de la propia tarea
- *
- * @param {Objeto} nombreContexto Nombre del contexto
- * @param {Objeto} nombreTarea Nombre de la tarea
- * @returns Identificador de la tarea.
- */
+* Función para crear el identificador de una tarea con el nombre del contexto y
+* el de la propia tarea
+*
+* @param {Objeto} nombreContexto Nombre del contexto
+* @param {Objeto} nombreTarea Nombre de la tarea
+* @returns Identificador de la tarea.
+*/
 function nuevoIriTarea(nombreContexto, nombreTarea) {
   return `https://casuallearn.gsic.uva.es/${nombreContexto.trim().replace(/\s/g, '_')}/${nombreTarea.trim().replace(/\s/g, '').toLowerCase()}`;
 }
 
 /**
- * https://stackoverflow.com/a/5717133
- * @param {String} str 
- */
+* https://stackoverflow.com/a/5717133
+* @param {String} str
+*/
 function validURL(str) {
   const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
     '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
@@ -348,6 +412,15 @@ function validURL(str) {
     '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
     '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
   return !!pattern.test(str);
+}
+
+function validIRI(str) {
+  return !(URI.parse(str, { iri: true }).scheme === undefined);
+}
+
+
+function existeObjeto(objeto) {
+  return typeof objeto === 'object' && objeto !== null;
 }
 
 module.exports = {
@@ -363,4 +436,7 @@ module.exports = {
   validURL,
   tipoRespuetasSoportados,
   espaciosSoportados,
+  compruebaEspacios,
+  existeObjeto,
+  validIRI,
 };

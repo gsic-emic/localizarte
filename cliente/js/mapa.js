@@ -58,6 +58,9 @@ let markers = null;
 let popoverTriggerList;
 let popoverList;
 
+let tokenSesion;
+let rol;
+
 
 inicio();
 
@@ -106,10 +109,16 @@ function inicio() {
         attribution: '&copy; <a target="_blank" href="https://www.mapbox.com/about/maps/">Mapbox</a> | &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" >OpenStreetMap</a> contributors'
     }).addTo(map);*/
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    /*L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         minZoom: 3,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+    }).addTo(map);*/
+
+    L.tileLayer('', {
+        maxZoom: 20,
+        minZoom: 3,
+        attribution: ''
     }).addTo(map);
 
     //Posición inicial
@@ -131,13 +140,18 @@ function inicio() {
 
     // Pulsación con el botón derecho del ratón o tap largo
     map.on('contextmenu', (pos) => {
-        creacionNuevoContexto(pos);
+        if(tokenSesion !== null && rol !== null && rol > 0){
+            creacionNuevoContexto(pos);
+        }
     });
 
     popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
       return new bootstrap.Popover(popoverTriggerEl)
     });
+
+    tokenSesion = null;
+    rol = null;
 }
 
 
@@ -191,5 +205,14 @@ function seguir() {
             }
             indicador = null;
         }
+    }
+}
+
+function cambiaVistaProfesor() {
+    rol = rol * -1;
+    if(rol > 0){
+        document.getElementById('swVistaProfesor').checked = true;
+    } else {
+        document.getElementById('swVistaProfesor').checked = false;
     }
 }

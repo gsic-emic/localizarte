@@ -2,7 +2,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="./libraries/bootstrap-5.0.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./libraries/bootstrap-5.0.1-dist/css/bootstrap.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="./css/localizarte.css">
@@ -34,10 +34,10 @@
             <div class="collapse navbar-collapse" id="gestionUsuarioContenedor">
                 <ul class="navbar-nav ms-auto mb-1 mb-md-0" id="gestionUsuarioLista">
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:inicioSesionModal();">Registro</a>
+                        <a class="nav-link" href="javascript:registroUsuario();">Registro</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="inicioSesionModal:registroModal();">Identificación</a>
+                        <a class="nav-link" href="javascript:inicioSesionUsuario();">Identificación</a>
                     </li>
                 </ul>
             </div>
@@ -54,7 +54,7 @@
                         id="cerrarModalMarcador"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="d-md-flex flex-md-row py-1 row g-2 bg-light" id="administracionPOI">
+                    <div class="py-1 row g-2 text-white rounded fondoPrimario" id="administracionPOI">
                         <div class="row justify-content">
                             <h6>Administración del POI</h6>
                         </div>
@@ -193,8 +193,8 @@
                                 * Campos obligatorios
                             </small>
                         </div>
-                        <div class="row mx-1 mb-2">
-                            <div class="col-sm-1">
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
                                 <button class="btn btn-primary" type="button" id="enviarNPI">Enviar</button>
                             </div>
                         </div>
@@ -209,7 +209,7 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="tituloNT">Nueva tarea</h5>
+                    <h5 class="modal-title" id="encabezadoNT">Nueva tarea</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -219,15 +219,15 @@
                                 respuesta de la tarea*</label>
                             <select id="selectTipoRespuesta" class="form-select">
                                 <option selected>Selecciona un tipo</option>
-                                <option value="trueFalse">Verdadero o falso</option>
-                                <option value="mcq">Pregunta opción múltiple</option>
-                                <option value="text">Texto</option>
-                                <option value="shortText">Texto corto</option>
-                                <option value="photo">Fotografía</option>
-                                <option value="photoAndText">Fotografía y texto</option>
-                                <option value="multiplePhotos">Múltiple fotografías</option>
-                                <option value="multiplePhotosAndText">Múltiples fotos y texto</option>
-                                <option value="video">Vídeo</option>
+                                <option value="tRVF">Verdadero o falso</option>
+                                <option value="tRMcq">Pregunta opción múltiple</option>
+                                <option value="tRTexto">Texto</option>
+                                <option value="tRTextoCorto">Texto corto</option>
+                                <option value="tRFoto">Fotografía</option>
+                                <option value="tRFotoTexto">Fotografía y texto</option>
+                                <option value="tRMultiFotos">Múltiple fotografías</option>
+                                <option value="tRMultiFotosTexto">Múltiples fotos y texto</option>
+                                <option value="tRVideo">Vídeo</option>
                             </select>
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
@@ -278,7 +278,7 @@
                                 </div>
                                 <div class="row g-2 align-items-center">
                                     <div class="col-md-6">
-                                        <label class="form-label" for="rD1MCQ">Distracción 2*</label>
+                                        <label class="form-label" for="rD2MCQ">Distracción 2*</label>
                                         <input type="text" id="rD2MCQ" class="form-control"
                                             placeholder="Opción falsa 2">
                                     </div>
@@ -292,7 +292,11 @@
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
                             <div class="row g-1">
-                                <label class="form-label" for="cbEspacioDiv">Espacio donde se podrá completar la tarea* <a role="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="popover" data-bs-content="<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de LocalizARTE desde cualquier lugar. <b>Web</b>: la tarea se diseña para ser realizada en un VLE." data-bs-container="#nuevaTareaModal" data-bs-html="true">?</a>
+                                <label class="form-label" for="cbEspacioDiv">Espacio donde se podrá completar la tarea*
+                                    <a role="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="popover"
+                                        data-bs-content="<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de LocalizARTE desde cualquier lugar."
+                                        data-bs-container="#nuevaTareaModal" data-bs-html="true">?</a>
+                                    <!--<label class="form-label" for="cbEspacioDiv">Espacio donde se podrá completar la tarea* <a role="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="popover" data-bs-content="<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de LocalizARTE desde cualquier lugar. <b>Web</b>: la tarea se diseña para ser realizada en un VLE." data-bs-container="#nuevaTareaModal" data-bs-html="true">?</a>-->
                                 </label>
                                 <div class="row mx-1" id="cbEspacioDiv">
                                     <div class="form-check col-md-4">
@@ -305,7 +309,7 @@
                                             value="virtualMap">
                                         <label class="form-check-label" for="rbEspacio2">Mapa virtual</label>
                                     </div>
-                                    <div class="form-check col-md-4">
+                                    <div class="form-check col-md-4" hidden>
                                         <input class="form-check-input" type="checkbox" name="cbEspacio" id="cbEspacio3"
                                             value="web">
                                         <label class="form-check-label" for="rbEspacio3">Web (Moodle)</label>
@@ -318,8 +322,8 @@
                                 * Campos obligatorios
                             </small>
                         </div>
-                        <div class="row mx-1 mb-2">
-                            <div class="col-sm-1">
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
                                 <button class="btn btn-primary" type="button" id="enviarNT">Enviar</button>
                             </div>
                         </div>
@@ -329,12 +333,117 @@
         </div>
     </div>
 
-
-    <div class="botonFlotante" id="seguir" onclick="seguir();">
-        <img src="resources/centrar.svg" id="imagenSeguir">
+    <div class="modal fade" data-bs-backdrop="static" id="inicioSesionModal" tabindex="-1" role="dialog"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Iniciar sesión</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formInicio">
+                        <div class="row g-1 justify-content-around mx-1 mb-4">
+                            <div class="col-md-5">
+                                <label for="inicioMail" class="form-label">Dirección de correo</label>
+                                <input type="text" id="inicioMail" class="form-control" placeholder="ejemplo@email.es">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="inicioPass" class="form-label">Contraseña</label>
+                                <input type="password" id="inicioPass" class="form-control" placeholder="Tu contraseña">
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
+                                <button type="button" class="btn btn-primary" id="inicioEnviar">Iniciar sesión</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="./libraries/bootstrap-5.0.0-dist/js/bootstrap.bundle.min.js"></script>
+    <div class="modal fade" data-bs-backdrop="static" id="nuevoUsuarioModal" tabindex="-1" role="dialog"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Nuevo usuario</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRegistro">
+                        <div class="row g-1 justify-content-around mx-1 mb-4">
+                            <div class="col-md-5">
+                                <label for="registroMail" class="form-label">Dirección de correo*</label>
+                                <input type="text" id="registroMail" class="form-control"
+                                    placeholder="ejemplo@email.es">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="registroPass" class="form-label">Contraseña*</label>
+                                <input type="password" id="registroPass" class="form-control"
+                                    placeholder="Nueva contraseña">
+                            </div>
+                        </div>
+                        <div class="row g-1 justify-content-around mx-1 mb-4">
+                            <div class="col-md-5">
+                                <label for="registroNombre" class="form-label">Nombre</label>
+                                <input type="text" id="registroNombre" class="form-control" placeholder="Claude">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="registroApellido" class="form-label">Apellido</label>
+                                <input type="text" id="registroApellido" class="form-control" placeholder="Shannon">
+                            </div>
+                        </div>
+                        <div class="row mx-1 mb-4">
+                            <small class="text-muted">
+                                * Campos obligatorios
+                            </small>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
+                                <button type="button" class="btn btn-primary" id="registroEnviar">Registrar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmarCerrar" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Cierre de sesión</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 class="text-center">¿Quieres cerrar la sesión?</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" id="aceptaCerrarSesion">Cerrar sesión</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="botonFlotante">
+        <div class="interruptorFlotante rounded-pill px-2 py-1 mb-2" id="interruptorProfesor"
+            onclick="cambiaVistaProfesor()" hidden>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="swVistaProfesor">
+                <label class="form-check-label" for="swVistaProfesor">Vista profesor</label>
+            </div>
+        </div>
+        <div class="text-end" id="seguir" onclick="seguir();">
+            <img src="resources/centrar.svg" id="imagenSeguir">
+        </div>
+    </div>
+
+    <script src="./libraries/bootstrap-5.0.1-dist/js/bootstrap.bundle.min.js"></script>
     <script src="./libraries/leaflet-1.7.1/leaflet.js"></script>
     <script src="./libraries/Leaflet.markercluster-1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="./libraries/mustache.js-4.2.0/mustache.js"></script>

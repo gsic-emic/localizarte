@@ -189,13 +189,13 @@ function pintaPOIs(zona) {
                     iconCreateFunction: (cluster) => {
                         const numeroHijos = cluster.getChildCount();
                         let tipo;
-                        if (numeroHijos <= 10) {
+                        if (numeroHijos <= 7) {
                             tipo = '10';
                         } else {
-                            if (numeroHijos <= 25) {
+                            if (numeroHijos <= 15) {
                                 tipo = '25';
                             } else {
-                                if (numeroHijos <= 50) {
+                                if (numeroHijos <= 40) {
                                     tipo = '50';
                                 } else {
                                     tipo = '100';
@@ -236,6 +236,11 @@ function markerPoP(poi) {
         const puntoInteresModal = document.getElementById('puntoInteres');
         const modal = new bootstrap.Modal(puntoInteresModal);
         tareasContexto(poi.ctx);
+        if(rol !== null && rol > 0){
+            document.getElementById('administracionPOI').removeAttribute('hidden');
+        } else {
+            document.getElementById('administracionPOI').setAttribute('hidden', true);
+        }
         const titulo = document.getElementById('tituloPuntoInteres');
         titulo.innerText = poi.titulo;
         const imagen = document.getElementById('imagenPuntoInteres');
@@ -464,7 +469,7 @@ function modificarPI(poi) {
 
                     camposOpcionales.forEach(campo => {
                         if (campo.id === 'imagenNPI') {
-                            if (campo.value && campo.value.trim() !== '' && !validURL(campo.value.trim())) {
+                            if (campo.value && campo.value.trim() !== '' && !validIRI(campo.value.trim())) {
                                 todoOk = false;
                                 campo.placeholder = mensajes[campo.id];
                                 campo.value = '';
@@ -668,26 +673,7 @@ function peticionCrafts(lat, lng, contenidoPopup) {
     let resultadosEs = null;
     let puntoOrigen = { lat: lat, lng: lng };
 
-    const incr = (map.getMaxZoom() - map.getZoom() + 1) / 200;
-
-    /*const direccionEn = mustache.render(
-        'https://crafts.gsic.uva.es/apis/localizarte/query?id=places-en&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&limit={{{lim}}}',
-        {
-            lat: lat,
-            lng: lng,
-            incr: incr,
-            lim: 20
-        }
-    );
-    const direccionEs = mustache.render(
-        'https://crafts.gsic.uva.es/apis/localizarte/query?id=places-es&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&limit={{{lim}}}',
-        {
-            lat: lat,
-            lng: lng,
-            incr: incr,
-            lim: 20
-        }
-    );*/
+    const incr = (map.getMaxZoom() - map.getZoom() + 1) / 400;
 
     const direccionEn = mustache.render(
         'https://crafts.gsic.uva.es/apis/localizarteV2/query?id=places-en&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&isNotType=http://dbpedia.org/ontology/PopulatedPlace&limit={{{lim}}}',
@@ -794,7 +780,7 @@ function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, comp
 
                 let puntosEn = [];
                 let puntosEs = [];
-                
+
                 paraMostrar.forEach(ele => {
                     switch (ele.version) {
                         case 'es':
@@ -833,7 +819,7 @@ function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, comp
                 }
 
                 if (completadoEn && completadoEs) {
-                    pintaSugerenciaPois(null, true, null, true, puntoOrigen, contenidoPopup);
+                    pintaSugerenciaPois(null, true, null, true, null, contenidoPopup);
                 } else {
                     const requestOptions = {
                         method: 'GET',
@@ -841,57 +827,54 @@ function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, comp
                         redirect: 'follow'
                     };
 
-                    fetch(infoEn, requestOptions)
-                        .then(response => {
-                            switch (response.status) {
-                                case 200:
-                                    return response.json();
-                                default:
-                                    notificaLateralError('Error en la obtención de los POIs de DBpedia.org (info final)');
-                                    return null;
-                            }
-                        })
-                        .then(result => {
-                            console.log(result);/*
-                            if (result && result.results.bindings.length > 0) {
-                                resultadosEn = parseadorResultadosSparql(result.head.vars, result.results.bindings);
-                            } else {
-                                resultadosEn = null;
-                            }
-                            completadoEn = true;
-                            pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);*/
-                        })
-                        .catch(error => {
-                            resultadosEn = null; completadoEn = true;
-                            pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
-                            console.log('error', error);
-                        });
-
-                    fetch(infoEs, requestOptions)
-                        .then(response => {
-                            switch (response.status) {
-                                case 200:
-                                    return response.json();
-                                default:
-                                    notificaLateralError('Error en la obtención de los POIs de es.DBpedia.org (info final)');
-                                    return null;
-                            }
-                        })
-                        .then(result => {
-                            console.log(result);/*
-                            if (result && result.results.bindings.length > 0) {
-                                resultadosEs = parseadorResultadosSparql(result.head.vars, result.results.bindings);
-                            } else {
-                                resultadosEs = null;
-                            }
-                            completadoEs = true;
-                            pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);*/
-                        })
-                        .catch(error => {
-                            resultadosEn = null; completadoEn = true;
-                            pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
-                            console.log('error', error);
-                        });
+                    if (infoEn) {
+                        fetch(infoEn, requestOptions)
+                            .then(response => {
+                                switch (response.status) {
+                                    case 200:
+                                        return response.json();
+                                    default:
+                                        notificaLateralError('Error en la obtención de los POIs de DBpedia.org (info final)');
+                                        return null;
+                                }
+                            })
+                            .then(results => {
+                                resultadosEn = results;
+                                completadoEn = true;
+                                pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                            })
+                            .catch(error => {
+                                resultadosEn = null; completadoEn = true;
+                                pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                                console.log('error', error);
+                            });
+                    } else {
+                        pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                    }
+                    if (infoEs) {
+                        fetch(infoEs, requestOptions)
+                            .then(response => {
+                                switch (response.status) {
+                                    case 200:
+                                        return response.json();
+                                    default:
+                                        notificaLateralError('Error en la obtención de los POIs de es.DBpedia.org (info final)');
+                                        return null;
+                                }
+                            })
+                            .then(results => {
+                                resultadosEs = results;
+                                completadoEs = true;
+                                pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                            })
+                            .catch(error => {
+                                resultadosEs = null; completadoEs = true;
+                                pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                                console.log('error', error);
+                            });
+                    } else {
+                        pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                    }
                 }
             } else {
                 popup.setContent(mustache.render(
@@ -902,7 +885,7 @@ function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, comp
     }
 }
 
-function pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
+function pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, posicionPuntos, contenidoPopup) {
     if ((completadoEn && !completadoEs) || (!completadoEn && resultadosEs)) {
         if (popup && popup.isOpen()) {
             popup.setContent(mustache.render(
@@ -911,27 +894,102 @@ function pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completa
         }
     } else {
         if (completadoEn && completadoEs) {
-            const resultados = agrupaResultados(resultadosEn, resultadosEs);
-            if (resultados) {
+            if (posicionPuntos) {
+                const resultados = agrupaResultadosFinales(resultadosEn, resultadosEs, posicionPuntos);
+                if (resultados) {
+                    if (popup && popup.isOpen()) {
+                        let nuevoContenido = '<div class="mt-3"><h6 style="text-align: left";>Agregar nuevo POI basado en:</h6><div class="list-group justify-content-center" style="max-width:280px;">';
+                        let ta = window.performance.now(), etiqueta, lang;
+                        resultados.forEach(lugar => {
+                            infoNuevoContexto[ta] = lugar;
+                            if (lugar.label.length > 0) {
+                                lugar.label.some(l => {
+                                    //const eti = l.label;
+                                    lang = Object.keys(l)[0];
+                                    etiqueta = Object.values(l)[0];
+                                    if (lang === 'es')
+                                        return true;
+                                    return false;
+                                });
+                            } else {
+                                etiqueta = Object.values(lugar.label)[0];
+                            }
+                            for (let index = 0; index < lugar.label.length; index++) {
+                                const eti = lugar.label[index];
+                                lang = Object.keys(eti)[0];
+                                etiqueta = Object.values(eti)[0];
+                                if (lang === 'es') {
+                                    break;
+                                }
+                            }
+                            nuevoContenido = mustache.render(
+                                '{{{nuevoContenido}}}<a class="list-group-item list-group-item-action text-truncate" aria-current="true" href="javascript:modalNPI({{{ta}}});">{{{etiqueta}}}</a>',
+                                {
+                                    nuevoContenido: nuevoContenido,
+                                    ta: ta,
+                                    etiqueta: etiqueta
+                                });
+                            ++ta;
+                        });
+                        popup.setContent(mustache.render(
+                            '{{{contenidoPopup}}}{{{nuevoContenido}}}</div></div>',
+                            { contenidoPopup: contenidoPopup, nuevoContenido: nuevoContenido }));
+                    }
+                }
             }
         }
     }
-    /*
-                PARA MOSTRAR EN EL POPUP
-                if (popup && popup.isOpen()) {
-                    let nuevoContenido = '<div class="mt-3"><h6 style="text-align: left";>Agregar nuevo POI basado en:</h6><div class="list-group justify-content-center" style="max-width:280px;">';
-                    let ta = window.performance.now();
-                    paraMostrar.forEach(lugar => {
-                        infoNuevoContexto[ta] = lugar;
-                        nuevoContenido = mustache.render(
-                            '{{{nuevoContenido}}}<a class="list-group-item list-group-item-action text-truncate" aria-current="true" href="javascript:modalNPI({{{ta}}});">{{{etiqueta}}}</a>',
-                            { nuevoContenido: nuevoContenido, ta: ta, etiqueta: lugar['lab'] });
-                        ++ta;
-                    });
-                    popup.setContent(mustache.render(
-                        '{{{contenidoPopup}}}{{{nuevoContenido}}}</div></div>',
-                        { contenidoPopup: contenidoPopup, nuevoContenido: nuevoContenido }));
-                }*/
+}
+
+function agrupaResultadosFinales(resultadosEn, resultadosEs, posicionPuntos) {
+    let salida = null, todos = [], distancias = [];
+    if (resultadosEn) {
+        agregaPosicion(resultadosEn, posicionPuntos, 'en').forEach(ren => {
+            todos.push(ren);
+            distancias.push(ren.distancia);
+        });
+    }
+    if (resultadosEs) {
+        agregaPosicion(resultadosEs, posicionPuntos, 'es').forEach(res => {
+            todos.push(res);
+            distancias.push(res.distancia);
+        });
+    }
+
+    if (todos.length > 0) {
+        salida = [];
+        distancias = distancias.sort((a, b) => a - b);
+        distancias.forEach(d => {
+            todos.some(t => {
+                if (t.distancia === d) {
+                    salida.push(t);
+                    return true;
+                }
+                return false;
+            });
+        });
+    }
+
+    return salida;
+}
+
+function agregaPosicion(resultados, todosLosDatos, version) {
+    let salida = [];
+    let resultIri;
+    resultados.forEach(result => {
+        resultIri = result.iri;
+        todosLosDatos.some(r => {
+            if (r.version === version && resultIri === r.place) {
+                result.lat = r.lat;
+                result.lng = r.lng;
+                result.distancia = r.distancia;
+                result.version = r.version;
+                salida.push(result);
+            }
+            return false;
+        });
+    });
+    return salida;
 }
 
 
@@ -1038,32 +1096,110 @@ function modalNPI(id) {
         ];
         const camposOpcionales = [
             document.getElementById('fuentesNPI'),
-            document.getElementById('imagenNPI'),
-            document.getElementById('licenciaNPI')
+            document.getElementById('licenciaNPI'),
+            document.getElementById('imagenNPI')
+        ];
+
+        const imagenLicencia = [
+            { imagen: document.getElementById('imagenNPI') },
+            { licencia: document.getElementById('licenciaNPI') }
         ];
 
         const nombresServ = {
-            tituloNPI: 'lab',
-            descrNPI: 'com',
+            tituloNPI: 'label',
+            descrNPI: 'comment',
             latitudNPI: 'lat',
             longitudNPI: 'lng',
-            fuentesNPI: 'place',
-            imagenNPI: 'imagen',
+            fuentesNPI: 'iri',
+            imagenNPI: 'image',
             licenciaNPI: 'license'
         };
 
         const campos = camposObligatorios.concat(camposOpcionales);
-        let campoId;
+        let campoId, dato;
         campos.forEach(campo => {
             campoId = campo.id;
             switch (campoId) {
+                case 'licenciaNPI'://Ahora puede venir dentro de la imagen
+                    if (nombresServ[campoId] in datos) {
+                        campo.setAttribute('value', datos[nombresServ[campoId]]);
+                    } else {
+                        if (datos.image && datos.image.length > 0) {
+                            break;
+                        } else {
+                            campo.setAttribute('value', '');
+                        }
+                    }
+                    break;
                 case 'descrNPI':
                     if (nombresServ[campoId] in datos) {
-                        campo.value = datos[nombresServ[campoId]];
+                        dato = datos[nombresServ[campoId]];
+                        if (dato.length && dato.length > 0) {//Más de un idioma
+                            dato.some(d => {
+                                campo.value = Object.values(d)[0];
+                                if (Object.keys(d)[0] === 'es') {
+                                    return true;
+                                }
+                                return false;
+                            });
+                        } else {
+                            if (typeof dato !== 'string') {
+                                campo.value = Object.values(dato)[0];
+                            } else {
+                                campo.value = dato;
+                            }
+                        }
                     } else {
                         campo.value = '';
                     }
                     break;
+                case 'tituloNPI':
+                    if (nombresServ[campoId] in datos) {
+                        dato = datos[nombresServ[campoId]];
+                        if (dato.length && dato.length > 0) {//Más de un idioma
+                            dato.some(d => {
+                                campo.setAttribute('value', Object.values(d)[0]);
+                                if (Object.keys(d)[0] === 'es') {
+                                    return true;
+                                }
+                                return false;
+                            });
+                        } else {
+                            if (typeof dato !== 'string') {
+                                campo.setAttribute('value', Object.values(dato)[0]);
+                            } else {
+                                campo.setAttribute('value', dato);
+                            }
+                        }
+                    } else {
+                        campo.setAttribute('value', '');
+                    }
+                    break;
+                case 'imagenNPI':
+                    if (nombresServ[campoId] in datos) {
+                        dato = datos.image;
+                        if (dato.length && dato.length > 0) {
+                            document.getElementById('imagenNPI').setAttribute('value', dato.iri);
+                            document.getElementById('licenciaNPI').setAttribute('value', dato.rights);
+
+                        } else {
+                            if (typeof dato !== 'string') {
+                                document.getElementById('imagenNPI').setAttribute('value', dato.iri);
+                                if (dato.iri.includes('commons.wikimedia.org/wiki/Special:FilePath')) {
+                                    document.getElementById('licenciaNPI').setAttribute('value', dato.iri.replace('commons.wikimedia.org/wiki/Special:FilePath/', 'commons.wikimedia.org/wiki/File:').replaceAll('?width=300', ''));
+                                }
+                            } else {
+                                document.getElementById('imagenNPI').setAttribute('value', dato);
+                                if (dato.iri.includes('commons.wikimedia.org/wiki/Special:FilePath')) {
+                                    document.getElementById('licenciaNPI').setAttribute('value', dato.iri.replace('commons.wikimedia.org/wiki/Special:FilePath/', 'commons.wikimedia.org/wiki/File:').replaceAll('?width=300', ''));
+                                }
+                            }
+                        }
+                    } else {
+                        document.getElementById('imagenNPI').setAttribute('value', '');
+                        document.getElementById('licenciaNPI').setAttribute('value', '');
+                    }
+                    break
                 case 'latitudNPI':
                 case 'longitudNPI':
                     campo.setAttribute('readonly', true);
@@ -1104,7 +1240,7 @@ function modalNPI(id) {
             });
             camposOpcionales.forEach(campo => {
                 if (campo.id === 'imagenNPI') {
-                    if (campo.value && campo.value.trim() !== '' && !validURL(campo.value.trim())) {
+                    if (campo.value && campo.value.trim() !== '' && !validIRI(campo.value.trim())) {
                         todoOk = false;
                         campo.placeholder = mensajes[campo.id];
                         campo.value = '';
@@ -1164,14 +1300,32 @@ function modalNPI(id) {
                                     ele = elem.trim();
                                     if (ele && ele !== '') {
                                         fu.push({
-                                            type: (validURL(ele) ? 'url' : 'string'),
-                                            value: ele
+                                            //type: (validURL(ele) ? 'url' : 'string'),
+                                            fuente: ele
                                         });
                                     }
                                 });
                                 if (fu.length > 0) {
                                     envio[idsParaServ[campoId]] = fu;
                                 }
+                            }
+                            break;
+                        case 'tituloNPI':
+                        case 'descrNPI':
+                            envio[idsParaServ[campoId]] = [{
+                                lang: 'es',
+                                value: campo.value.trim()
+                            }];
+                            dato = datos[nombresServ[campoId]];
+                            if (dato && dato.length && dato.length > 0) {//Más de un idioma
+                                dato.some(d => {
+                                    if (Object.keys(d)[0] !== 'es') {
+                                        envio[idsParaServ[campoId]].push({
+                                            lang: Object.keys(d)[0],
+                                            value: Object.values(d)[0]
+                                        });
+                                    }
+                                });
                             }
                             break;
                         default:

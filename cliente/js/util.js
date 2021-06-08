@@ -84,8 +84,16 @@ function masCercanos(posicion, lugares, maximo = 5) {
     distancias.some(distancia => {
         lugaresPrima.some(lugar => {
             if (distancia === lugar['distancia']) {
-                salida.push(lugar);
-                return true;
+                let guarda = true;
+                salida.forEach(l => {
+                    if (l.place === lugar.place || (l.lat === lugar.lat && l.lng === lugar.lng)) {
+                        guarda = false;
+                    }
+                });
+                if (guarda) {
+                    salida.push(lugar);
+                    return true;
+                } 
             }
         });
         if (salida.length >= maximo) {
@@ -121,12 +129,16 @@ function validURL(str) {
     return !!pattern.test(str);
 }
 
+function validIRI(str) {
+    return ((str.includes('www.') || (str.includes('https://') || (str.includes('http://')))) && !str.includes(' '));
+}
+
 /**
  * Función para mostrar al usuario una notificación a través de un Toast.
  * 
  * @param {String} mensaje Mensaje
  */
-function notificaLateral(mensaje){
+function notificaLateral(mensaje) {
     let toast = new bootstrap.Toast(document.getElementById('notificacionLateral'));
     document.getElementById('mensajeNotificacionLateral').innerHTML = mensaje;
     toast.show();
@@ -137,7 +149,7 @@ function notificaLateral(mensaje){
  * 
  * @param {String} mensaje Mensaje de error
  */
-function notificaLateralError(mensaje){
+function notificaLateralError(mensaje) {
     let toast = new bootstrap.Toast(document.getElementById('notificacionLateralError'));
     document.getElementById('mensajeNotificacionLateralError').innerHTML = mensaje;
     toast.show();
@@ -150,5 +162,5 @@ function notificaLateralError(mensaje){
  * @returns Verdadero si está abierto o falso si no lo está
  */
 function modalOpen(modal) {
-    return modal.className.includes('show'); 
+    return modal.className.includes('show');
 }

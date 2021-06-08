@@ -87,16 +87,24 @@ function nuevoContexto(req, res) {
       // Adapto los datos obligatorios a sus tipos y compruebo que sean válidos
       const { lat } = nCtx;
       const { long } = nCtx;
-      const titulo = nCtx.titulo.trim();
-      const descr = nCtx.descr.trim();
+      const titulo = nCtx.titulo;
+      const descr = nCtx.descr;
       const autor = nCtx.autor.trim();
       if (Auxiliar.latitudValida(lat) && Auxiliar.longitudValida(long)
         && titulo && descr && autor) {
         // Creo la posible IRI y compruebo que no exista en el repositorio
+        let tituloIRI;
+        titulo.some(t => {
+          tituloIRI = t.value.replace(/ /g, '_');
+          if (t.lang === 'es') {
+            return true;
+          }
+          return false;
+        });
         const iri = Mustache.render(
           'https://casuallearn.gsic.uva.es/context/{{{titulo}}}/{{{long}}}/{{{lat}}}',
           {
-            titulo: titulo.replace(/ /g, '_'),
+            titulo: tituloIRI,
             long: long,
             lat: lat
           });

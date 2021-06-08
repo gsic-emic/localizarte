@@ -67,7 +67,7 @@ function formatoTiposDatos(tipo, valor) {
     case 'decimal':
       return `${valor} `;
     case 'uriString':
-      return (Auxiliar.validURL(valor)) ? `<${valor}> ` : `'''${valor}''' `;
+      return (Auxiliar.validIRI(valor)) ? `<${valor}> ` : `'''${valor}''' `;
     default:
       return `<${valor}> `;
   }
@@ -83,16 +83,52 @@ function formatoTiposDatos(tipo, valor) {
  */
 function nuevoObjeto(datosObjeto, tipoObjeto) {
   let query = Mustache.render(
-    'with <http://localizarte.gsic.uva.es> insert { <{{{iri}}}> a <{{{tipoObjeto}}}>; ',
+    'with <http://localizarte.gsic.uva.es> insert {<{{{iri}}}> a <{{{tipoObjeto}}}>; ',
     {
       iri: datosObjeto.iri,
       tipoObjeto: tipoObjeto
     });
   let primero = true;
+  let sigue = true;
   for (const t in datosObjeto) {
     try {
+      if (t === 'iri') {
+        continue;
+      }
       switch (t) {
-        case 'iri':
+        case 'titulo':
+        case 'descr':
+        case 'title':
+          let vector = datosObjeto[t];
+          if (typeof vector === 'string') {
+            vector = {
+              value: vector,
+              lang: 'es'
+            };
+          }
+          if (!Array.isArray(vector)) {
+            vector = [vector];
+          }
+          vector.forEach(v => {
+            if (!Auxiliar.isEmpty(v.value.trim()) && !Auxiliar.isEmpty(v.lang.trim())) {
+              if (primero) {
+                primero = false;
+              } else {
+                query = Mustache.render(
+                  '{{{query}}}; ',
+                  { query: query }
+                );
+              }
+              query = Mustache.render(
+                '{{{query}}}{{{predicado}}} {{{objeto}}}@{{{idioma}}}',
+                {
+                  query: query,
+                  predicado: (Auxiliar.equivalencias[t]).abr,
+                  objeto: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, v.value.trim()).trim(),
+                  idioma: v.lang
+                })
+            }
+          });
           break;
         case 'fuentes':
           const { fuentes } = datosObjeto;
@@ -106,17 +142,16 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
               );
             }
             query = Mustache.render(
-              '{{{query}}}<{{{propiedad}}}> {{{valor}}} ',
+              '{{{query}}}{{{predicado}}} {{{valor}}} ',
               {
                 query: query,
-                propiedad: (Auxiliar.equivalencias.fuente).prop,
-                valor: formatoTiposDatos('uriString', fuente.value),
+                predicado: (Auxiliar.equivalencias.fuente).abr,
+                valor: formatoTiposDatos('uriString', fuente.fuente),
               }
             );
           });
           break;
         case 'aT':
-        case 'espacio':
           if (primero) {
             primero = false;
           } else {
@@ -126,13 +161,78 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
             );
           }
           query = Mustache.render(
-            '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
+            '{{{query}}}{{{predicado}}} {{{valor}}}',
             {
               query: query,
-              propiedad: Auxiliar.equivalencias[t].prop,
+              predicado: Auxiliar.equivalencias[t].abr,
               valor: formatoTiposDatos('uriString', Auxiliar.equivalencias[datosObjeto[t]].prop)
             }
           )
+          break;
+        case 'espacios':
+          let { espacios } = datosObjeto;
+          if (typeof espacios === 'string') {
+            espacios = [{ spa: espacios }];
+          }
+          espacios.forEach(espacio => {
+            if (primero) {
+              primero = false;
+            } else {
+              query = Mustache.render(
+                '{{{query}}}; ',
+                { query: query }
+              );
+            }
+            query = Mustache.render(
+              '{{{query}}}{{{predicado}}} {{{valor}}}',
+              {
+                query: query,
+                predicado: Auxiliar.equivalencias.spa.abr,
+                valor: formatoTiposDatos('uri', Auxiliar.equivalencias[espacio.spa].prop)
+              }
+            );
+          });
+          break;
+        case 'thumbnail':
+          if (primero) {
+            primero = false;
+          } else {
+            query = Mustache.render(
+              '{{{query}}}; ',
+              { query: query }
+            );
+          }
+          const { thumbnail } = datosObjeto;
+          if (!Auxiliar.isEmpty(thumbnail.iri)) {
+            query = Mustache.render(
+              '{{{query}}}clp:thumbnail {{{iriThumb}}}',
+              {
+                query: query,
+                iriThumb: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, thumbnail.iri)
+              }
+            );
+          }
+          break;
+        case 'categorias':
+          const { categorias } = datosObjeto;
+          categorias.forEach(c => {
+            if (primero) {
+              primero = false;
+            } else {
+              query = Mustache.render(
+                '{{{query}}}; ',
+                { query: query }
+              );
+            }
+            query = Mustache.render(
+              '{{{query}}}{{{propCategoria}}} {{{valorCategoria}}}',
+              {
+                query: query,
+                propCategoria: Auxiliar.equivalencias['topic'].abr,
+                valorCategoria: formatoTiposDatos((Auxiliar.equivalencias['topic']).tipo, c.categoria)
+              }
+            );
+          });
           break;
         default:
           if (primero) {
@@ -155,8 +255,93 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
       }
     } catch (e) {
       console.log(e);
+      sigue = false;
     }
   }
+  //Agregamos inserciones extras:
+  if (sigue && (Auxiliar.existeObjeto(datosObjeto.thumbnail) || Auxiliar.existeObjeto(datosObjeto.categorias))) {
+    if (Auxiliar.existeObjeto(datosObjeto.thumbnail)) {
+      const thumbnail = datosObjeto.thumbnail;
+      query = Mustache.render(
+        '{{{query}}}{{#licencia}}.<{{{iriThumb}}}> a dbo:Image ; <{{{propLicencia}}}> {{{valorLicencia}}}{{/licencia}}',
+        {
+          query: query,
+          licencia: !Auxiliar.isEmpty(thumbnail.iri.trim()) && !Auxiliar.isEmpty(thumbnail.licencia.trim()),
+          iriThumb: thumbnail.iri.trim(),
+          propLicencia: Auxiliar.equivalencias.licencia.prop,
+          valorLicencia: formatoTiposDatos((Auxiliar.equivalencias.licencia.tipo), thumbnail.licencia)
+        }
+      );
+    }
+    if (Auxiliar.existeObjeto(datosObjeto.categorias)) {
+      const categorias = datosObjeto.categorias;
+      categorias.forEach(categoria => {
+        const { broaders } = categoria;
+        const { etiqueta } = categoria;
+        let broadersFormados, etiquetaFormada;
+        let tieneBroaders, tieneEtiqueta;
+        if (Auxiliar.existeObjeto(broaders)) {
+          tieneBroaders = true;
+          broadersFormados = " ; skos:broader"
+          const tama = broaders.length;
+          const tamaMenos = tama - 1;
+          for (let i = 0; i < tama; i++) {
+            if (i == tamaMenos) {
+              broadersFormados = Mustache.render(
+                '{{{broadersFormados}}} <{{{broader}}}>',
+                {
+                  broadersFormados: broadersFormados,
+                  broader: broaders[i].broader
+                });
+            } else {
+              broadersFormados = Mustache.render(
+                '{{{broadersFormados}}} <{{{broader}}}>,',
+                {
+                  broadersFormados: broadersFormados,
+                  broader: broaders[i].broader
+                });
+            }
+          }
+        } else {
+          tieneBroaders = false;
+          broadersFormados = "";
+        }
+        if (Auxiliar.existeObjeto(etiqueta)) {
+          tieneEtiqueta = true;
+          etiquetaFormada = " ; rdfs:label ";
+          let valorEtiqueta;
+          etiqueta.some(etiq => {
+            valorEtiqueta = "'''" + etiq.value + "'''@" + etiq.lang;
+            if (etiq.lang === 'en') {
+              return true;
+            } else {
+              return false;
+            }
+          });
+          etiquetaFormada = Mustache.render(
+            ' ; rdfs:label {{{valorEtiqueta}}} ',
+            { valorEtiqueta: valorEtiqueta }
+          );
+        } else {
+          tieneEtiqueta = false;
+          etiquetaFormada = "";
+
+        }
+        query = Mustache.render(
+          '{{{query}}}.<{{{iriCategoria}}}> a skos:Concept{{#tieneEtiqueta}}{{{etiqueta}}}{{/tieneEtiqueta}}{{#tieneBroaders}}{{{broadersFormados}}} {{/tieneBroaders}}',
+          {
+            query: query,
+            iriCategoria: categoria.categoria,
+            tieneEtiqueta: tieneEtiqueta,
+            etiqueta: etiquetaFormada,
+            tieneBroaders: tieneBroaders,
+            broadersFormados: broadersFormados
+          }
+        );
+      });
+    }
+  }
+
   query = Mustache.render('{{{query}}}}', { query: query });
   console.log(query);
   return encodeURIComponent(query);
@@ -263,7 +448,7 @@ function contenidoInsertDelete(array, extra, tama2, final) {
     }
   }
   let d;
-  let valor;
+  //let valor;
   for (let i = 0; i < tama; i++) {
     d = Object.keys(array)[i];
     if (d === 'fuente') {
