@@ -208,7 +208,32 @@ const equivalencias = {
     prop: 'http://purl.org/dc/elements/1.1/rights',
     abr: 'dc:rights',
     tipo: 'uri',
-  }
+  },
+  distractor1: {
+    prop: 'https://casuallearn.gsic.uva.es/property/distractor1',
+    abr: 'clp:distractor1',
+    tipo: 'string',
+  },
+  distractor2: {
+    prop: 'https://casuallearn.gsic.uva.es/property/distractor2',
+    abr: 'clp:distractor2',
+    tipo: 'string',
+  },
+  distractor3: {
+    prop: 'https://casuallearn.gsic.uva.es/property/distractor3',
+    abr: 'clp:distractor3',
+    tipo: 'string',
+  },
+  correctMcq: {
+    prop: 'https://casuallearn.gsic.uva.es/property/correct',
+    abr: 'clp:correct',
+    tipo: 'string',
+  },
+  rE: {
+    prop: 'https://casuallearn.gsic.uva.es/property/expectedAnswer',
+    abr: 'clp:expectedAnswer',
+    tipo: 'string',
+  },
 };
 
 const tipoRespuetasSoportados = ['tRTexto', 'tRMultiFotosTexto', 'tRMultiFoto', 'tRFotoTexto', 'tRMultiFotos', 'tRTextoCorto', 'tRTextoCorto', 'tRSinRespuesta', 'tRVideo', 'tRVideoTexto', 'tRVF', 'tRMcq'];

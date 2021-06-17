@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión de los contextos.
  * autor: Pablo García Zarza
- * version: 20210520
+ * version: 20210615
  */
 
 /** Icono personalizado para los marcadores */
@@ -26,9 +26,9 @@ const iconoMarcadores = L.icon({
     iconUrl: './resources/marcadorL.svg'
 });
 
-/** 
- * Objecto donde se agrupa la información de las distintas opciones que 
- * tiene el usuario cuando vaya a agregar un nuevo POI. Se guarda la 
+/**
+ * Objecto donde se agrupa la información de las distintas opciones que
+ * tiene el usuario cuando vaya a agregar un nuevo POI. Se guarda la
  * información junto con un identificador.
  */
 let infoNuevoContexto = {};
@@ -36,7 +36,7 @@ let infoNuevoContexto = {};
 
 /**
  * Función para comprobar qué cuadrículas tiene que obtener del servidor.
- * 
+ *
  * @param {LatLngBounds} zona Límites del mapa
  */
 function calculaZonasParaDescargar(zona) {
@@ -64,10 +64,10 @@ function calculaZonasParaDescargar(zona) {
 }
 
 /**
- * Función para obtener el punto desde el que se va tiene que realizar las comprobaciones 
+ * Función para obtener el punto desde el que se va tiene que realizar las comprobaciones
  * de las áreas. Depende de la porción del mapa mostrado.
- * 
- * @param {Array} puntos Array de dos elementos: la latitud más al norte y la longitud al 
+ *
+ * @param {Array} puntos Array de dos elementos: la latitud más al norte y la longitud al
  * oeste.
  * @returns Punto desde que se tendría que comprobar las zonas
  */
@@ -94,12 +94,12 @@ function puntoInicio(puntos) {
 }
 
 /**
- * Función para calcular el número de cuadrículas que se van a tener que comprobar 
+ * Función para calcular el número de cuadrículas que se van a tener que comprobar
  * posteriormente.
- * 
- * @param {LatLng} noroeste Posición al noroeste 
- * @param {LatLng} sureste Posición al sueste 
- * @returns Número de cuadrículas en vertical y horizontal que se muestran en el mapa 
+ *
+ * @param {LatLng} noroeste Posición al noroeste
+ * @param {LatLng} sureste Posición al sueste
+ * @returns Número de cuadrículas en vertical y horizontal que se muestran en el mapa
  * desde la posición inicial.
  */
 function cuadriculas(noroeste, sureste) {
@@ -111,7 +111,7 @@ function cuadriculas(noroeste, sureste) {
 
 /**
  * Función para obtener del servidor las zonas que no están almacenadas en el cliente.
- * 
+ *
  * @param {LatLng} punto Posición desde la que se genera la zona en el servidor.
  * @param {LatLngBounds} zona Mapa mostrado
  */
@@ -174,9 +174,9 @@ function peticionZona(punto, zona) {
 }
 
 /**
- * Función para pintar los POIs de la zona del mapa que se muestra por 
+ * Función para pintar los POIs de la zona del mapa que se muestra por
  * pantalla.
- * 
+ *
  * @param {LatLngBounds} zona Zona que se está mostrando en la pantalla
  */
 function pintaPOIs(zona) {
@@ -224,19 +224,19 @@ function pintaPOIs(zona) {
 }
 
 let modalInfo = false;
-
+let modalPOI;
 /**
  * Función para crear un marcador para un punto de interés.
- * 
+ *
  * @param {JSONObject} poi Información del punto de interés
  */
 function markerPoP(poi) {
     let marker = L.marker(poi.posicion, { icon: iconoMarcadores });
     marker.on('click', () => {
         const puntoInteresModal = document.getElementById('puntoInteres');
-        const modal = new bootstrap.Modal(puntoInteresModal);
-        tareasContexto(poi.ctx);
-        if(rol !== null && rol > 0){
+        modalPOI = new bootstrap.Modal(puntoInteresModal);
+        tareasContexto(poi.ctx, poi);
+        if (rol !== null && rol > 0) {
             document.getElementById('administracionPOI').removeAttribute('hidden');
         } else {
             document.getElementById('administracionPOI').setAttribute('hidden', true);
@@ -262,26 +262,26 @@ function markerPoP(poi) {
         }
 
         document.getElementById('cerrarModalMarcador').onclick = () => {
-            modal.hide();
+            modalPOI.hide();
             cerrarPI()
         };
 
         document.getElementById('eliminarPI').onclick = () => {
             confirmarEliminacion(poi, 'Eliminación punto de interés', '¿Estás seguro de eliminar el punto de interés?');
-            modal.hide();
+            modalPOI.hide();
         };
 
         document.getElementById('modificarPI').onclick = () => {
-            modal.hide();
+            modalPOI.hide();
             modificarPI(poi)
         };
 
         document.getElementById('agregarTarea').onclick = () => {
-            modal.hide();
+            modalPOI.hide();
             nuevaTarea(poi.ctx);
         }
 
-        modal.show();
+        modalPOI.show();
     }, { once: true });
     markers.addLayer(marker);
 }
@@ -297,9 +297,9 @@ function cerrarPI() {
 
 /**
  * Función para mostrar un diálogo de confirmación de la acción de borrado
- * 
+ *
  * @param {Object} poi Información del punto de interés a eliminar
- * @param {String} titulo Texto que se va a mostrar en la cabecera del modal 
+ * @param {String} titulo Texto que se va a mostrar en la cabecera del modal
  * @param {String} mensaje Texto que se va a mostrar en el cuerpo del modal
  */
 function confirmarEliminacion(poi, titulo, mensaje) {
@@ -315,11 +315,17 @@ function confirmarEliminacion(poi, titulo, mensaje) {
 
 /**
  * Función para eliminar un punto de interés del sistema.
- * 
+ *
  * @param {JSONObject} poi Información del punto de interés
  */
 function eliminarPI(poi) {
-    const direccion = recursoContextoParaElServidor(poi.ctx);
+    const direccion = mustache.render(
+        '{{{dir}}}?token={{{query}}}',
+        {
+            dir: recursoContextoParaElServidor(poi.ctx),
+            query: tokenSesion
+        }
+    );
     const peticion = {
         method: 'DELETE',
         redirect: 'follow'
@@ -366,7 +372,13 @@ function eliminarPI(poi) {
  * @param {JSONObject} poi Información que se tiene del punto de interés
  */
 function modificarPI(poi) {
-    const direccion = recursoContextoParaElServidor(poi.ctx);
+    const direccion = mustache.render(
+        '{{{dir}}}?token={{{query}}}',
+        {
+            dir: recursoContextoParaElServidor(poi.ctx),
+            query: tokenSesion
+        }
+    );
     const options = {
         method: 'GET',
         redirect: 'follow'
@@ -455,7 +467,7 @@ function modificarPI(poi) {
                         longitudNPI: 'El punto necesita una longitud',
                         imagenNPI: 'La imagen se tiene que proporcionar a través de una URL',
                         licenciaNPI: 'La licencia de la imagen puede ser texto o URL',
-                        fuentesNPI: 'Las fuentes de información puden ser texto o URL'
+                        fuentesNPI: 'Las fuentes de información pueden ser texto o URL'
                     };
                     camposObligatorios.forEach(campo => {
                         if (!campo || !campo.value || campo.value.trim() === '') {
@@ -527,7 +539,7 @@ function modificarPI(poi) {
                                     valor = campo.value.trim();
                                     break;
                             }
-                            //Si la key no está en lo que envía el cliente será una creación. 
+                            //Si la key no está en lo que envía el cliente será una creación.
                             //Para el resto de casos será una modificación o una eliminación (se envía un string vacío).
                             if (nombresServ[campoId] in datos) {
                                 //Modificación o eliminación
@@ -560,18 +572,12 @@ function modificarPI(poi) {
                                 .then(response => {
                                     switch (response.status) {
                                         case 200:
-                                            return 'OK';
-                                        case 404:
-                                            notificaLateralError('El POI no existe en el repositorio');
-                                            return null;
+                                            return { codigo: 200, mensaje: 'OK' };
                                         case 400:
-                                            notificaLateralError('El formato de los datos enviados no es válido.');
-                                            return null;
-                                        case 500:
-                                            notificaLateralError('Error interno del servidor');
-                                            return null;
+                                        case 403:
+                                        case 404:
                                         case 503:
-                                            notificaLateralError('El repositorio no puede atender a esta petición en este momento.');
+                                            return response.text();
                                         default:
                                             notificaLateralError(mustache.render(
                                                 'Se ha producido un error desconocido: {{{status}}}',
@@ -580,29 +586,33 @@ function modificarPI(poi) {
                                     }
                                 })
                                 .then(resultado => {
-                                    if (resultado) {
-                                        //POI modificado en el servidor
-                                        //Lo elimino de la memoria local
-                                        (Object.entries(modificados)).forEach(([modK, modV]) => {
-                                            if (modV === '' && (modK in poi)) {//Se elimina el valor
-                                                delete poi[modK];
-                                            } else {
-                                                poi[modK] = modV;
-                                            }
-                                        });
-                                        pois.some((p, i) => {
-                                            if (p.ctx === poi.ctx) {
-                                                pois.splice(i, 1);
-                                                return true;
-                                            } else {
-                                                return false;
-                                            }
-                                        });
-                                        //Lo vuelvo a agregar y pinto:
-                                        pois.push(poi);
-                                        pintaPOIs(map.getBounds());
-                                        modal.hide();
-                                        notificaLateral('Punto actualizado');
+                                    if (resultado !== null) {
+                                        if (typeof resultado !== 'string') {
+                                            //POI modificado en el servidor
+                                            //Lo elimino de la memoria local
+                                            (Object.entries(modificados)).forEach(([modK, modV]) => {
+                                                if (modV === '' && (modK in poi)) {//Se elimina el valor
+                                                    delete poi[modK];
+                                                } else {
+                                                    poi[modK] = modV;
+                                                }
+                                            });
+                                            pois.some((p, i) => {
+                                                if (p.ctx === poi.ctx) {
+                                                    pois.splice(i, 1);
+                                                    return true;
+                                                } else {
+                                                    return false;
+                                                }
+                                            });
+                                            //Lo vuelvo a agregar y pinto:
+                                            pois.push(poi);
+                                            pintaPOIs(map.getBounds());
+                                            modal.hide();
+                                            notificaLateral('Punto actualizado');
+                                        } else {
+                                            notificaLateralError(resultado);
+                                        }
                                     }
                                 })
                                 .catch(error => {
@@ -629,7 +639,7 @@ function modificarPI(poi) {
 
 /**
  * Función para crear un popup en el mapa cuando el usuario ha pulsado sobre el.
- * 
+ *
  * @param {Object} pos Pulsación en el mapa
  */
 function creacionNuevoContexto(pos) {
@@ -657,7 +667,7 @@ function creacionNuevoContexto(pos) {
 /**
  * Función para recuperar los puntos cercanos que existen cerca del punto donde haya pulsado
  * el usuario.
- * 
+ *
  * @param {Float} lat Latitud origen
  * @param {Float} lng Longitud origen
  * @param {String} contenidoPopup Contenido que se está mostrando en el popup
@@ -752,15 +762,15 @@ function peticionCrafts(lat, lng, contenidoPopup) {
 }
 
 /**
- * Función para pintar los lugares sugeridos cuando se ha completado la búsqueda en las distintas versiones 
+ * Función para pintar los lugares sugeridos cuando se ha completado la búsqueda en las distintas versiones
  * de la DBpedia.
- * 
+ *
  * @param {Object} resultadosEn Resultados que se han obtenido de DBpedia
  * @param {Boolean} completadoEn Indica si se ha completado la petición a DBpedia
  * @param {Object} resultadosEs Resultados que se han obtenido de es.DBpedia
  * @param {Boolean} completadoEs Indica si se ha completado la petición a es.DBpedia
  * @param {Object} puntoOrigen Objeto con la latitud (lat) y longitud (lng) donde ha pulstado el usuario
- * @param {String} contenidoPopup Frase que se está mostrando en el popup 
+ * @param {String} contenidoPopup Frase que se está mostrando en el popup
  */
 function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
     if ((completadoEn && !completadoEs) || (!completadoEn && resultadosEs)) {
@@ -994,10 +1004,10 @@ function agregaPosicion(resultados, todosLosDatos, version) {
 
 
 /**
- * Función para agrupar los resultados obtenidos de las consultas a la DBpedia. Da preferencia 
+ * Función para agrupar los resultados obtenidos de las consultas a la DBpedia. Da preferencia
  * a los resultados de la versión española (compara por iri y etiqueta).
- * 
- * @param {Object} resultadosEn Resultados de la versión internacional 
+ *
+ * @param {Object} resultadosEn Resultados de la versión internacional
  * @param {Object} resultadosEs Resultados de la versión española.
  * @returns Resultados agrupados y aplicado la preferencia por la española.
  */
@@ -1047,9 +1057,9 @@ function agrupaResultados(resultadosEn, resultadosEs) {
 }
 
 /**
- * Función para pasar al modal la información sobre la selección del usuario 
+ * Función para pasar al modal la información sobre la selección del usuario
  * que ha realizado sobre el popup utilizado para agregar POIs.
- * 
+ *
  * @param {Number} id Identificador de la opción seleccionada por el usuario
  * @returns Datos de la opción seleccionada por el usuario
  */
@@ -1061,7 +1071,7 @@ function datosNuevoContexto(id) {
 
 /**
  * Función para establecer la clase de un conjunto de objetos a form-control (formularios).
- * 
+ *
  * @param {Array} campos Array con las referencias de los objetos del formulario.
  */
 function reseteaCamposValidador(campos) {
@@ -1073,8 +1083,8 @@ function reseteaCamposValidador(campos) {
 /**
  * Función para crear el modal para la creación de un punto de interés. Carga la información
  * que se le pase mediante el identificador en el formulario.
- * 
- * @param {Number} id Identificador de los datos en el vector infoNuevoContexto 
+ *
+ * @param {Number} id Identificador de los datos en el vector infoNuevoContexto
  */
 function modalNPI(id) {
     const datos = datosNuevoContexto(id);
@@ -1335,8 +1345,11 @@ function modalNPI(id) {
                             break;
                     }
                 });
-                //TODO cambiar el autor por el del usuario
-                envio.autor = 'pablogz@gsic.uva.es';
+
+                const enviar = {
+                    token: tokenSesion,
+                    datos: envio
+                };
 
                 //Envío los datos al servidor para que los agregue
                 const direccion = mustache.render('{{{direccionServidor}}}/contexts', { direccionServidor: direccionServidor });
@@ -1345,7 +1358,7 @@ function modalNPI(id) {
                 const requestOptions = {
                     method: 'POST',
                     headers: myHeaders,
-                    body: JSON.stringify(envio),
+                    body: JSON.stringify({ token: tokenSesion, datos: envio }),
                     redirect: 'follow',
                 };
                 fetch(direccion, requestOptions)
@@ -1386,10 +1399,10 @@ function modalNPI(id) {
 
 /**
  * Solicitud para la obtención de toda la información de un POI
- * 
+ *
  * @param {String} iri Identificador del POI
- * @param {Boolean} guardaPinta Indica si se tiene que llamar para 
- * volver a pintar los marcadores del mapa y guardar el resultado 
+ * @param {Boolean} guardaPinta Indica si se tiene que llamar para
+ * volver a pintar los marcadores del mapa y guardar el resultado
  * en la caché. Con false se devuelve la info del servidor.
  * @param {Object} modal Modal que se debe ocultar cuando se finalice la petición.
  */

@@ -73,9 +73,14 @@ body {
     background-color: #0c252d;
 }
 
+.colorActivo {
+    color: #3388ff;
+}
+
 @media screen and (max-width: 450px) {
     .imagen {
-        max-width: 220px;
+        /*max-width: 220px;*/
+        max-width: 100%;
     }
     .toast {
         max-width: 280px;

@@ -33,7 +33,7 @@ const Auxiliar = require('./auxiliar');
  */
 function contextosZona(puntos) {
   const query = Mustache.render(
-    'select ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen where {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . optional { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } filter ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})).} ',
+    'select ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen where {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . optional { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } filter ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})). filter ((lang(?titulo) = "es" || lang(?titulo) = "") && (lang(?descr) = "es" || lang(?descr) = ""))} ',
     puntos,
   );
   return encodeURIComponent(query);
@@ -109,7 +109,8 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
           if (!Array.isArray(vector)) {
             vector = [vector];
           }
-          vector.forEach(v => {
+          //Con esto guardo para todos los idiomas, voy a guardar solo en español para el prototipo TODO CAMBIAR!!
+          /*vector.forEach(v => {
             if (!Auxiliar.isEmpty(v.value.trim()) && !Auxiliar.isEmpty(v.lang.trim())) {
               if (primero) {
                 primero = false;
@@ -127,6 +128,30 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
                   objeto: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, v.value.trim()).trim(),
                   idioma: v.lang
                 })
+            }
+          });*/
+          vector.forEach(v => {
+            if (!Auxiliar.isEmpty(v.value.trim()) && !Auxiliar.isEmpty(v.lang.trim())) {
+              if (v.lang === 'es') {
+
+                if (primero) {
+                  primero = false;
+                } else {
+                  query = Mustache.render(
+                    '{{{query}}}; ',
+                    { query: query }
+                  );
+                }
+
+                query = Mustache.render(
+                  '{{{query}}}{{{predicado}}} {{{objeto}}}@{{{idioma}}}',
+                  {
+                    query: query,
+                    predicado: (Auxiliar.equivalencias[t]).abr,
+                    objeto: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, v.value.trim()).trim(),
+                    idioma: v.lang
+                  });
+              }
             }
           });
           break;
@@ -254,7 +279,6 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
           break;
       }
     } catch (e) {
-      console.log(e);
       sigue = false;
     }
   }
@@ -343,7 +367,6 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
   }
 
   query = Mustache.render('{{{query}}}}', { query: query });
-  console.log(query);
   return encodeURIComponent(query);
 }
 
@@ -448,18 +471,12 @@ function contenidoInsertDelete(array, extra, tama2, final) {
     }
   }
   let d;
-  //let valor;
   for (let i = 0; i < tama; i++) {
     d = Object.keys(array)[i];
     if (d === 'fuente') {
       const fue = (extra) ? (array[d])[extra].split(';') : array[d].split(';');
       let t = 0;
       fue.forEach(f => {
-        /*query += `<http://www.w3.org/2000/01/rdf-schema#seeAlso> `;
-        query += formatoTiposDatos('uriString', f.trim());
-        if (t < (v - 1)) {
-          query += `; `;
-        }*/
         query = Mustache.render(
           '{{{query}}}<http://www.w3.org/2000/01/rdf-schema#seeAlso> {{{valor}}}{{{siguiente}}}',
           {
@@ -471,21 +488,31 @@ function contenidoInsertDelete(array, extra, tama2, final) {
         ++t;
       });
     } else {
-      /*query += `<${(Auxiliar.equivalencias[d]).prop}> `;
-      valor = (extra) ? (array[d])[extra] : (array[d]);
-      query += formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valor);*/
-      query = Mustache.render(
-        '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
-        {
-          query: query,
-          propiedad: (Auxiliar.equivalencias[d]).prop,
-          valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, (extra) ? (array[d])[extra] : (array[d]))
-        }
-      );
+      //TODO cambiar para cuando se tengan varios idiomas
+      let valorCampo;
+      if(d === 'titulo' || d === 'descr'){
+        valorCampo = (extra) ? (array[d])[extra] : (array[d]);
+      }
+      if (d === 'titulo' || d === 'descr' && !valorCampo.includes('@es')) {
+        query = Mustache.render(
+          '{{{query}}}<{{{propiedad}}}> {{{valor}}}@es',
+          {
+            query: query,
+            propiedad: (Auxiliar.equivalencias[d]).prop,
+            valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valorCampo)
+          }
+        );
+      } else {
+        query = Mustache.render(
+          '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
+          {
+            query: query,
+            propiedad: (Auxiliar.equivalencias[d]).prop,
+            valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, (extra) ? (array[d])[extra] : (array[d]))
+          }
+        );
+      }
     }
-    /*if (final) {
-      if (i != (tama - 1)) query += '; ';
-    } else if (tama2 || i < (tama - 1)) query += '; ';*/
     if (final) {
       if (i != (tama - 1)) query = Mustache.render('{{{query}}}; ', { query: query });
     } else if (tama2 || i < (tama - 1)) query = Mustache.render('{{{query}}}; ', { query: query });
@@ -517,7 +544,6 @@ function actualizaValoresContexto(iri, inserciones, eliminaciones, modificacione
     query += contenidoInsertDelete(inserciones, null, tama2, false);
     query += contenidoInsertDelete(modificaciones, 'nuevo', tama2, true);
   }
-  console.log(query);
   return encodeURIComponent(query);
 }
 
@@ -545,7 +571,7 @@ function tareasContexto(iriContexto) {
  * @returns Query para realizar una consulta sobre la propiedad label de un contexto
  */
 function tituloContexto(iri) {
-  const query = Mustache.render('select ?titulo where { <{{{iri}}}> a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; rdfs:label ?titulo }', { iri: iri });
+  const query = Mustache.render('select ?titulo where { <{{{iri}}}> a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; rdfs:label ?titulo . filter (lang(?titulo) = "es" || lang(?titulo) = "")}', { iri: iri });
   return encodeURIComponent(query);
 }
 

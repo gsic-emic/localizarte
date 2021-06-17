@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Creación de las rutas del servidor.
  * autor: Pablo
- * version: 20210429
+ * version: 20210613
  */
 
 const express = require('express');
@@ -28,6 +28,7 @@ const Contexts = require('../resources/contexts/contexts');
 const Context = require('../resources/contexts/context');
 const Tasks = require('../resources/tasks/tasks');
 const Task = require('../resources/tasks/task');
+const Answers = require('../resources/answers/answers');
 
 const Users = require('../resources/users/users');
 const Sesiones = require('../resources/users/sesiones');
@@ -80,17 +81,25 @@ Ruter.route(recursos.tarea)
   .delete((req, res) => Task.eliminaTarea(req, res))
   .all(envia405);
 
+// Creación y obtención de usuarios
 Ruter.route(recursos.users)
   .get((req, res) => Users.dameUsuarios(req, res))
   .post((req, res) => Users.newUser(req, res))
   .all(envia405);
 
+// Gestión de sesiones
 Ruter.route(recursos.sesiones)
   .post((req, res) => Sesiones.login(req, res))
   .all(envia405);
 
 Ruter.route(recursos.sesion)
   .delete((req, res) => Sesion.logout(req, res))
+  .all(envia405);
+
+// Respuestas
+Ruter. route(recursos.respuestas)
+  .post((req, res) => Answers.nuevaRespuesta(req, res))
+  .get((req, res) => Answers.dameRespuestas(req, res))
   .all(envia405);
 
 module.exports = Ruter;

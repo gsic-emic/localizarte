@@ -25,7 +25,7 @@ function dameColeccion(coleccion) {
 
 async function guardaDocumentoEnColeccion(documento, coleccion) {
     conectaBD();
-    await client.db(Config.nombreBD).collection(coleccion).insertOne(documento);
+    return await client.db(Config.nombreBD).collection(coleccion).insertOne(documento);
 }
 
 async function nuevoUsuarioEnColeccionRapida(documento) {
@@ -48,6 +48,32 @@ async function dameColeccionUsuario(email) {
         return documento.uid;
     else
         return null;
+}
+
+async function dameColeccionToken(token) {
+    conectaBD();
+    const documento = await client.db(Config.nombreBD).collection('rapida').findOne({ sesion: token });
+    if (documento && documento.uid)
+        return documento.uid;
+    else
+        return null;
+}
+
+async function dameCorreoSiProfe(token) {
+    conectaBD();
+    const documento = await client.db(Config.nombreBD).collection('rapida').findOne({ sesion: token });
+    let email = null;
+    if (documento && documento.email && documento.uid) {
+        email = documento.email;
+    }
+    if (email !== null) {
+        const datosUsuario = await dameDatosDeColeccion(documento.uid);
+        if (datosUsuario && datosUsuario.rol && datosUsuario.rol === 1) {
+            return email;
+        } else {
+            return null;
+        }
+    }
 }
 
 async function dameDatosDeColeccion(coleccion) {
@@ -90,4 +116,6 @@ module.exports = {
     dameTareaDeColeccion,
     abreSesion,
     cierraSesion,
+    dameColeccionToken,
+    dameCorreoSiProfe,
 }

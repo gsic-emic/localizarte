@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="./libraries/leaflet-1.7.1/leaflet.css" />
     <link rel="stylesheet" href="./libraries/Leaflet.markercluster-1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="./css/clusteres.css">
-    <!--<link rel=" stylesheet " href="./libraries/Leaflet.markercluster-1.4.1/dist/MarkerCluster.Default.css " />-->
     <title>LocalizARTE</title>
 </head>
 
@@ -70,12 +69,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="d-md-flex flex-md-row py-1">
-                        <div class="text-center p-1 order-md-1">
-                            <img class="imagen" id="imagenPuntoInteres" alt="Imagen Punto Interés"
-                                style="display: none;">
+                    <div class="d-md-flex flex-md-row py-1 align-items-center">
+                        <div class="col-md-auto p-1 order-md-1 text-center">
+                            <img class="imagen" id="imagenPuntoInteres" alt="Imagen Punto Interés">
                         </div>
-                        <div class="order-md-2">
+                        <div class="col order-md-2">
                             <div id="descripcionPuntoInteres" class="descripcion"></div>
                             <div id="tareasPuntoInteres" style="visibility: hidden;"></div>
                         </div>
@@ -258,7 +256,7 @@
                                     </div>
                                     <div class="col-sm-6 form-check">
                                         <input class="form-check-input" type="radio" name="rbVFNT" id="rbVFFNT"
-                                            value="flaso">
+                                            value="falso">
                                         <label class="form-check-label" for="rbVFFNT">Falso</label>
                                     </div>
                                 </div>
@@ -296,7 +294,6 @@
                                     <a role="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="popover"
                                         data-bs-content="<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de LocalizARTE desde cualquier lugar."
                                         data-bs-container="#nuevaTareaModal" data-bs-html="true">?</a>
-                                    <!--<label class="form-label" for="cbEspacioDiv">Espacio donde se podrá completar la tarea* <a role="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="popover" data-bs-content="<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de LocalizARTE desde cualquier lugar. <b>Web</b>: la tarea se diseña para ser realizada en un VLE." data-bs-container="#nuevaTareaModal" data-bs-html="true">?</a>-->
                                 </label>
                                 <div class="row mx-1" id="cbEspacioDiv">
                                     <div class="form-check col-md-4">
@@ -429,13 +426,136 @@
         </div>
     </div>
 
+    <div class="modal" id="realizarTareaModal" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="tituloRealizaTarea"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-md-flex flex-md-row g-1 mb-3">
+                        <div class="col-md-auto order-md-1 text-center" id="colImgRepoRealizaTarea">
+                            <img class="imagen" id="imgRepoRealizaTarea">
+                        </div>
+                        <div class="col order-md-2">
+                            <div id="atrRealizaTarea" class="py-2 px-1"></div>
+                        </div>
+                    </div>
+                    <div class="row g-1 my-1">
+                        <div class="col-12">
+                            <label for="notasRealizaTarea" class="form-label" id="lblnotasRealizaTarea">Tus
+                                anotaciones</label>
+                            <input type="text" id="tbnotasRealizaTarea" class="form-control"
+                                placeholder="Agrega alguna nota si lo deseas">
+                        </div>
+                    </div>
+                    <div id="contenedorMcqRealizaTarea" class="row g-1 my-1" hidden>
+                        <label for="mcqOpcionesRealizaTarea" class="mt-3">Selecciona la respuesta
+                            correcta</label>
+                        <div id="mcqOpcionesRealizaTarea" class="row g-1 form-check">
+                            <!--<div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
+                                    id="mcq1RealizaTarea" value="1">
+                                <label class="form-check-label" for="mcq1RealizaTarea">Opt1</label>
+                            </div>
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
+                                    id="mcq2RealizaTarea" value="2">
+                                <label class="form-check-label" for="mcq2RealizaTarea">Opt2</label>
+                            </div>
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
+                                    id="mcq3RealizaTarea" value="3">
+                                <label class="form-check-label" for="mcq3RealizaTarea">Opt3</label>
+                            </div>
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
+                                    id="mcq4RealizaTarea" value="4">
+                                <label class="form-check-label" for="mcq4RealizaTarea">Opt4</label>
+                            </div>-->
+                        </div>
+                    </div>
+                    <div id="contenedorvFRealizaTarea" class="row g-1 my-1" hidden>
+                        <label for="vFOpcionesRealizaTarea" class="mt-3">Selecciona la respuesta
+                            correcta</label>
+                        <div id="vFOpcionesRealizaTarea" class="row g-1 form-check">
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="vFRealizaTarea" id="vF1RealizaTarea"
+                                    value="True">
+                                <label class="form-check-label" for="vF1RealizaTarea">Verdadero</label>
+                            </div>
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="vFRealizaTarea" id="vF2RealizaTarea"
+                                    value="False">
+                                <label class="form-check-label" for="vF2RealizaTarea">Falso</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="contenendorCamara" class="row g-1 justify-content-center my-1" hidden>
+                        <button type="button" class="col-auto btn btn-primary text-center align-items-center"
+                            data-bs-toggle="modal" data-bs-target="#modalCamara" onclick="inicioCamara()"
+                            id="btIniciarCamara">
+                            <img src="./resources/camera.svg" class="pe-2 pb-1">Iniciar cámara
+                        </button>
+                        <label for="btIniciarCamara" class="form-check-label is-invalid" id="lblSinRealizarFoto" hidden>Realiza una fotografía</label>
+                        <div class="row w-50" id="resultadoCaptura" hidden>
+                            <img id="foto" class="img-fluid">
+                        </div>
+                    </div>
+                    <div class="row my-2 justify-content-center">
+                        <button type="button" class="col-auto btn btn-primary" id="finalizarTarea">
+                            Finalizar tarea
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade m-0 p-0" id="modalCamara" tabindex="-1" aria-labelledby="modalCamaraLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen m-0 p-0">
+            <div class="modal-content m-0 p-0">
+                <div class="modal-body m-0 p-0">
+                    <div>
+                        <div class="row p-0 m-0 card border-0 bg-dark">
+                            <div class="row p-0 m-0">
+                                <video id="webcam" autoplay playsinline class="p-0 m-0 img-fluid m-auto" width="640"
+                                    height="480" style="height: 100vh; width: auto;"></video>
+                                <canvas id="canvas" class="d-none"></canvas>
+                            </div>
+                            <div class="row card-img-overlay m-0 p-0">
+                                <div class="row justify-content-end me-2 mt-4">
+                                    <button type="button" class="btn-close btn-danger bg-danger rounded-pill"
+                                        aria-label="Close" onclick="paraCamara()"></button>
+                                </div>
+                                <div class="row  align-items-end m-0 p-2">
+                                    <div class="col-6 text-center">
+                                        <button onclick="reversoCamara()" class="btn btn-secondary rounded-pill"><img
+                                                src="./resources/cameraswitch.svg"></button>
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <button onclick="capturaCamara()" class="btn btn-primary rounded-pill"><img
+                                                src="./resources/camera.svg"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="botonFlotante">
         <div class="interruptorFlotante rounded-pill px-2 py-1 mb-2" id="interruptorProfesor"
             onclick="cambiaVistaProfesor()" hidden>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="swVistaProfesor">
-                <label class="form-check-label" for="swVistaProfesor">Vista profesor</label>
+                <label class="form-check-label colorActivo" for="swVistaProfesor" id="labelVistaProfesor">Vista
+                    docente</label>
             </div>
         </div>
         <div class="text-end" id="seguir" onclick="seguir();">
@@ -447,6 +567,9 @@
     <script src="./libraries/leaflet-1.7.1/leaflet.js"></script>
     <script src="./libraries/Leaflet.markercluster-1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="./libraries/mustache.js-4.2.0/mustache.js"></script>
+    <script src="./libraries/webcam-easy/dist/webcam-easy.min.js" charset="utf-8"></script>
+    <script type="text/javascript"
+        src="./libraries/browser-image-compression-1.0.13/dist/browser-image-compression.js"></script>
 
     <script src="./js/config.js" type="text/javascript"></script>
     <script src="./js/util.js" type="text/javascript"></script>

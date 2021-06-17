@@ -27,8 +27,13 @@ limitations under the License.
  * @returns Identificador formateado
  */
 function recursoContextoParaElServidor(iri) {
-    return iri.replace('https://casuallearn.gsic.uva.es/context/', direccionServidor + '/contexts/');
+    return iri.replace('https://casuallearn.gsic.uva.es/context/', `${direccionServidor}/contexts/`);
 }
+
+function recursoTareaParaElServidor(iri) {
+    return iri.replace('https://casuallearn.gsic.uva.es/', `${direccionServidor}/tasks/`);
+}
+
 
 //TODO revisar qué pasa con los optional
 /**
@@ -93,7 +98,7 @@ function masCercanos(posicion, lugares, maximo = 5) {
                 if (guarda) {
                     salida.push(lugar);
                     return true;
-                } 
+                }
             }
         });
         if (salida.length >= maximo) {

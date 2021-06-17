@@ -103,11 +103,11 @@ function inicio() {
         attribution: '&copy; <a target="_blank" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
     }).addTo(map);*/
 
-    /*L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckp5n8o6z0hwm18mnwan8zm0l/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja2c5bDdtYzUwODBoMnVtczJhOWV5a2JnIn0.RpYJDfsHKYUlrXlsKlWqxA', {
+    L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckp5n8o6z0hwm18mnwan8zm0l/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3ExMWcxajQwMTN4MnVsYTJtMmdpOXc2In0.S9rtoLY8TYoI-4D8oy8F8A', {
         maxZoom: 20,
         minZoom: 3,
         attribution: '&copy; <a target="_blank" href="https://www.mapbox.com/about/maps/">Mapbox</a> | &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" >OpenStreetMap</a> contributors'
-    }).addTo(map);*/
+    }).addTo(map);
 
     /*L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -115,11 +115,11 @@ function inicio() {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
     }).addTo(map);*/
 
-    L.tileLayer('', {
+    /*L.tileLayer('', {
         maxZoom: 20,
         minZoom: 3,
         attribution: ''
-    }).addTo(map);
+    }).addTo(map);*/
 
     //Posición inicial
     map.setView(position, 18);//4.5
@@ -188,7 +188,7 @@ function seguir() {
         });
 
         map.on('locationerror', (e) => {
-            alert(e.message);
+            notificaLateralError(e.message);
             siguiendo = false;
             indicador = null;
             map.stopLocate();
@@ -212,7 +212,9 @@ function cambiaVistaProfesor() {
     rol = rol * -1;
     if(rol > 0){
         document.getElementById('swVistaProfesor').checked = true;
+        document.getElementById('labelVistaProfesor').className = "form-check-label colorActivo";
     } else {
         document.getElementById('swVistaProfesor').checked = false;
+        document.getElementById('labelVistaProfesor').className = "form-check-label";
     }
 }

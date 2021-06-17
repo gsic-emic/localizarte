@@ -67,6 +67,9 @@ function inicioSesionUsuario() {
             }
         });
         if (todoOk) {
+            camposObligatorios.forEach(campo => {
+                campo.className = 'form-control';
+            });
             let envio = {};
             camposObligatorios.forEach(campo => {
                 switch (campo.id) {
@@ -109,9 +112,9 @@ function inicioSesionUsuario() {
                             notificaLateral('Hola de nuevo');
                             tokenSesion = result.sesion;
                             rol = result.rol;
-                            if(rol > 0) {
+                            if (rol > 0) {
                                 document.getElementById('interruptorProfesor').removeAttribute('hidden');
-                                if(!document.getElementById('swVistaProfesor').checked) {
+                                if (!document.getElementById('swVistaProfesor').checked) {
                                     document.getElementById('swVistaProfesor').checked = true;
                                 }
                             } else {
@@ -191,8 +194,11 @@ function registroUsuario() {
                     break;
             }
         });
-        if(todoOk){
+        if (todoOk) {
             let envio = {};
+            campos.forEach(campo => {
+                campo.className = 'form-control';
+            });
             camposObligatorios.forEach(campo => {
                 switch (campo.id) {
                     case 'inicioPass':
@@ -204,7 +210,7 @@ function registroUsuario() {
                 }
             });
             camposOpcionales.forEach(campo => {
-                if(campo.value && campo.value.trim() !== '') {
+                if (campo.value && campo.value.trim() !== '') {
                     envio[equivalencias[campo.id]] = campo.value.trim();
                 }
             });
@@ -234,8 +240,8 @@ function registroUsuario() {
                     }
                 })
                 .then(result => {
-                    if(result){
-                        if(typeof result === 'string'){
+                    if (result) {
+                        if (typeof result === 'string') {
                             notificaLateralError('El usuario ya se ha registrado previamente en LocalizARTE');
                             modal.hide();
                         } else {
@@ -281,7 +287,7 @@ function cerrarSesion() {
                     if (result) {
                         document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link"  href="javascript:registroUsuario();">Registro</a></li><li class="nav-item"><a class="nav-link" href="javascript:inicioSesionUsuario();">Identificación</a></li>';
                         tokenSesion = null;
-                        if(rol !== 0) {
+                        if (rol !== 0) {
                             document.getElementById('interruptorProfesor').setAttribute('hidden', true);
                         }
                         rol = null;
