@@ -33,18 +33,7 @@ const Auxiliar = require('./auxiliar');
  */
 function contextosZona(puntos) {
   const query = Mustache.render(
-    'select ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen where {'
-    + '?ctx geo:lat ?lat ; '
-    + 'geo:long ?long ; '
-    + 'rdfs:label ?titulo ; '
-    + 'rdfs:comment ?descr ;'
-    + 'dc:creator ?autor . '
-    + 'optional { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } '
-    + 'filter ('
-    + '(xsd:decimal(?lat) > {{{sur}}}) && '
-    + '(xsd:decimal(?lat) <= {{{norte}}}) && '
-    + '(xsd:decimal(?long) >= {{{oeste}}}) && '
-    + '(xsd:decimal(?long) < {{{este}}})).} ',
+    'select ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen where {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . optional { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } filter ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})). filter ((lang(?titulo) = "es" || lang(?titulo) = "") && (lang(?descr) = "es" || lang(?descr) = ""))} ',
     puntos,
   );
   return encodeURIComponent(query);
@@ -57,7 +46,9 @@ function contextosZona(puntos) {
  * @returns Query formateada
  */
 function tipoIRI(id) {
-  const query = `select ?tipo where {<${id}> a ?tipo}`;
+  const query = Mustache.render(
+    'select ?tipo where {<{{{id}}}> a ?tipo}',
+    { id: id });
   return encodeURIComponent(query);
 }
 
@@ -76,7 +67,7 @@ function formatoTiposDatos(tipo, valor) {
     case 'decimal':
       return `${valor} `;
     case 'uriString':
-      return (Auxiliar.validURL(valor)) ? `<${valor}> ` : `'''${valor}''' `;
+      return (Auxiliar.validIRI(valor)) ? `<${valor}> ` : `'''${valor}''' `;
     default:
       return `<${valor}> `;
   }
@@ -91,42 +82,291 @@ function formatoTiposDatos(tipo, valor) {
  * @returns Query con la que realizar la consulta
  */
 function nuevoObjeto(datosObjeto, tipoObjeto) {
-  let query = `${'with <http://localizarte.gsic.uva.es> insert { '
-    + '<'}${datosObjeto.iri}> a <${tipoObjeto}>; `;
+  let query = Mustache.render(
+    'with <http://localizarte.gsic.uva.es> insert {<{{{iri}}}> a <{{{tipoObjeto}}}>; ',
+    {
+      iri: datosObjeto.iri,
+      tipoObjeto: tipoObjeto
+    });
   let primero = true;
-  let propiedad;
+  let sigue = true;
   for (const t in datosObjeto) {
     try {
+      if (t === 'iri') {
+        continue;
+      }
       switch (t) {
-        case 'iri':
+        case 'titulo':
+        case 'descr':
+        case 'title':
+          let vector = datosObjeto[t];
+          if (typeof vector === 'string') {
+            vector = {
+              value: vector,
+              lang: 'es'
+            };
+          }
+          if (!Array.isArray(vector)) {
+            vector = [vector];
+          }
+          //Con esto guardo para todos los idiomas, voy a guardar solo en español para el prototipo TODO CAMBIAR!!
+          /*vector.forEach(v => {
+            if (!Auxiliar.isEmpty(v.value.trim()) && !Auxiliar.isEmpty(v.lang.trim())) {
+              if (primero) {
+                primero = false;
+              } else {
+                query = Mustache.render(
+                  '{{{query}}}; ',
+                  { query: query }
+                );
+              }
+              query = Mustache.render(
+                '{{{query}}}{{{predicado}}} {{{objeto}}}@{{{idioma}}}',
+                {
+                  query: query,
+                  predicado: (Auxiliar.equivalencias[t]).abr,
+                  objeto: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, v.value.trim()).trim(),
+                  idioma: v.lang
+                })
+            }
+          });*/
+          vector.forEach(v => {
+            if (!Auxiliar.isEmpty(v.value.trim()) && !Auxiliar.isEmpty(v.lang.trim())) {
+              if (v.lang === 'es') {
+
+                if (primero) {
+                  primero = false;
+                } else {
+                  query = Mustache.render(
+                    '{{{query}}}; ',
+                    { query: query }
+                  );
+                }
+
+                query = Mustache.render(
+                  '{{{query}}}{{{predicado}}} {{{objeto}}}@{{{idioma}}}',
+                  {
+                    query: query,
+                    predicado: (Auxiliar.equivalencias[t]).abr,
+                    objeto: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, v.value.trim()).trim(),
+                    idioma: v.lang
+                  });
+              }
+            }
+          });
           break;
         case 'fuentes':
           const { fuentes } = datosObjeto;
-          propiedad = (Auxiliar.equivalencias.fuente).prop;
           fuentes.forEach((fuente) => {
             if (primero) {
               primero = false;
             } else {
-              query += '; ';
+              query = Mustache.render(
+                '{{{query}}}; ',
+                { query: query }
+              );
             }
-            query += `<${propiedad}> ${(Auxiliar.validURL(fuente.value)) ? `<${fuente.value}> ` : `'''${fuente.value}''' `}`;
+            query = Mustache.render(
+              '{{{query}}}{{{predicado}}} {{{valor}}} ',
+              {
+                query: query,
+                predicado: (Auxiliar.equivalencias.fuente).abr,
+                valor: formatoTiposDatos('uriString', fuente.fuente),
+              }
+            );
           });
           break;
-        default:
-          propiedad = (Auxiliar.equivalencias[t]).prop;
+        case 'aT':
           if (primero) {
             primero = false;
           } else {
-            query += '; ';
+            query = Mustache.render(
+              '{{{query}}}; ',
+              { query: query }
+            );
           }
-          query += `<${propiedad}> ${formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, datosObjeto[t])}`;
+          query = Mustache.render(
+            '{{{query}}}{{{predicado}}} {{{valor}}}',
+            {
+              query: query,
+              predicado: Auxiliar.equivalencias[t].abr,
+              valor: formatoTiposDatos('uriString', Auxiliar.equivalencias[datosObjeto[t]].prop)
+            }
+          )
+          break;
+        case 'espacios':
+          let { espacios } = datosObjeto;
+          if (typeof espacios === 'string') {
+            espacios = [{ spa: espacios }];
+          }
+          espacios.forEach(espacio => {
+            if (primero) {
+              primero = false;
+            } else {
+              query = Mustache.render(
+                '{{{query}}}; ',
+                { query: query }
+              );
+            }
+            query = Mustache.render(
+              '{{{query}}}{{{predicado}}} {{{valor}}}',
+              {
+                query: query,
+                predicado: Auxiliar.equivalencias.spa.abr,
+                valor: formatoTiposDatos('uri', Auxiliar.equivalencias[espacio.spa].prop)
+              }
+            );
+          });
+          break;
+        case 'thumbnail':
+          if (primero) {
+            primero = false;
+          } else {
+            query = Mustache.render(
+              '{{{query}}}; ',
+              { query: query }
+            );
+          }
+          const { thumbnail } = datosObjeto;
+          if (!Auxiliar.isEmpty(thumbnail.iri)) {
+            query = Mustache.render(
+              '{{{query}}}clp:thumbnail {{{iriThumb}}}',
+              {
+                query: query,
+                iriThumb: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, thumbnail.iri)
+              }
+            );
+          }
+          break;
+        case 'categorias':
+          const { categorias } = datosObjeto;
+          categorias.forEach(c => {
+            if (primero) {
+              primero = false;
+            } else {
+              query = Mustache.render(
+                '{{{query}}}; ',
+                { query: query }
+              );
+            }
+            query = Mustache.render(
+              '{{{query}}}{{{propCategoria}}} {{{valorCategoria}}}',
+              {
+                query: query,
+                propCategoria: Auxiliar.equivalencias['topic'].abr,
+                valorCategoria: formatoTiposDatos((Auxiliar.equivalencias['topic']).tipo, c.categoria)
+              }
+            );
+          });
+          break;
+        default:
+          if (primero) {
+            primero = false;
+          } else {
+            query = Mustache.render(
+              '{{{query}}}; ',
+              { query: query }
+            );
+          }
+          query = Mustache.render(
+            '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
+            {
+              query: query,
+              propiedad: (Auxiliar.equivalencias[t]).prop,
+              valor: formatoTiposDatos((Auxiliar.equivalencias[t]).tipo, datosObjeto[t]),
+            }
+          );
           break;
       }
     } catch (e) {
-      console.log(e);
+      sigue = false;
     }
   }
-  query += '}';
+  //Agregamos inserciones extras:
+  if (sigue && (Auxiliar.existeObjeto(datosObjeto.thumbnail) || Auxiliar.existeObjeto(datosObjeto.categorias))) {
+    if (Auxiliar.existeObjeto(datosObjeto.thumbnail)) {
+      const thumbnail = datosObjeto.thumbnail;
+      query = Mustache.render(
+        '{{{query}}}{{#licencia}}.<{{{iriThumb}}}> a dbo:Image ; <{{{propLicencia}}}> {{{valorLicencia}}}{{/licencia}}',
+        {
+          query: query,
+          licencia: !Auxiliar.isEmpty(thumbnail.iri.trim()) && !Auxiliar.isEmpty(thumbnail.licencia.trim()),
+          iriThumb: thumbnail.iri.trim(),
+          propLicencia: Auxiliar.equivalencias.licencia.prop,
+          valorLicencia: formatoTiposDatos((Auxiliar.equivalencias.licencia.tipo), thumbnail.licencia)
+        }
+      );
+    }
+    if (Auxiliar.existeObjeto(datosObjeto.categorias)) {
+      const categorias = datosObjeto.categorias;
+      categorias.forEach(categoria => {
+        const { broaders } = categoria;
+        const { etiqueta } = categoria;
+        let broadersFormados, etiquetaFormada;
+        let tieneBroaders, tieneEtiqueta;
+        if (Auxiliar.existeObjeto(broaders)) {
+          tieneBroaders = true;
+          broadersFormados = " ; skos:broader"
+          const tama = broaders.length;
+          const tamaMenos = tama - 1;
+          for (let i = 0; i < tama; i++) {
+            if (i == tamaMenos) {
+              broadersFormados = Mustache.render(
+                '{{{broadersFormados}}} <{{{broader}}}>',
+                {
+                  broadersFormados: broadersFormados,
+                  broader: broaders[i].broader
+                });
+            } else {
+              broadersFormados = Mustache.render(
+                '{{{broadersFormados}}} <{{{broader}}}>,',
+                {
+                  broadersFormados: broadersFormados,
+                  broader: broaders[i].broader
+                });
+            }
+          }
+        } else {
+          tieneBroaders = false;
+          broadersFormados = "";
+        }
+        if (Auxiliar.existeObjeto(etiqueta)) {
+          tieneEtiqueta = true;
+          etiquetaFormada = " ; rdfs:label ";
+          let valorEtiqueta;
+          etiqueta.some(etiq => {
+            valorEtiqueta = "'''" + etiq.value + "'''@" + etiq.lang;
+            if (etiq.lang === 'en') {
+              return true;
+            } else {
+              return false;
+            }
+          });
+          etiquetaFormada = Mustache.render(
+            ' ; rdfs:label {{{valorEtiqueta}}} ',
+            { valorEtiqueta: valorEtiqueta }
+          );
+        } else {
+          tieneEtiqueta = false;
+          etiquetaFormada = "";
+
+        }
+        query = Mustache.render(
+          '{{{query}}}.<{{{iriCategoria}}}> a skos:Concept{{#tieneEtiqueta}}{{{etiqueta}}}{{/tieneEtiqueta}}{{#tieneBroaders}}{{{broadersFormados}}} {{/tieneBroaders}}',
+          {
+            query: query,
+            iriCategoria: categoria.categoria,
+            tieneEtiqueta: tieneEtiqueta,
+            etiqueta: etiquetaFormada,
+            tieneBroaders: tieneBroaders,
+            broadersFormados: broadersFormados
+          }
+        );
+      });
+    }
+  }
+
+  query = Mustache.render('{{{query}}}}', { query: query });
   return encodeURIComponent(query);
 }
 
@@ -157,13 +397,7 @@ function nuevaTarea(datosTarea) {
  * @returns Query formateada
  */
 function infoContexto(iriContexto) {
-  const query = `${'select ?lat ?long ?titulo ?descr ?autor ?tipo where {'
-    + '<'}${iriContexto}> a ?tipo ; `
-    + 'geo:lat ?lat ; '
-    + 'geo:long ?long ; '
-    + 'rdfs:label ?titulo ; '
-    + 'rdfs:comment ?descr ;'
-    + 'dc:creator ?autor }';
+  const query = Mustache.render('select ?lat ?long ?titulo ?descr ?autor ?tipo where {<{{{iriContexto}}}> a ?tipo ; geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor }', { iriContexto: iriContexto });
   return encodeURIComponent(query);
 }
 
@@ -174,8 +408,7 @@ function infoContexto(iriContexto) {
  * @returns Query preparada para enviar al punto SPARQL
  */
 function todaInfo(iri) {
-  const query = `${'select ?propiedad ?valor where { '
-    + '<'}${iri}> ?propiedad ?valor }`;
+  const query = Mustache.render('select ?propiedad ?valor where { <{{{iri}}}> ?propiedad ?valor }', { iri: iri });
   return encodeURIComponent(query);
 }
 
@@ -187,8 +420,12 @@ function todaInfo(iri) {
  * @returns Query formateada para solicitar la eliminación de las triplas de ese iri
  */
 function eliminaObjeto(iri, tipo) {
-  const query = `${'with <http://localizarte.gsic.uva.es> '
-    + 'delete where { <'}${iri}> a <${tipo}> ; ?a ?b }`;
+  const query = Mustache.render(
+    'with <http://localizarte.gsic.uva.es> delete where { <{{{iri}}}> a <{{{tipo}}}> ; ?a ?b }',
+    {
+      iri: iri,
+      tipo: tipo
+    });
   return encodeURIComponent(query);
 }
 
@@ -234,30 +471,53 @@ function contenidoInsertDelete(array, extra, tama2, final) {
     }
   }
   let d;
-  let valor;
   for (let i = 0; i < tama; i++) {
     d = Object.keys(array)[i];
     if (d === 'fuente') {
-      const fue = (extra)?(array[d])[extra].split(';'):array[d].split(';');
+      const fue = (extra) ? (array[d])[extra].split(';') : array[d].split(';');
       let t = 0;
       fue.forEach(f => {
-        query += `<http://www.w3.org/2000/01/rdf-schema#seeAlso> `;
-        query += formatoTiposDatos('uriString', f.trim());
-        if(t < (v - 1)){
-          query += `; `;
-        }
+        query = Mustache.render(
+          '{{{query}}}<http://www.w3.org/2000/01/rdf-schema#seeAlso> {{{valor}}}{{{siguiente}}}',
+          {
+            query: query,
+            valor: formatoTiposDatos('uriString', f.trim()),
+            siguiente: (t < (v - 1)) ? '; ' : ''
+          }
+        );
         ++t;
       });
     } else {
-      query += `<${(Auxiliar.equivalencias[d]).prop}> `;
-      valor = (extra) ? (array[d])[extra] : (array[d]);
-      query += formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valor);
+      //TODO cambiar para cuando se tengan varios idiomas
+      let valorCampo;
+      if(d === 'titulo' || d === 'descr'){
+        valorCampo = (extra) ? (array[d])[extra] : (array[d]);
+      }
+      if (d === 'titulo' || d === 'descr' && !valorCampo.includes('@es')) {
+        query = Mustache.render(
+          '{{{query}}}<{{{propiedad}}}> {{{valor}}}@es',
+          {
+            query: query,
+            propiedad: (Auxiliar.equivalencias[d]).prop,
+            valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valorCampo)
+          }
+        );
+      } else {
+        query = Mustache.render(
+          '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
+          {
+            query: query,
+            propiedad: (Auxiliar.equivalencias[d]).prop,
+            valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, (extra) ? (array[d])[extra] : (array[d]))
+          }
+        );
+      }
     }
     if (final) {
-      if (i != (tama - 1)) query += '; ';
-    } else if (tama2 || i < (tama - 1)) query += '; ';
+      if (i != (tama - 1)) query = Mustache.render('{{{query}}}; ', { query: query });
+    } else if (tama2 || i < (tama - 1)) query = Mustache.render('{{{query}}}; ', { query: query });
   }
-  if (final) query += '} ';
+  if (final) query = Mustache.render('{{{query}}}} ', { query: query });
   return query;
 }
 
@@ -284,7 +544,6 @@ function actualizaValoresContexto(iri, inserciones, eliminaciones, modificacione
     query += contenidoInsertDelete(inserciones, null, tama2, false);
     query += contenidoInsertDelete(modificaciones, 'nuevo', tama2, true);
   }
-  console.log(query);
   return encodeURIComponent(query);
 }
 
@@ -299,13 +558,9 @@ function actualizaValoresTareas(iri, inserciones, eliminaciones, modificaciones)
  * @returns La query para realizar una consulta sobre las tareas de un contexto
  */
 function tareasContexto(iriContexto) {
-  const query = `${'prefix cl: <https://casuallearn.gsic.uva.es/property/> '
-    + 'select ?task ?aT ?aTR ?thumb where { '
-    + '?task a <https://casuallearn.gsic.uva.es/ontology/task>; '
-    + 'cl:hasContext <'}${iriContexto}>; `
-    + 'cl:answerType ?aT; '
-    + 'cl:associatedTextResource ?aTR. '
-    + 'optional{?task <http://es.dbpedia.org/ontology/thumbnail> ?thumb} } ';
+  const query = Mustache.render(
+    'prefix cl: <https://casuallearn.gsic.uva.es/property/> select ?task ?aT ?aTR ?thumb ?spa ?title where { ?task a <https://casuallearn.gsic.uva.es/ontology/task>; cl:hasContext <{{{iriContexto}}}>; cl:answerType ?aT; cl:associatedTextResource ?aTR ; cl:space ?spa . optional{?task <http://es.dbpedia.org/ontology/thumbnail> ?thumb .} optional{?task <https://casuallearn.gsic.uva.es/property/title> ?title} } ',
+    { iriContexto: iriContexto });
   return encodeURIComponent(query);
 }
 
@@ -316,10 +571,7 @@ function tareasContexto(iriContexto) {
  * @returns Query para realizar una consulta sobre la propiedad label de un contexto
  */
 function tituloContexto(iri) {
-  const query = `${'select ?titulo where { '
-    + '<'}${iri}> `
-    + 'a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; '
-    + 'rdfs:label ?titulo }';
+  const query = Mustache.render('select ?titulo where { <{{{iri}}}> a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; rdfs:label ?titulo . filter (lang(?titulo) = "es" || lang(?titulo) = "")}', { iri: iri });
   return encodeURIComponent(query);
 }
 

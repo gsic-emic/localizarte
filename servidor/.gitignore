@@ -63,3 +63,6 @@ typings/
 # Directorio de vscode
 .vscode
 .eslintrc.json
+
+# Configuración del sistema
+util/config.js

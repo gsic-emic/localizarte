@@ -1,1 +1,6 @@
 libraries/
+
+# Directorio de vscode
+.vscode
+.eslintrc.json
+

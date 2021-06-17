@@ -1,0 +1,6 @@
+bootstrap-5.0.1: https://github.com/twbs/bootstrap/releases/download/v5.0.1/bootstrap-5.0.1-dist.zip
+leaflet-1.7.1: https://github.com/Leaflet/Leaflet/archive/refs/tags/v1.7.1.zip
+leaflet.markercluster-1.4.1: https://github.com/Leaflet/Leaflet.markercluster/archive/refs/tags/v1.4.1.zip
+mustache.js-4.2.0: https://github.com/janl/mustache.js/archive/refs/tags/v4.2.0.zip
+webcam-easy https://www.npmjs.com/package/webcam-easy
+browser-image-compression 1.0.13 https://www.npmjs.com/package/browser-image-compression

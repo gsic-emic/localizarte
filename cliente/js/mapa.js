@@ -54,6 +54,13 @@ let indicador;
 /** Marcadores representados en el mapa */
 let markers = null;
 
+/** Popovers */
+let popoverTriggerList;
+let popoverList;
+
+let tokenSesion;
+let rol;
+
 
 inicio();
 
@@ -66,7 +73,11 @@ function inicio() {
     pois = [];
     popup = null;
     faltan = 0;
-    map = L.map('mapa');
+    map = L.map('mapa',
+        {
+            zoomControl: false,
+        });
+    map.attributionControl.setPrefix('<a target="_blank" href="https://leafletjs.com/">Leaflet</a>');
     capaMarcadores = L.layerGroup().addTo(map);
 
     siguiendo = false;
@@ -74,11 +85,11 @@ function inicio() {
 
     // Mapa cargado
     map.on('load', () => {
-        if (map.getZoom() > 13) {
+        if (map.getZoom() >= 13) {
             calculaZonasParaDescargar(map.getBounds());
             pintaPOIs(map.getBounds());
         } else {
-            if (map.getZoom() < 11) {
+            if (map.getZoom() < 13) {
                 if (markers) {
                     markers.clearLayers();
                 }
@@ -86,21 +97,40 @@ function inicio() {
         }
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    /*L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '<a href="https://casuallearn.gsic.uva.es" target="_blank">CasualLearn</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+        minZoom: 3,
+        attribution: '&copy; <a target="_blank" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+    }).addTo(map);*/
+
+    L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckp5n8o6z0hwm18mnwan8zm0l/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3ExMWcxajQwMTN4MnVsYTJtMmdpOXc2In0.S9rtoLY8TYoI-4D8oy8F8A', {
+        maxZoom: 20,
+        minZoom: 3,
+        attribution: '&copy; <a target="_blank" href="https://www.mapbox.com/about/maps/">Mapbox</a> | &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" >OpenStreetMap</a> contributors'
     }).addTo(map);
 
+    /*L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        minZoom: 3,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+    }).addTo(map);*/
+
+    /*L.tileLayer('', {
+        maxZoom: 20,
+        minZoom: 3,
+        attribution: ''
+    }).addTo(map);*/
+
     //Posición inicial
-    map.setView(posicionCyL, 4.5);//4.5
+    map.setView(position, 18);//4.5
 
     // El mapa se ve desplazado
     map.on('moveend', () => {
-        if (map.getZoom() > 13) {
+        if (map.getZoom() >= 13) {
             calculaZonasParaDescargar(map.getBounds());
             pintaPOIs(map.getBounds());
         } else {
-            if (map.getZoom() < 11) {
+            if (map.getZoom() < 13) {
                 if (markers) {
                     markers.clearLayers();
                 }
@@ -110,9 +140,20 @@ function inicio() {
 
     // Pulsación con el botón derecho del ratón o tap largo
     map.on('contextmenu', (pos) => {
-        creacionNuevoContexto(pos);
+        if(tokenSesion !== null && rol !== null && rol > 0){
+            creacionNuevoContexto(pos);
+        }
     });
+
+    popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+      return new bootstrap.Popover(popoverTriggerEl)
+    });
+
+    tokenSesion = null;
+    rol = null;
 }
+
 
 
 /**
@@ -147,7 +188,7 @@ function seguir() {
         });
 
         map.on('locationerror', (e) => {
-            alert(e.message);
+            notificaLateralError(e.message);
             siguiendo = false;
             indicador = null;
             map.stopLocate();
@@ -164,5 +205,16 @@ function seguir() {
             }
             indicador = null;
         }
+    }
+}
+
+function cambiaVistaProfesor() {
+    rol = rol * -1;
+    if(rol > 0){
+        document.getElementById('swVistaProfesor').checked = true;
+        document.getElementById('labelVistaProfesor').className = "form-check-label colorActivo";
+    } else {
+        document.getElementById('swVistaProfesor').checked = false;
+        document.getElementById('labelVistaProfesor').className = "form-check-label";
     }
 }

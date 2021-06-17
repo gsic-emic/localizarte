@@ -8,81 +8,47 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
-   sodipodi:docname="marcadorL.svg"
-   id="svg8"
-   version="1.1"
-   viewBox="0 0 6.3499999 12.7"
+   width="24"
    height="48"
-   width="24">
+   viewBox="0 0 6.3499999 12.7"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="marcadorL.svg"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)">
   <defs
      id="defs2">
     <linearGradient
-       osb:paint="solid"
-       id="linearGradient4047">
+       id="linearGradient4047"
+       osb:paint="solid">
       <stop
-         id="stop4045"
+         style="stop-color:#8b0d0d;stop-opacity:1;"
          offset="0"
-         style="stop-color:#8b0d0d;stop-opacity:1;" />
+         id="stop4045" />
     </linearGradient>
     <linearGradient
-       osb:paint="solid"
-       id="linearGradient2893">
+       id="linearGradient2893"
+       osb:paint="solid">
       <stop
-         id="stop2891"
+         style="stop-color:#ff8f80;stop-opacity:1;"
          offset="0"
-         style="stop-color:#ff8f80;stop-opacity:1;" />
+         id="stop2891" />
     </linearGradient>
     <clipPath
-       id="clipPath890"
-       clipPathUnits="userSpaceOnUse">
-      <rect
-         y="0"
-         x="0"
-         height="4.2333331"
-         width="4.9872146"
-         id="rect892"
-         style="fill:#000000;stroke-width:2.13497;paint-order:markers stroke fill" />
-    </clipPath>
-    <clipPath
-       id="clipPath906"
-       clipPathUnits="userSpaceOnUse">
-      <path
-         inkscape:original-d="m 2.1166668,8.466666 c 0,0 -2.64900759,-4.4543336 -2.02010979,-6.702777 C 0.34307571,0.8825324 1.2401355,0 2.1166667,0 2.9931979,0 3.8902576,0.8825324 4.1367763,1.7638889 4.7656742,4.0123324 2.1166668,8.466666 2.1166668,8.466666 Z"
-         sodipodi:nodetypes="caaac"
-         d="m 2.1166668,8.4666661 c 0,0 -2.64900759,-4.4543337 -2.02010979,-6.7027771 C 0.34307571,0.88253241 1.2401355,0 2.1166667,0 2.9931979,0 3.8902576,0.88253241 4.1367763,1.7638889 4.7656742,4.0123324 2.1166668,8.4666661 2.1166668,8.4666661 Z"
-         inkscape:transform-center-y="-0.635557"
-         inkscape:transform-center-x="0.27549325"
-         style="fill:#000000;stroke-width:1.26421;paint-order:markers stroke fill"
-         id="path908" />
-    </clipPath>
-    <clipPath
        clipPathUnits="userSpaceOnUse"
-       id="clipPath890-3">
+       id="clipPath890">
       <rect
          style="fill:#000000;stroke-width:2.13497;paint-order:markers stroke fill"
-         id="rect892-9"
+         id="rect892"
          width="4.9872146"
          height="4.2333331"
          x="0"
          y="0" />
     </clipPath>
     <clipPath
-       id="clipPath890-3-5"
-       clipPathUnits="userSpaceOnUse">
-      <rect
-         y="0"
-         x="0"
-         height="4.2333331"
-         width="4.9872146"
-         id="rect892-9-6"
-         style="fill:#000000;stroke-width:2.13497;paint-order:markers stroke fill" />
-    </clipPath>
-    <clipPath
        clipPathUnits="userSpaceOnUse"
-       id="clipPath906-3">
+       id="clipPath906">
       <path
-         id="path908-9"
+         id="path908"
          style="fill:#000000;stroke-width:1.26421;paint-order:markers stroke fill"
          inkscape:transform-center-x="0.27549325"
          inkscape:transform-center-y="-0.635557"
@@ -91,7 +57,29 @@
          inkscape:original-d="m 2.1166668,8.466666 c 0,0 -2.64900759,-4.4543336 -2.02010979,-6.702777 C 0.34307571,0.8825324 1.2401355,0 2.1166667,0 2.9931979,0 3.8902576,0.8825324 4.1367763,1.7638889 4.7656742,4.0123324 2.1166668,8.466666 2.1166668,8.466666 Z" />
     </clipPath>
     <clipPath
-       id="clipPath906-3-4"
+       id="clipPath890-3"
+       clipPathUnits="userSpaceOnUse">
+      <rect
+         y="0"
+         x="0"
+         height="4.2333331"
+         width="4.9872146"
+         id="rect892-9"
+         style="fill:#000000;stroke-width:2.13497;paint-order:markers stroke fill" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath890-3-5">
+      <rect
+         style="fill:#000000;stroke-width:2.13497;paint-order:markers stroke fill"
+         id="rect892-9-6"
+         width="4.9872146"
+         height="4.2333331"
+         x="0"
+         y="0" />
+    </clipPath>
+    <clipPath
+       id="clipPath906-3"
        clipPathUnits="userSpaceOnUse">
       <path
          inkscape:original-d="m 2.1166668,8.466666 c 0,0 -2.64900759,-4.4543336 -2.02010979,-6.702777 C 0.34307571,0.8825324 1.2401355,0 2.1166667,0 2.9931979,0 3.8902576,0.8825324 4.1367763,1.7638889 4.7656742,4.0123324 2.1166668,8.466666 2.1166668,8.466666 Z"
@@ -100,40 +88,52 @@
          inkscape:transform-center-y="-0.635557"
          inkscape:transform-center-x="0.27549325"
          style="fill:#000000;stroke-width:1.26421;paint-order:markers stroke fill"
-         id="path908-9-4" />
+         id="path908-9" />
     </clipPath>
     <clipPath
-       id="clipPath890-3-6"
-       clipPathUnits="userSpaceOnUse">
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath906-3-4">
+      <path
+         id="path908-9-4"
+         style="fill:#000000;stroke-width:1.26421;paint-order:markers stroke fill"
+         inkscape:transform-center-x="0.27549325"
+         inkscape:transform-center-y="-0.635557"
+         d="m 2.1166668,8.4666661 c 0,0 -2.64900759,-4.4543337 -2.02010979,-6.7027771 C 0.34307571,0.88253241 1.2401355,0 2.1166667,0 2.9931979,0 3.8902576,0.88253241 4.1367763,1.7638889 4.7656742,4.0123324 2.1166668,8.4666661 2.1166668,8.4666661 Z"
+         sodipodi:nodetypes="caaac"
+         inkscape:original-d="m 2.1166668,8.466666 c 0,0 -2.64900759,-4.4543336 -2.02010979,-6.702777 C 0.34307571,0.8825324 1.2401355,0 2.1166667,0 2.9931979,0 3.8902576,0.8825324 4.1367763,1.7638889 4.7656742,4.0123324 2.1166668,8.466666 2.1166668,8.466666 Z" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath890-3-6">
       <rect
-         y="0"
-         x="0"
-         height="4.2333331"
-         width="4.9872146"
+         style="fill:#000000;stroke-width:2.13497;paint-order:markers stroke fill"
          id="rect892-9-7"
-         style="fill:#000000;stroke-width:2.13497;paint-order:markers stroke fill" />
+         width="4.9872146"
+         height="4.2333331"
+         x="0"
+         y="0" />
     </clipPath>
   </defs>
   <sodipodi:namedview
-     inkscape:window-maximized="1"
-     inkscape:window-y="-8"
-     inkscape:window-x="-8"
-     inkscape:window-height="1057"
-     inkscape:window-width="1920"
-     units="px"
-     showgrid="false"
-     inkscape:document-rotation="0"
-     inkscape:current-layer="layer1"
-     inkscape:document-units="px"
-     inkscape:cy="30.538654"
-     inkscape:cx="-6.0169607"
-     inkscape:zoom="7.5513544"
-     inkscape:pageshadow="2"
-     inkscape:pageopacity="0.0"
-     borderopacity="1.0"
-     bordercolor="#666666"
+     id="base"
      pagecolor="#ffffff"
-     id="base" />
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="7.5513544"
+     inkscape:cx="-6.0169607"
+     inkscape:cy="30.538654"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -147,21 +147,21 @@
     </rdf:RDF>
   </metadata>
   <g
-     id="layer1"
+     inkscape:label="Capa 1"
      inkscape:groupmode="layer"
-     inkscape:label="Capa 1">
+     id="layer1">
     <path
-       sodipodi:nodetypes="ccccccc"
-       id="path836"
-       style="mix-blend-mode:normal;fill:#d11313;fill-opacity:1;stroke:#8b0d0d;stroke-width:0.49259;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
-       inkscape:transform-center-x="0.38108897"
+       d="M 3.1749984,12.172316 C 2.0295712,10.111389 1.0175022,7.9450193 0.47493134,5.6348742 0.20364594,4.4078996 0.05293182,2.9892099 0.75626435,1.8772672 1.2988352,0.99509481 2.2232151,0.20938827 3.2882615,0.24769497 4.403546,0.35315021 5.297783,1.2347215 5.7800682,2.2128004 c 0.5325232,1.1603851 0.3114759,2.5114649 0,3.7192443 C 5.0971007,8.1771791 4.0710003,10.466394 3.1749984,12.172316 Z"
        inkscape:transform-center-y="-0.89496601"
-       d="M 3.1749984,12.172316 C 2.0295712,10.111389 1.0175022,7.9450193 0.47493134,5.6348742 0.20364594,4.4078996 0.05293182,2.9892099 0.75626435,1.8772672 1.2988352,0.99509481 2.2232151,0.20938827 3.2882615,0.24769497 4.403546,0.35315021 5.297783,1.2347215 5.7800682,2.2128004 c 0.5325232,1.1603851 0.3114759,2.5114649 0,3.7192443 C 5.0971007,8.1771791 4.0710003,10.466394 3.1749984,12.172316 Z" />
+       inkscape:transform-center-x="0.38108897"
+       style="mix-blend-mode:normal;fill:#d30e44;fill-opacity:1;stroke:#9b0e44;stroke-width:0.49259;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="path836"
+       sodipodi:nodetypes="ccccccc" />
     <circle
-       r="1.3229166"
-       cy="3.96875"
-       cx="3.175"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.930292;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
        id="path4061"
-       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.930292;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+       cx="3.175"
+       cy="3.96875"
+       r="1.3229166" />
   </g>
 </svg>

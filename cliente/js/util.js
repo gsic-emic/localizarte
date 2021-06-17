@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones auxiliares utilizadas en el cliente de LocalizARTE.
  * autor: Pablo García Zarza
- * version: 20210519
+ * version: 20210525
  */
 
 /**
@@ -27,8 +27,13 @@ limitations under the License.
  * @returns Identificador formateado
  */
 function recursoContextoParaElServidor(iri) {
-    return iri.replace('https://casuallearn.gsic.uva.es/context/', direccionServidor + '/contexts/');
+    return iri.replace('https://casuallearn.gsic.uva.es/context/', `${direccionServidor}/contexts/`);
 }
+
+function recursoTareaParaElServidor(iri) {
+    return iri.replace('https://casuallearn.gsic.uva.es/', `${direccionServidor}/tasks/`);
+}
+
 
 //TODO revisar qué pasa con los optional
 /**
@@ -84,8 +89,16 @@ function masCercanos(posicion, lugares, maximo = 5) {
     distancias.some(distancia => {
         lugaresPrima.some(lugar => {
             if (distancia === lugar['distancia']) {
-                salida.push(lugar);
-                return true;
+                let guarda = true;
+                salida.forEach(l => {
+                    if (l.place === lugar.place || (l.lat === lugar.lat && l.lng === lugar.lng)) {
+                        guarda = false;
+                    }
+                });
+                if (guarda) {
+                    salida.push(lugar);
+                    return true;
+                }
             }
         });
         if (salida.length >= maximo) {
@@ -121,14 +134,38 @@ function validURL(str) {
     return !!pattern.test(str);
 }
 
-function notificaLateral(mensaje){
+function validIRI(str) {
+    return ((str.includes('www.') || (str.includes('https://') || (str.includes('http://')))) && !str.includes(' '));
+}
+
+/**
+ * Función para mostrar al usuario una notificación a través de un Toast.
+ * 
+ * @param {String} mensaje Mensaje
+ */
+function notificaLateral(mensaje) {
     let toast = new bootstrap.Toast(document.getElementById('notificacionLateral'));
     document.getElementById('mensajeNotificacionLateral').innerHTML = mensaje;
     toast.show();
 }
 
-function notificaLateralError(mensaje){
+/**
+ * Función para mostrar al usuario un mensaje de error a través de un Toast.
+ * 
+ * @param {String} mensaje Mensaje de error
+ */
+function notificaLateralError(mensaje) {
     let toast = new bootstrap.Toast(document.getElementById('notificacionLateralError'));
     document.getElementById('mensajeNotificacionLateralError').innerHTML = mensaje;
     toast.show();
+}
+
+/**
+ * Función para determinar si un modal está abierto o no.
+ * 
+ * @param {Object} modal Elemento del documento que contiene al modal
+ * @returns Verdadero si está abierto o falso si no lo está
+ */
+function modalOpen(modal) {
+    return modal.className.includes('show');
 }

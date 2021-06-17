@@ -8,6 +8,16 @@ var app = require('../app');
 var debug = require('debug')('servidor:server');
 var http = require('http');
 
+
+try {
+  require('fs').mkdirSync('./log');
+} catch (e) {
+  if (e.code != 'EEXIST') {
+    console.error("No se ha podido crear el directorio de log: ", e);
+    process.exit(1);
+  }
+}
+
 /**
  * Get port from environment and store in Express.
  */

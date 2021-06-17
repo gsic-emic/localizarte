@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión de los contextos.
  * autor: Pablo García Zarza
- * version: 20210519
+ * version: 20210615
  */
 
 /** Icono personalizado para los marcadores */
@@ -26,9 +26,9 @@ const iconoMarcadores = L.icon({
     iconUrl: './resources/marcadorL.svg'
 });
 
-/** 
- * Objecto donde se agrupa la información de las distintas opciones que 
- * tiene el usuario cuando vaya a agregar un nuevo POI. Se guarda la 
+/**
+ * Objecto donde se agrupa la información de las distintas opciones que
+ * tiene el usuario cuando vaya a agregar un nuevo POI. Se guarda la
  * información junto con un identificador.
  */
 let infoNuevoContexto = {};
@@ -36,7 +36,7 @@ let infoNuevoContexto = {};
 
 /**
  * Función para comprobar qué cuadrículas tiene que obtener del servidor.
- * 
+ *
  * @param {LatLngBounds} zona Límites del mapa
  */
 function calculaZonasParaDescargar(zona) {
@@ -64,10 +64,10 @@ function calculaZonasParaDescargar(zona) {
 }
 
 /**
- * Función para obtener el punto desde el que se va tiene que realizar las comprobaciones 
+ * Función para obtener el punto desde el que se va tiene que realizar las comprobaciones
  * de las áreas. Depende de la porción del mapa mostrado.
- * 
- * @param {Array} puntos Array de dos elementos: la latitud más al norte y la longitud al 
+ *
+ * @param {Array} puntos Array de dos elementos: la latitud más al norte y la longitud al
  * oeste.
  * @returns Punto desde que se tendría que comprobar las zonas
  */
@@ -94,12 +94,12 @@ function puntoInicio(puntos) {
 }
 
 /**
- * Función para calcular el número de cuadrículas que se van a tener que comprobar 
+ * Función para calcular el número de cuadrículas que se van a tener que comprobar
  * posteriormente.
- * 
- * @param {LatLng} noroeste Posición al noroeste 
- * @param {LatLng} sureste Posición al sueste 
- * @returns Número de cuadrículas en vertical y horizontal que se muestran en el mapa 
+ *
+ * @param {LatLng} noroeste Posición al noroeste
+ * @param {LatLng} sureste Posición al sueste
+ * @returns Número de cuadrículas en vertical y horizontal que se muestran en el mapa
  * desde la posición inicial.
  */
 function cuadriculas(noroeste, sureste) {
@@ -111,7 +111,7 @@ function cuadriculas(noroeste, sureste) {
 
 /**
  * Función para obtener del servidor las zonas que no están almacenadas en el cliente.
- * 
+ *
  * @param {LatLng} punto Posición desde la que se genera la zona en el servidor.
  * @param {LatLngBounds} zona Mapa mostrado
  */
@@ -140,18 +140,29 @@ function peticionZona(punto, zona) {
         })
         .then(result => {
             if (result) {
-                if (result.length > 0) {
-                    for (let json of result) {
-                        //Agrego la posición para que la carga de POIs sea inmediata
-                        json.posicion = L.latLng(json.lat, json.long);
-                        pois.push(json);
+                let encontrado = false;
+                for (let zona of zonas) {
+                    if (zona.equals(punto)) {
+                        encontrado = true;
+                        break;
                     }
                 }
-                zonas.push(punto);
+                if (!encontrado) {
+                    if (result.length > 0) {
+                        for (let json of result) {
+                            //Agrego la posición para que la carga de POIs sea inmediata
+                            json.posicion = L.latLng(json.lat, json.long);
+                            pois.push(json);
+                        }
+                    }
+                    zonas.push(punto);
+                }
             }
         })
         .catch(error => {
-            notificaLateralError('Se ha producido un error al descargar la zona: ' + error);
+            /*notificaLateralError(mustache.render(
+                'Se ha producido un error al descargar la zona: {{{error}}}',
+                { error: error }));*/
             console.log('error', error)
         })
         .finally(() => { //Siempre decremento por si tengo que pintar
@@ -163,9 +174,9 @@ function peticionZona(punto, zona) {
 }
 
 /**
- * Función para pintar los POIs de la zona del mapa que se muestra por 
+ * Función para pintar los POIs de la zona del mapa que se muestra por
  * pantalla.
- * 
+ *
  * @param {LatLngBounds} zona Zona que se está mostrando en la pantalla
  */
 function pintaPOIs(zona) {
@@ -176,23 +187,28 @@ function pintaPOIs(zona) {
             markers = L.markerClusterGroup(
                 {//Icono personaliza para las agrupaciones
                     iconCreateFunction: (cluster) => {
-                        let tipo = 'marker-cluster marker-cluster-';
                         const numeroHijos = cluster.getChildCount();
-                        if (numeroHijos <= 10) {
-                            tipo += '10';
+                        let tipo;
+                        if (numeroHijos <= 7) {
+                            tipo = '10';
                         } else {
-                            if (numeroHijos <= 25) {
-                                tipo += '25';
+                            if (numeroHijos <= 15) {
+                                tipo = '25';
                             } else {
-                                if (numeroHijos <= 50) {
-                                    tipo += '50';
+                                if (numeroHijos <= 40) {
+                                    tipo = '50';
                                 } else {
-                                    tipo += '100';
+                                    tipo = '100';
                                 }
                             }
                         }
-                        return L.divIcon({ html: '<div><span>' + numeroHijos + '<span></div>', className: tipo, iconSize: new L.Point(40, 40) });
-                    }
+                        return L.divIcon({
+                            html: mustache.render('<div><span>{{{numeroHijos}}}</span></div>', { numeroHijos: numeroHijos }),
+                            className: mustache.render('marker-cluster marker-cluster-{{{tipo}}}', { tipo: tipo }),
+                            iconSize: new L.Point(40, 40)
+                        });
+                    },
+                    maxClusterRadius: 40
                 }
             );
         }
@@ -207,15 +223,24 @@ function pintaPOIs(zona) {
     }
 }
 
+let modalInfo = false;
+let modalPOI;
 /**
  * Función para crear un marcador para un punto de interés.
- * 
+ *
  * @param {JSONObject} poi Información del punto de interés
  */
 function markerPoP(poi) {
     let marker = L.marker(poi.posicion, { icon: iconoMarcadores });
     marker.on('click', () => {
-        let modal = new bootstrap.Modal(document.getElementById('puntoInteres'));
+        const puntoInteresModal = document.getElementById('puntoInteres');
+        modalPOI = new bootstrap.Modal(puntoInteresModal);
+        tareasContexto(poi.ctx, poi);
+        if (rol !== null && rol > 0) {
+            document.getElementById('administracionPOI').removeAttribute('hidden');
+        } else {
+            document.getElementById('administracionPOI').setAttribute('hidden', true);
+        }
         const titulo = document.getElementById('tituloPuntoInteres');
         titulo.innerText = poi.titulo;
         const imagen = document.getElementById('imagenPuntoInteres');
@@ -233,19 +258,30 @@ function markerPoP(poi) {
 
         if (poi.descr) {
             const descripcion = document.getElementById('descripcionPuntoInteres');
-            descripcion.innerHTML = poi.descr;
+            descripcion.innerHTML = poi.descr.replaceAll('<a ', '<a target="_blank" ');
         }
 
-        document.getElementById('cerrarModalMarcador').onclick = () => cerrarPI();
+        document.getElementById('cerrarModalMarcador').onclick = () => {
+            modalPOI.hide();
+            cerrarPI()
+        };
+
         document.getElementById('eliminarPI').onclick = () => {
             confirmarEliminacion(poi, 'Eliminación punto de interés', '¿Estás seguro de eliminar el punto de interés?');
-            modal.hide();
+            modalPOI.hide();
         };
+
         document.getElementById('modificarPI').onclick = () => {
-            modal.hide();
+            modalPOI.hide();
             modificarPI(poi)
         };
-        modal.show();
+
+        document.getElementById('agregarTarea').onclick = () => {
+            modalPOI.hide();
+            nuevaTarea(poi.ctx);
+        }
+
+        modalPOI.show();
     }, { once: true });
     markers.addLayer(marker);
 }
@@ -261,9 +297,9 @@ function cerrarPI() {
 
 /**
  * Función para mostrar un diálogo de confirmación de la acción de borrado
- * 
+ *
  * @param {Object} poi Información del punto de interés a eliminar
- * @param {String} titulo Texto que se va a mostrar en la cabecera del modal 
+ * @param {String} titulo Texto que se va a mostrar en la cabecera del modal
  * @param {String} mensaje Texto que se va a mostrar en el cuerpo del modal
  */
 function confirmarEliminacion(poi, titulo, mensaje) {
@@ -279,11 +315,17 @@ function confirmarEliminacion(poi, titulo, mensaje) {
 
 /**
  * Función para eliminar un punto de interés del sistema.
- * 
+ *
  * @param {JSONObject} poi Información del punto de interés
  */
 function eliminarPI(poi) {
-    const direccion = recursoContextoParaElServidor(poi.ctx);
+    const direccion = mustache.render(
+        '{{{dir}}}?token={{{query}}}',
+        {
+            dir: recursoContextoParaElServidor(poi.ctx),
+            query: tokenSesion
+        }
+    );
     const peticion = {
         method: 'DELETE',
         redirect: 'follow'
@@ -304,7 +346,9 @@ function eliminarPI(poi) {
                 if (response.status === 200) {
                     return response.text();
                 }
-                notificaLateralError('No se ha podido completar el borrado: ' + response.status);
+                notificaLateralError(mustache.render(
+                    'No se ha podido completar el borrado: {{{status}}}',
+                    { status: response.status }));
                 return null;
             })
             .then(result => {
@@ -315,7 +359,9 @@ function eliminarPI(poi) {
                 }
             })
             .catch(error => {
-                notificaLateralError('Se ha producido un error: ' + error);
+                notificaLateralError(mustache.render(
+                    'Se ha producido un error: {{{error}}}',
+                    { error: error }));
                 console.log('error', error)
             });
     }
@@ -326,7 +372,13 @@ function eliminarPI(poi) {
  * @param {JSONObject} poi Información que se tiene del punto de interés
  */
 function modificarPI(poi) {
-    const direccion = recursoContextoParaElServidor(poi.ctx);
+    const direccion = mustache.render(
+        '{{{dir}}}?token={{{query}}}',
+        {
+            dir: recursoContextoParaElServidor(poi.ctx),
+            query: tokenSesion
+        }
+    );
     const options = {
         method: 'GET',
         redirect: 'follow'
@@ -338,7 +390,9 @@ function modificarPI(poi) {
                 case 200:
                     return response.json();
                 default:
-                    notificaLateralError('Se ha producido un error al intentar obtener la información del repositorio: ' + response.status);
+                    notificaLateralError(mustache.render(
+                        'Se ha producido un error al intentar obtener la información del repositorio: {{{status}}}',
+                        { status: response.status }));
                     return null;
             }
         })
@@ -413,7 +467,7 @@ function modificarPI(poi) {
                         longitudNPI: 'El punto necesita una longitud',
                         imagenNPI: 'La imagen se tiene que proporcionar a través de una URL',
                         licenciaNPI: 'La licencia de la imagen puede ser texto o URL',
-                        fuentesNPI: 'Las fuentes de información puden ser texto o URL'
+                        fuentesNPI: 'Las fuentes de información pueden ser texto o URL'
                     };
                     camposObligatorios.forEach(campo => {
                         if (!campo || !campo.value || campo.value.trim() === '') {
@@ -427,14 +481,14 @@ function modificarPI(poi) {
 
                     camposOpcionales.forEach(campo => {
                         if (campo.id === 'imagenNPI') {
-                            if (campo.value && campo.value.trim() !== '' && !validURL(campo.value.trim())) {
+                            if (campo.value && campo.value.trim() !== '' && !validIRI(campo.value.trim())) {
                                 todoOk = false;
                                 campo.placeholder = mensajes[campo.id];
                                 campo.value = '';
                                 campo.className = 'form-control is-invalid';
                             }
                         } else {
-                            if(campo.value && campo.value.trim() !== '') {
+                            if (campo.value && campo.value.trim() !== '') {
                                 campo.className = 'form-control is-valid';
                             }
                         }
@@ -485,7 +539,7 @@ function modificarPI(poi) {
                                     valor = campo.value.trim();
                                     break;
                             }
-                            //Si la key no está en lo que envía el cliente será una creación. 
+                            //Si la key no está en lo que envía el cliente será una creación.
                             //Para el resto de casos será una modificación o una eliminación (se envía un string vacío).
                             if (nombresServ[campoId] in datos) {
                                 //Modificación o eliminación
@@ -518,51 +572,53 @@ function modificarPI(poi) {
                                 .then(response => {
                                     switch (response.status) {
                                         case 200:
-                                            return 'OK';
-                                        case 404:
-                                            notificaLateralError('El POI no existe en el repositorio');
-                                            return null;
+                                            return { codigo: 200, mensaje: 'OK' };
                                         case 400:
-                                            notificaLateralError('El formato de los datos enviados no es válido.');
-                                            return null;
-                                        case 500:
-                                            notificaLateralError('Error interno del servidor');
-                                            return null;
+                                        case 403:
+                                        case 404:
                                         case 503:
-                                            notificaLateralError('El repositorio no puede atender a esta petición en este momento.');
+                                            return response.text();
                                         default:
-                                            notificaLateralError('Se ha producido un error desconocido: ' + response.status);
+                                            notificaLateralError(mustache.render(
+                                                'Se ha producido un error desconocido: {{{status}}}',
+                                                { status: response.status }));
                                             return null;
                                     }
                                 })
                                 .then(resultado => {
-                                    if (resultado) {
-                                        //POI modificado en el servidor
-                                        //Lo elimino de la memoria local
-                                        (Object.entries(modificados)).forEach(([modK, modV]) => {
-                                            if (modV === '' && (modK in poi)) {//Se elimina el valor
-                                                delete poi[modK];
-                                            } else {
-                                                poi[modK] = modV;
-                                            }
-                                        });
-                                        pois.some((p, i) => {
-                                            if (p.ctx === poi.ctx) {
-                                                pois.splice(i, 1);
-                                                return true;
-                                            } else {
-                                                return false;
-                                            }
-                                        });
-                                        //Lo vuelvo a agregar y pinto:
-                                        pois.push(poi);
-                                        pintaPOIs(map.getBounds());
-                                        modal.hide();
-                                        notificaLateral('Punto actualizado');
+                                    if (resultado !== null) {
+                                        if (typeof resultado !== 'string') {
+                                            //POI modificado en el servidor
+                                            //Lo elimino de la memoria local
+                                            (Object.entries(modificados)).forEach(([modK, modV]) => {
+                                                if (modV === '' && (modK in poi)) {//Se elimina el valor
+                                                    delete poi[modK];
+                                                } else {
+                                                    poi[modK] = modV;
+                                                }
+                                            });
+                                            pois.some((p, i) => {
+                                                if (p.ctx === poi.ctx) {
+                                                    pois.splice(i, 1);
+                                                    return true;
+                                                } else {
+                                                    return false;
+                                                }
+                                            });
+                                            //Lo vuelvo a agregar y pinto:
+                                            pois.push(poi);
+                                            pintaPOIs(map.getBounds());
+                                            modal.hide();
+                                            notificaLateral('Punto actualizado');
+                                        } else {
+                                            notificaLateralError(resultado);
+                                        }
                                     }
                                 })
                                 .catch(error => {
-                                    notificaLateralError('Se ha producido un error al actualizar el POI: ' + error);
+                                    notificaLateralError(mustache.render(
+                                        'Se ha producido un error al actualizar el POI: {{{error}}}',
+                                        { error: error }));
                                     console.log('error', error)
                                 });
                         } else {
@@ -574,56 +630,79 @@ function modificarPI(poi) {
             }
         }, { once: true })
         .catch(error => {
-            notificaLateralError('Se ha producido un error al obtener la información del POI: ' + error);
+            notificaLateralError(mustache.render(
+                'Se ha producido un error al obtener la información del POI: {{{error}}}',
+                { error: error }));
             console.log('error', error)
         });
 }
 
 /**
  * Función para crear un popup en el mapa cuando el usuario ha pulsado sobre el.
- * 
+ *
  * @param {Object} pos Pulsación en el mapa
  */
 function creacionNuevoContexto(pos) {
     const lat = Number((pos.latlng.lat).toFixed(5));
     const lng = Number((pos.latlng.lng).toFixed(5));
-    const cabecera = '<h4>Punto (' + lat + ', ' + lng + ')</h4>';
+    const cabecera = mustache.render(
+        '<h4>Punto ({{{lat}}},{{{lng}}})</h4>',
+        { lat: lat, lng: lng });
     let ta = window.performance.now();
     infoNuevoContexto[ta] = { lat: lat, lng: lng };
-    let cuerpo = '<div class="list-group">'
-        + '<a class="list-group-item list-group-item-action active" aria-current="true" href="javascript:modalNPI(' + ta + ');">Agregar nuevo POI</a>'
-        + '</div>';
-    peticionCrafts(lat, lng, cabecera + cuerpo);
-    cuerpo = cuerpo + '<div class="mt-2"><h6 style="text-align: left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div>';
+    let cuerpo = mustache.render(
+        '<div class="list-group"><a class="list-group-item list-group-item-action active" aria-current="true" href="javascript:modalNPI({{{ta}}});">Agregar nuevo POI</a></div>',
+        { ta: ta });
+    peticionCrafts(lat, lng, mustache.render('{{{cabecera}}}{{{cuerpo}}}', { cabecera: cabecera, cuerpo: cuerpo }));
+    cuerpo = mustache.render(
+        '{{{cuerpo}}}<div class="mt-2"><h6 style="text-align: left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+        { cuerpo: cuerpo });
     popup = L.popup(
         autoClose = true,
-        closeButton = false
+        closeButton = false,
+        maxWidth = 300
     ).setLatLng(pos.latlng).setContent(cabecera + cuerpo).openOn(map);
 }
 
 /**
  * Función para recuperar los puntos cercanos que existen cerca del punto donde haya pulsado
  * el usuario.
- * 
+ *
  * @param {Float} lat Latitud origen
  * @param {Float} lng Longitud origen
  * @param {String} contenidoPopup Contenido que se está mostrando en el popup
  */
 function peticionCrafts(lat, lng, contenidoPopup) {
     const myHeaders = new Headers();
-    myHeaders.append('Authorization', 'Bearer ' + tokenCraftLocalizarte);
+    myHeaders.append('Authorization', mustache.render(
+        'Bearer {{{token}}}',
+        { token: tokenCraftLocalizarte }));
     let completadoEn = false;
     let completadoEs = false;
     let resultadosEn = null;
     let resultadosEs = null;
     let puntoOrigen = { lat: lat, lng: lng };
 
+    const incr = (map.getMaxZoom() - map.getZoom() + 1) / 400;
+
     const direccionEn = mustache.render(
-        'https://crafts.gsic.uva.es/apis/localizarte/query?id=places-en&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&limit={{{lim}}}',
-        { lat: lat, lng: lng, incr: 0.005, lim: 20 });
+        'https://crafts.gsic.uva.es/apis/localizarteV2/query?id=places-en&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&isNotType=http://dbpedia.org/ontology/PopulatedPlace&limit={{{lim}}}',
+        {
+            lat: lat,
+            lng: lng,
+            incr: incr,
+            lim: 200
+        }
+    );
     const direccionEs = mustache.render(
-        'https://crafts.gsic.uva.es/apis/localizarte/query?id=places-es&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&limit={{{lim}}}',
-        { lat: lat, lng: lng, incr: 0.005, lim: 20 });
+        'https://crafts.gsic.uva.es/apis/localizarteV2/query?id=places-es&latCenter={{{lat}}}&lngCenter={{{lng}}}&halfSideDeg={{{incr}}}&isNotType=http://dbpedia.org/ontology/PopulatedPlace&limit={{{lim}}}',
+        {
+            lat: lat,
+            lng: lng,
+            incr: incr,
+            lim: 200
+        }
+    );
 
     const requestOptions = {
         method: 'GET',
@@ -648,11 +727,11 @@ function peticionCrafts(lat, lng, contenidoPopup) {
                 resultadosEn = null;
             }
             completadoEn = true;
-            pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
         })
         .catch(error => {
             resultadosEn = null; completadoEn = true;
-            pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
             console.log('error', error);
         });
 
@@ -673,93 +752,314 @@ function peticionCrafts(lat, lng, contenidoPopup) {
                 resultadosEs = null;
             }
             completadoEs = true;
-            pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
         })
         .catch(error => {
             resultadosEn = null; completadoEn = true;
-            pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
             console.log('error', error);
         });
 }
 
 /**
- * Función para pintar los lugares sugeridos cuando se ha completado la búsqueda en las distintas versiones 
+ * Función para pintar los lugares sugeridos cuando se ha completado la búsqueda en las distintas versiones
  * de la DBpedia.
- * 
+ *
  * @param {Object} resultadosEn Resultados que se han obtenido de DBpedia
  * @param {Boolean} completadoEn Indica si se ha completado la petición a DBpedia
  * @param {Object} resultadosEs Resultados que se han obtenido de es.DBpedia
  * @param {Boolean} completadoEs Indica si se ha completado la petición a es.DBpedia
  * @param {Object} puntoOrigen Objeto con la latitud (lat) y longitud (lng) donde ha pulstado el usuario
- * @param {String} contenidoPopup Frase que se está mostrando en el popup 
+ * @param {String} contenidoPopup Frase que se está mostrando en el popup
  */
-function pintaSugerenciaPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
+function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
     if ((completadoEn && !completadoEs) || (!completadoEn && resultadosEs)) {
         if (popup && popup.isOpen()) {
-            popup.setContent(contenidoPopup + '<div class="mt-2"><h6 style="text-align:left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div></div></div>');
+            popup.setContent(mustache.render(
+                '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                { contenidoPopup: contenidoPopup }));
         }
     } else {
         if (completadoEn && completadoEs) {
             const resultados = agrupaResultados(resultadosEn, resultadosEs);
             if (resultados) {
                 const paraMostrar = masCercanos(puntoOrigen, resultados);
-                if (popup && popup.isOpen()) {
-                    let nuevoContenido = '<div class="mt-3"><h6 style="text-align: left";>Agregar nuevo POI basado en:</h6><div class="list-group">';
-                    let ta = window.performance.now();
-                    paraMostrar.forEach(lugar => {
-                        infoNuevoContexto[ta] = lugar;
-                        nuevoContenido += '<a class="list-group-item list-group-item-action text-truncate" aria-current="true" href="javascript:modalNPI(' + ta + ');">' + lugar['lab'] + '</a>';
-                        ++ta;
-                    });
-                    nuevoContenido += '</div></div>';
-                    popup.setContent(contenidoPopup + nuevoContenido);
+                popup.setContent(mustache.render(
+                    '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 80%;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                    { contenidoPopup: contenidoPopup }));
+
+                let puntosEn = [];
+                let puntosEs = [];
+
+                paraMostrar.forEach(ele => {
+                    switch (ele.version) {
+                        case 'es':
+                            puntosEs.push({ punto: ele.place.replace('http://es.dbpedia.org/resource/', 'p:') });
+                            break;
+                        case 'en':
+                            puntosEn.push({ punto: ele.place.replace('http://dbpedia.org/resource/', 'p:') });
+                            break;
+                        default:
+                            break;
+                    }
+                });
+
+                const myHeaders = new Headers();
+                myHeaders.append('Authorization', mustache.render(
+                    'Bearer {{{token}}}',
+                    { token: tokenCraftLocalizarte }));
+                let completadoEn = false;
+                let completadoEs = false;
+                let resultadosEn = null;
+                let resultadosEs = null;
+                let infoEs = null, infoEn = null;
+                if (puntosEs.length > 0) {
+                    infoEs = mustache.render(
+                        'https://crafts.gsic.uva.es/apis/localizarteV2/resources?id=Place-es&ns=http://es.dbpedia.org/resource/&nspref=p{{#puntosEs}}&iris={{{punto}}}{{/puntosEs}}',
+                        { puntosEs: puntosEs });
+                } else {
+                    completadoEs = true;
+                }
+                if (puntosEn.length > 0) {
+                    infoEn = mustache.render(
+                        'https://crafts.gsic.uva.es/apis/localizarteV2/resources?id=Place-en&ns=http://dbpedia.org/resource/&nspref=p{{#puntosEn}}&iris={{{punto}}}{{/puntosEn}}',
+                        { puntosEn: puntosEn });
+                } else {
+                    completadoEn = true;
+                }
+
+                if (completadoEn && completadoEs) {
+                    pintaSugerenciaPois(null, true, null, true, null, contenidoPopup);
+                } else {
+                    const requestOptions = {
+                        method: 'GET',
+                        headers: myHeaders,
+                        redirect: 'follow'
+                    };
+
+                    if (infoEn) {
+                        fetch(infoEn, requestOptions)
+                            .then(response => {
+                                switch (response.status) {
+                                    case 200:
+                                        return response.json();
+                                    default:
+                                        notificaLateralError('Error en la obtención de los POIs de DBpedia.org (info final)');
+                                        return null;
+                                }
+                            })
+                            .then(results => {
+                                resultadosEn = results;
+                                completadoEn = true;
+                                pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                            })
+                            .catch(error => {
+                                resultadosEn = null; completadoEn = true;
+                                pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                                console.log('error', error);
+                            });
+                    } else {
+                        pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                    }
+                    if (infoEs) {
+                        fetch(infoEs, requestOptions)
+                            .then(response => {
+                                switch (response.status) {
+                                    case 200:
+                                        return response.json();
+                                    default:
+                                        notificaLateralError('Error en la obtención de los POIs de es.DBpedia.org (info final)');
+                                        return null;
+                                }
+                            })
+                            .then(results => {
+                                resultadosEs = results;
+                                completadoEs = true;
+                                pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                            })
+                            .catch(error => {
+                                resultadosEs = null; completadoEs = true;
+                                pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                                console.log('error', error);
+                            });
+                    } else {
+                        pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
+                    }
                 }
             } else {
-                popup.setContent(contenidoPopup + '<div class="mt-2"><h6 style="text-align:left">No existen puntos para sugerir.</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div></div>');
+                popup.setContent(mustache.render(
+                    '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">No existen puntos para sugerir.</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                    { contenidoPopup: contenidoPopup }));
             }
         }
     }
 }
 
+function pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, posicionPuntos, contenidoPopup) {
+    if ((completadoEn && !completadoEs) || (!completadoEn && resultadosEs)) {
+        if (popup && popup.isOpen()) {
+            popup.setContent(mustache.render(
+                '{{{contenidoPopup}}}<div class="mt-2"><h6 style="text-align:left">Cargando puntos cercanos...</h6><div class="progress" style="height: 1px;"><div class="progress-bar" role="progressbar" style="width: 90%;" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div></div></div>',
+                { contenidoPopup: contenidoPopup }));
+        }
+    } else {
+        if (completadoEn && completadoEs) {
+            if (posicionPuntos) {
+                const resultados = agrupaResultadosFinales(resultadosEn, resultadosEs, posicionPuntos);
+                if (resultados) {
+                    if (popup && popup.isOpen()) {
+                        let nuevoContenido = '<div class="mt-3"><h6 style="text-align: left";>Agregar nuevo POI basado en:</h6><div class="list-group justify-content-center" style="max-width:280px;">';
+                        let ta = window.performance.now(), etiqueta, lang;
+                        resultados.forEach(lugar => {
+                            infoNuevoContexto[ta] = lugar;
+                            if (lugar.label.length > 0) {
+                                lugar.label.some(l => {
+                                    //const eti = l.label;
+                                    lang = Object.keys(l)[0];
+                                    etiqueta = Object.values(l)[0];
+                                    if (lang === 'es')
+                                        return true;
+                                    return false;
+                                });
+                            } else {
+                                etiqueta = Object.values(lugar.label)[0];
+                            }
+                            for (let index = 0; index < lugar.label.length; index++) {
+                                const eti = lugar.label[index];
+                                lang = Object.keys(eti)[0];
+                                etiqueta = Object.values(eti)[0];
+                                if (lang === 'es') {
+                                    break;
+                                }
+                            }
+                            nuevoContenido = mustache.render(
+                                '{{{nuevoContenido}}}<a class="list-group-item list-group-item-action text-truncate" aria-current="true" href="javascript:modalNPI({{{ta}}});">{{{etiqueta}}}</a>',
+                                {
+                                    nuevoContenido: nuevoContenido,
+                                    ta: ta,
+                                    etiqueta: etiqueta
+                                });
+                            ++ta;
+                        });
+                        popup.setContent(mustache.render(
+                            '{{{contenidoPopup}}}{{{nuevoContenido}}}</div></div>',
+                            { contenidoPopup: contenidoPopup, nuevoContenido: nuevoContenido }));
+                    }
+                }
+            }
+        }
+    }
+}
+
+function agrupaResultadosFinales(resultadosEn, resultadosEs, posicionPuntos) {
+    let salida = null, todos = [], distancias = [];
+    if (resultadosEn) {
+        agregaPosicion(resultadosEn, posicionPuntos, 'en').forEach(ren => {
+            todos.push(ren);
+            distancias.push(ren.distancia);
+        });
+    }
+    if (resultadosEs) {
+        agregaPosicion(resultadosEs, posicionPuntos, 'es').forEach(res => {
+            todos.push(res);
+            distancias.push(res.distancia);
+        });
+    }
+
+    if (todos.length > 0) {
+        salida = [];
+        distancias = distancias.sort((a, b) => a - b);
+        distancias.forEach(d => {
+            todos.some(t => {
+                if (t.distancia === d) {
+                    salida.push(t);
+                    return true;
+                }
+                return false;
+            });
+        });
+    }
+
+    return salida;
+}
+
+function agregaPosicion(resultados, todosLosDatos, version) {
+    let salida = [];
+    let resultIri;
+    resultados.forEach(result => {
+        resultIri = result.iri;
+        todosLosDatos.some(r => {
+            if (r.version === version && resultIri === r.place) {
+                result.lat = r.lat;
+                result.lng = r.lng;
+                result.distancia = r.distancia;
+                result.version = r.version;
+                salida.push(result);
+            }
+            return false;
+        });
+    });
+    return salida;
+}
+
+
 /**
- * Función para agrupar los resultados obtenidos de las consultas a la DBpedia. Da preferencia 
+ * Función para agrupar los resultados obtenidos de las consultas a la DBpedia. Da preferencia
  * a los resultados de la versión española (compara por iri y etiqueta).
- * 
- * @param {Object} resultadosEn Resultados de la versión internacional 
+ *
+ * @param {Object} resultadosEn Resultados de la versión internacional
  * @param {Object} resultadosEs Resultados de la versión española.
  * @returns Resultados agrupados y aplicado la preferencia por la española.
  */
 function agrupaResultados(resultadosEn, resultadosEs) {
-    if (resultadosEn && !resultadosEs)
-        return resultadosEn;
-    if (!resultadosEn && resultadosEs)
-        return resultadosEs;
-    if (!resultadosEn && !resultadosEs)
-        return null;
-    let resultados = [];
-    resultadosEs.forEach(r => resultados.push(r));
-    resultadosEn.forEach(r => {
-        //Tengo que comprobar que la versión en Inglés no me devuelva algo que ya tengo en la española
-        let iri = r['place'];
-        let lab = r['lab'];
-        let encontrado = false;
-        resultadosEs.some(ven => {
-            if (ven['place'] === iri || ven['lab'] === lab) {
-                encontrado = true;
-                return true;
+    let salida = [];
+
+    if (!resultadosEn && !resultadosEs) {
+        salida = null;
+    } else {
+        if (resultadosEn && !resultadosEs) {
+            resultadosEn.forEach(r => {
+                r.version = 'en';
+                salida.push(r);
+            });
+        } else {
+            if (!resultadosEn && resultadosEs) {
+                resultadosEs.forEach(r => {
+                    r.version = 'es';
+                    salida.push(r);
+                });
+            } else {
+                resultadosEs.forEach(r => {
+                    r.version = 'es';
+                    salida.push(r);
+                });
+                resultadosEn.forEach(r => {
+                    //Tengo que comprobar que la versión en Inglés no me devuelva algo que ya tengo en la española
+                    let iri = r['place'];
+                    let encontrado = false;
+                    resultadosEs.some(ven => {
+                        if (ven['place'] === iri) {
+                            encontrado = true;
+                            return true;
+                        }
+                        return false;
+                    });
+                    if (!encontrado) {
+                        r.version = 'en';
+                        salida.push(r);
+                    }
+                });
             }
-            return false;
-        });
-        if (!encontrado)
-            resultados.push(r);
-    });
-    return resultados;
+        }
+    }
+
+    return salida;
 }
 
 /**
- * Función para pasar al modal la información sobre la selección del usuario 
+ * Función para pasar al modal la información sobre la selección del usuario
  * que ha realizado sobre el popup utilizado para agregar POIs.
- * 
+ *
  * @param {Number} id Identificador de la opción seleccionada por el usuario
  * @returns Datos de la opción seleccionada por el usuario
  */
@@ -771,7 +1071,7 @@ function datosNuevoContexto(id) {
 
 /**
  * Función para establecer la clase de un conjunto de objetos a form-control (formularios).
- * 
+ *
  * @param {Array} campos Array con las referencias de los objetos del formulario.
  */
 function reseteaCamposValidador(campos) {
@@ -783,8 +1083,8 @@ function reseteaCamposValidador(campos) {
 /**
  * Función para crear el modal para la creación de un punto de interés. Carga la información
  * que se le pase mediante el identificador en el formulario.
- * 
- * @param {Number} id Identificador de los datos en el vector infoNuevoContexto 
+ *
+ * @param {Number} id Identificador de los datos en el vector infoNuevoContexto
  */
 function modalNPI(id) {
     const datos = datosNuevoContexto(id);
@@ -796,7 +1096,7 @@ function modalNPI(id) {
         const longitud = document.getElementById('longitudNPI');
         const botonEnviar = document.getElementById('enviarNPI');
         document.getElementById('tituloModalNPI').innerText = 'Nuevo punto de interés';
-        
+
 
         const camposObligatorios = [
             document.getElementById('tituloNPI'),
@@ -806,32 +1106,110 @@ function modalNPI(id) {
         ];
         const camposOpcionales = [
             document.getElementById('fuentesNPI'),
-            document.getElementById('imagenNPI'),
-            document.getElementById('licenciaNPI')
+            document.getElementById('licenciaNPI'),
+            document.getElementById('imagenNPI')
+        ];
+
+        const imagenLicencia = [
+            { imagen: document.getElementById('imagenNPI') },
+            { licencia: document.getElementById('licenciaNPI') }
         ];
 
         const nombresServ = {
-            tituloNPI: 'lab',
-            descrNPI: 'com',
+            tituloNPI: 'label',
+            descrNPI: 'comment',
             latitudNPI: 'lat',
             longitudNPI: 'lng',
-            fuentesNPI: 'place',
-            imagenNPI: 'imagen',
+            fuentesNPI: 'iri',
+            imagenNPI: 'image',
             licenciaNPI: 'license'
         };
 
         const campos = camposObligatorios.concat(camposOpcionales);
-        let campoId;
+        let campoId, dato;
         campos.forEach(campo => {
             campoId = campo.id;
             switch (campoId) {
+                case 'licenciaNPI'://Ahora puede venir dentro de la imagen
+                    if (nombresServ[campoId] in datos) {
+                        campo.setAttribute('value', datos[nombresServ[campoId]]);
+                    } else {
+                        if (datos.image && datos.image.length > 0) {
+                            break;
+                        } else {
+                            campo.setAttribute('value', '');
+                        }
+                    }
+                    break;
                 case 'descrNPI':
                     if (nombresServ[campoId] in datos) {
-                        campo.value = datos[nombresServ[campoId]];
+                        dato = datos[nombresServ[campoId]];
+                        if (dato.length && dato.length > 0) {//Más de un idioma
+                            dato.some(d => {
+                                campo.value = Object.values(d)[0];
+                                if (Object.keys(d)[0] === 'es') {
+                                    return true;
+                                }
+                                return false;
+                            });
+                        } else {
+                            if (typeof dato !== 'string') {
+                                campo.value = Object.values(dato)[0];
+                            } else {
+                                campo.value = dato;
+                            }
+                        }
                     } else {
                         campo.value = '';
                     }
                     break;
+                case 'tituloNPI':
+                    if (nombresServ[campoId] in datos) {
+                        dato = datos[nombresServ[campoId]];
+                        if (dato.length && dato.length > 0) {//Más de un idioma
+                            dato.some(d => {
+                                campo.setAttribute('value', Object.values(d)[0]);
+                                if (Object.keys(d)[0] === 'es') {
+                                    return true;
+                                }
+                                return false;
+                            });
+                        } else {
+                            if (typeof dato !== 'string') {
+                                campo.setAttribute('value', Object.values(dato)[0]);
+                            } else {
+                                campo.setAttribute('value', dato);
+                            }
+                        }
+                    } else {
+                        campo.setAttribute('value', '');
+                    }
+                    break;
+                case 'imagenNPI':
+                    if (nombresServ[campoId] in datos) {
+                        dato = datos.image;
+                        if (dato.length && dato.length > 0) {
+                            document.getElementById('imagenNPI').setAttribute('value', dato.iri);
+                            document.getElementById('licenciaNPI').setAttribute('value', dato.rights);
+
+                        } else {
+                            if (typeof dato !== 'string') {
+                                document.getElementById('imagenNPI').setAttribute('value', dato.iri);
+                                if (dato.iri.includes('commons.wikimedia.org/wiki/Special:FilePath')) {
+                                    document.getElementById('licenciaNPI').setAttribute('value', dato.iri.replace('commons.wikimedia.org/wiki/Special:FilePath/', 'commons.wikimedia.org/wiki/File:').replaceAll('?width=300', ''));
+                                }
+                            } else {
+                                document.getElementById('imagenNPI').setAttribute('value', dato);
+                                if (dato.iri.includes('commons.wikimedia.org/wiki/Special:FilePath')) {
+                                    document.getElementById('licenciaNPI').setAttribute('value', dato.iri.replace('commons.wikimedia.org/wiki/Special:FilePath/', 'commons.wikimedia.org/wiki/File:').replaceAll('?width=300', ''));
+                                }
+                            }
+                        }
+                    } else {
+                        document.getElementById('imagenNPI').setAttribute('value', '');
+                        document.getElementById('licenciaNPI').setAttribute('value', '');
+                    }
+                    break
                 case 'latitudNPI':
                 case 'longitudNPI':
                     campo.setAttribute('readonly', true);
@@ -872,14 +1250,14 @@ function modalNPI(id) {
             });
             camposOpcionales.forEach(campo => {
                 if (campo.id === 'imagenNPI') {
-                    if (campo.value && campo.value.trim() !== '' && !validURL(campo.value.trim())) {
+                    if (campo.value && campo.value.trim() !== '' && !validIRI(campo.value.trim())) {
                         todoOk = false;
                         campo.placeholder = mensajes[campo.id];
                         campo.value = '';
                         campo.className = 'form-control is-invalid';
                     }
                 } else {
-                    if(campo.value && campo.value.trim() !== '') {
+                    if (campo.value && campo.value.trim() !== '') {
                         campo.className = 'form-control is-valid';
                     }
                 }
@@ -932,14 +1310,32 @@ function modalNPI(id) {
                                     ele = elem.trim();
                                     if (ele && ele !== '') {
                                         fu.push({
-                                            type: (validURL(ele) ? 'url' : 'string'),
-                                            value: ele
+                                            //type: (validURL(ele) ? 'url' : 'string'),
+                                            fuente: ele
                                         });
                                     }
                                 });
                                 if (fu.length > 0) {
                                     envio[idsParaServ[campoId]] = fu;
                                 }
+                            }
+                            break;
+                        case 'tituloNPI':
+                        case 'descrNPI':
+                            envio[idsParaServ[campoId]] = [{
+                                lang: 'es',
+                                value: campo.value.trim()
+                            }];
+                            dato = datos[nombresServ[campoId]];
+                            if (dato && dato.length && dato.length > 0) {//Más de un idioma
+                                dato.some(d => {
+                                    if (Object.keys(d)[0] !== 'es') {
+                                        envio[idsParaServ[campoId]].push({
+                                            lang: Object.keys(d)[0],
+                                            value: Object.values(d)[0]
+                                        });
+                                    }
+                                });
                             }
                             break;
                         default:
@@ -949,17 +1345,20 @@ function modalNPI(id) {
                             break;
                     }
                 });
-                //TODO cambiar el autor por el del usuario
-                envio.autor = 'pablogz@gsic.uva.es';
+
+                const enviar = {
+                    token: tokenSesion,
+                    datos: envio
+                };
 
                 //Envío los datos al servidor para que los agregue
-                let direccion = direccionServidor + '/contexts';
+                const direccion = mustache.render('{{{direccionServidor}}}/contexts', { direccionServidor: direccionServidor });
                 let myHeaders = new Headers();
                 myHeaders.append("Content-Type", "application/json");
                 const requestOptions = {
                     method: 'POST',
                     headers: myHeaders,
-                    body: JSON.stringify(envio),
+                    body: JSON.stringify({ token: tokenSesion, datos: envio }),
                     redirect: 'follow',
                 };
                 fetch(direccion, requestOptions)
@@ -1000,10 +1399,10 @@ function modalNPI(id) {
 
 /**
  * Solicitud para la obtención de toda la información de un POI
- * 
+ *
  * @param {String} iri Identificador del POI
- * @param {Boolean} guardaPinta Indica si se tiene que llamar para 
- * volver a pintar los marcadores del mapa y guardar el resultado 
+ * @param {Boolean} guardaPinta Indica si se tiene que llamar para
+ * volver a pintar los marcadores del mapa y guardar el resultado
  * en la caché. Con false se devuelve la info del servidor.
  * @param {Object} modal Modal que se debe ocultar cuando se finalice la petición.
  */
@@ -1037,7 +1436,9 @@ function peticionInfoPoi(iri, guardaPinta, modal) {
             }
         })
         .catch(error => {
-            notificaLateralError('Se ha producido un error al descargar la información del POI: ' + error);
+            notificaLateralError(mustache.render(
+                'Se ha producido un error al descargar la información del POI: {{{error}}}',
+                { error: error }));
             console.log('error', error)
         });
 }
