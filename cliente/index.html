@@ -1,0 +1,583 @@
+<!DOCTYPE html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./libraries/bootstrap-5.0.1-dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="./css/localizarte.css">
+
+    <link rel="stylesheet" href="./libraries/leaflet-1.7.1/leaflet.css" />
+    <link rel="stylesheet" href="./libraries/Leaflet.markercluster-1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="./css/clusteres.css">
+    <title>LocalizARTE</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark navegacion">
+        <div class="container-fluid">
+            <a class="navbar-brand">
+                <img src="./resources/logo.svg" alt="Logo LocalizARTE" width="28" height="28"
+                    class="d-inline-block align-text-top">
+                LocalizARTE
+            </a>
+            <!--<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>-->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#gestionUsuarioContenedor" aria-controls="gestionUsuarioContenedor"
+                aria-expanded="false">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="gestionUsuarioContenedor">
+                <ul class="navbar-nav ms-auto mb-1 mb-md-0" id="gestionUsuarioLista">
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:registroUsuario();">Registro</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:inicioSesionUsuario();">Identificación</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="mapa" id="mapa"></div>
+
+    <div class="modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" id="puntoInteres">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title titulo" id="tituloPuntoInteres"></h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        id="cerrarModalMarcador"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="py-1 row g-2 text-white rounded fondoPrimario" id="administracionPOI">
+                        <div class="row justify-content">
+                            <h6>Administración del POI</h6>
+                        </div>
+                        <div class="row g-3 align-items-center justify-content-around my-1">
+                            <div class="col my-1 d-flex justify-content-center">
+                                <button class="btn btn-primary" id="agregarTarea">Agregar tarea</button>
+                            </div>
+                            <div class="col my-1 d-flex justify-content-center">
+                                <button class="btn btn-outline-warning" id="modificarPI">Modificar POI</button>
+                            </div>
+                            <div class="col my-1 d-flex justify-content-center">
+                                <button class="btn btn-outline-danger" id="eliminarPI">Eliminar POI</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-md-flex flex-md-row py-1 align-items-center">
+                        <div class="col-md-auto p-1 order-md-1 text-center">
+                            <img class="imagen" id="imagenPuntoInteres" alt="Imagen Punto Interés">
+                        </div>
+                        <div class="col order-md-2">
+                            <div id="descripcionPuntoInteres" class="descripcion"></div>
+                            <div id="tareasPuntoInteres" style="visibility: hidden;"></div>
+                        </div>
+                    </div>
+                    <div class="d-md-flex flex-md-row py-1 row" id="espacioTareas">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmarBorrar" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="tituloConfirmacion"></h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 id="mensajeConfirmacion"></h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" id="aceptaBorrar">Borrar</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-absolute top-0 end-0 p-3" style="z-index: 1601;margin:auto">
+        <div id="notificacionLateral" class="toast hide text-white bg-primary" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <small id="mensajeNotificacionLateral"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="notificacionLateralError" class="toast hide text-white bg-danger" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <small id="mensajeNotificacionLateralError"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" id="nuevoPuntoInteres">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title titulo" id="tituloModalNPI"></h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        id="cerrarModalNPI"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNPI">
+                        <div class="row g-1 align-items-center mx-1 mb-4">
+                            <div class="col-sm-12">
+                                <label for="tituloNPI" class="form-label">Título*</label>
+                                <input type="text" id="tituloNPI" class="form-control"
+                                    placeholder="Escribe aquí el título del nuevo punto de interés">
+                                <small class="text-muted">
+                                    El identificador único del punto de interés se creará utilizando el título que
+                                    indiques.
+                                </small>
+                            </div>
+                        </div>
+                        <div class="row g-1 align-items-center mx-1 mb-4">
+                            <div for="col-sm-12">
+                                <label for="descrNPI" class="form-label">Descripción*</label>
+                                <textarea class="form-control" id="descrNPI" name="descrNPI"
+                                    placeholder="Descripción del punto de interés"></textarea>
+                            </div>
+                        </div>
+                        <div class="row g-1 align-items-center mx-1 mb-4">
+                            <div class="col-sm-12">
+                                <label for="fuentesNPI" class="form-label">Fuentes de información</label>
+                                <input type="text" id="fuentesNPI" class="form-control"
+                                    placeholder="Escribe aquí las URLs de las fuentes de donde has obtenido la información">
+                                <small class="text-muted">
+                                    Si la información la has obtenido de varias fuentes sepáralas con el carácter
+                                    <b>;</b>. Las fuentes pueden ser expresadas mediante URLs o con cadenas de texto.
+                                </small>
+                            </div>
+                        </div>
+                        <div class="row g-2 align-items-center mx-1 mb-4">
+                            <div class="col-sm-6">
+                                <label for="latitudNPI" class="form-label">Latitud*</label>
+                                <input type="text" id="latitudNPI" class="form-control" readonly required>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="longitudNPI" class="form-label">Longitud*</label>
+                                <input type="text" id="longitudNPI" class="form-control" readonly required>
+                            </div>
+                        </div>
+                        <div class="row g-2 align-items-center mx-1 mb-4">
+                            <div class="col-sm-6">
+                                <label for="imagenNPI" class="form-label">URL de la imagen</label>
+                                <input type="text" id="imagenNPI" class="form-control" placeholder="https://...">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="licenciaNPI" class="form-label">Licencia</label>
+                                <input type="text" id="licenciaNPI" class="form-control"
+                                    placeholder="Licencia de la imagen">
+                            </div>
+                        </div>
+                        <div class="row mx-1 mb-4">
+                            <small class="text-muted">
+                                * Campos obligatorios
+                            </small>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
+                                <button class="btn btn-primary" type="button" id="enviarNPI">Enviar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" data-bs-backdrop="static" data-bs-keyboard="false" id="nuevaTareaModal" tabindex="-1"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="encabezadoNT">Nueva tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNT">
+                        <div class="row g-1 align-items-center mx-1 mb-4" id="seleccionadorEspacio">
+                            <label class="form-label" for="selectTipoRespuesta">Selecciona el tipo de
+                                respuesta de la tarea*</label>
+                            <select id="selectTipoRespuesta" class="form-select">
+                                <option selected>Selecciona un tipo</option>
+                                <option value="tRVF">Verdadero o falso</option>
+                                <option value="tRMcq">Pregunta opción múltiple</option>
+                                <option value="tRTexto">Texto</option>
+                                <option value="tRTextoCorto">Texto corto</option>
+                                <option value="tRFoto">Fotografía</option>
+                                <option value="tRFotoTexto">Fotografía y texto</option>
+                                <option value="tRMultiFotos">Múltiple fotografías</option>
+                                <option value="tRMultiFotosTexto">Múltiples fotos y texto</option>
+                                <option value="tRVideo">Vídeo</option>
+                            </select>
+                        </div>
+                        <div class="row g-1 align-items-center mx-1 mb-4">
+                            <div class="col-sm-12">
+                                <label for="tituloNT" class="form-label">Título*</label>
+                                <input type="text" id="tituloNT" class="form-control"
+                                    placeholder="Escribe aquí el título de la nueva tarea">
+                                <small class="text-muted">
+                                    El identificador único de la tarea se creará utilizando este título.
+                                </small>
+                            </div>
+                        </div>
+                        <div class="row g-1 align-items-center mx-1 mb-4">
+                            <div for="col-sm-12">
+                                <label for="textoAsociadoNT" class="form-label">Enunciado de la tarea*</label>
+                                <textarea class="form-control" id="textoAsociadoNT" name="textoAsociadoNT"
+                                    placeholder="Texto asociado a la tarea que tendrán que realizar"></textarea>
+                            </div>
+                        </div>
+                        <div id="tRcamposExtra" class="row g-1 align-items-center mx-1 mb-4" hidden>
+                            <div id="tRverdaderoFalso" class="row align-items-center my-1 g-1" hidden>
+                                <label for="verdaderoNTDiv" class="form-label">Respuesta correcta*</label>
+                                <div id="verdaderoNTDiv" class="row g-1">
+                                    <div class="col-sm-6 form-check">
+                                        <input class="form-check-input" type="radio" name="rbVFNT" id="rbVFVNT"
+                                            value="verdadero">
+                                        <label class="form-check-label" for="rbVFVNT">Verdadero</label>
+                                    </div>
+                                    <div class="col-sm-6 form-check">
+                                        <input class="form-check-input" type="radio" name="rbVFNT" id="rbVFFNT"
+                                            value="falso">
+                                        <label class="form-check-label" for="rbVFFNT">Falso</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="tRMCQ" class="row g-2 align-items-center my-1" hidden>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="rVMCQ">Respuesta verdadera*</label>
+                                        <input type="text" id="rVMCQ" class="form-control"
+                                            placeholder="Escribe aquí la respuesta verdadera">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="rD1MCQ">Distracción 1*</label>
+                                        <input type="text" id="rD1MCQ" class="form-control"
+                                            placeholder="Opción falsa 1">
+                                    </div>
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="rD2MCQ">Distracción 2*</label>
+                                        <input type="text" id="rD2MCQ" class="form-control"
+                                            placeholder="Opción falsa 2">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="rD3MCQ">Distracción 3*</label>
+                                        <input type="text" id="rD3MCQ" class="form-control"
+                                            placeholder="Opción falsa 3">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-1 align-items-center mx-1 mb-4">
+                            <div class="row g-1">
+                                <label class="form-label" for="cbEspacioDiv">Espacio donde se podrá completar la tarea*
+                                    <a role="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="popover"
+                                        data-bs-content="<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de LocalizARTE desde cualquier lugar."
+                                        data-bs-container="#nuevaTareaModal" data-bs-html="true">?</a>
+                                </label>
+                                <div class="row mx-1" id="cbEspacioDiv">
+                                    <div class="form-check col-md-4">
+                                        <input class="form-check-input" type="checkbox" name="cbEspacio" id="cbEspacio1"
+                                            value="physical">
+                                        <label class="form-check-label" for="rbEspacio1">Físico</label>
+                                    </div>
+                                    <div class="form-check col-md-4">
+                                        <input class="form-check-input" type="checkbox" name="cbEspacio" id="cbEspacio2"
+                                            value="virtualMap">
+                                        <label class="form-check-label" for="rbEspacio2">Mapa virtual</label>
+                                    </div>
+                                    <div class="form-check col-md-4" hidden>
+                                        <input class="form-check-input" type="checkbox" name="cbEspacio" id="cbEspacio3"
+                                            value="web">
+                                        <label class="form-check-label" for="rbEspacio3">Web (Moodle)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mx-1 mb-4">
+                            <small class="text-muted">
+                                * Campos obligatorios
+                            </small>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
+                                <button class="btn btn-primary" type="button" id="enviarNT">Enviar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" data-bs-backdrop="static" id="inicioSesionModal" tabindex="-1" role="dialog"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Iniciar sesión</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formInicio">
+                        <div class="row g-1 justify-content-around mx-1 mb-4">
+                            <div class="col-md-5">
+                                <label for="inicioMail" class="form-label">Dirección de correo</label>
+                                <input type="text" id="inicioMail" class="form-control" placeholder="ejemplo@email.es">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="inicioPass" class="form-label">Contraseña</label>
+                                <input type="password" id="inicioPass" class="form-control" placeholder="Tu contraseña">
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
+                                <button type="button" class="btn btn-primary" id="inicioEnviar">Iniciar sesión</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" data-bs-backdrop="static" id="nuevoUsuarioModal" tabindex="-1" role="dialog"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Nuevo usuario</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRegistro">
+                        <div class="row g-1 justify-content-around mx-1 mb-4">
+                            <div class="col-md-5">
+                                <label for="registroMail" class="form-label">Dirección de correo*</label>
+                                <input type="text" id="registroMail" class="form-control"
+                                    placeholder="ejemplo@email.es">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="registroPass" class="form-label">Contraseña*</label>
+                                <input type="password" id="registroPass" class="form-control"
+                                    placeholder="Nueva contraseña">
+                            </div>
+                        </div>
+                        <div class="row g-1 justify-content-around mx-1 mb-4">
+                            <div class="col-md-5">
+                                <label for="registroNombre" class="form-label">Nombre</label>
+                                <input type="text" id="registroNombre" class="form-control" placeholder="Claude">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="registroApellido" class="form-label">Apellido</label>
+                                <input type="text" id="registroApellido" class="form-control" placeholder="Shannon">
+                            </div>
+                        </div>
+                        <div class="row mx-1 mb-4">
+                            <small class="text-muted">
+                                * Campos obligatorios
+                            </small>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
+                                <button type="button" class="btn btn-primary" id="registroEnviar">Registrar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmarCerrar" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Cierre de sesión</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 class="text-center">¿Quieres cerrar la sesión?</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" id="aceptaCerrarSesion">Cerrar sesión</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="realizarTareaModal" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="tituloRealizaTarea"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-md-flex flex-md-row g-1 mb-3">
+                        <div class="col-md-auto order-md-1 text-center" id="colImgRepoRealizaTarea">
+                            <img class="imagen" id="imgRepoRealizaTarea">
+                        </div>
+                        <div class="col order-md-2">
+                            <div id="atrRealizaTarea" class="py-2 px-1"></div>
+                        </div>
+                    </div>
+                    <div class="row g-1 my-1">
+                        <div class="col-12">
+                            <label for="notasRealizaTarea" class="form-label" id="lblnotasRealizaTarea">Tus
+                                anotaciones</label>
+                            <input type="text" id="tbnotasRealizaTarea" class="form-control"
+                                placeholder="Agrega alguna nota si lo deseas">
+                        </div>
+                    </div>
+                    <div id="contenedorMcqRealizaTarea" class="row g-1 my-1" hidden>
+                        <label for="mcqOpcionesRealizaTarea" class="mt-3">Selecciona la respuesta
+                            correcta</label>
+                        <div id="mcqOpcionesRealizaTarea" class="row g-1 form-check">
+                            <!--<div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
+                                    id="mcq1RealizaTarea" value="1">
+                                <label class="form-check-label" for="mcq1RealizaTarea">Opt1</label>
+                            </div>
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
+                                    id="mcq2RealizaTarea" value="2">
+                                <label class="form-check-label" for="mcq2RealizaTarea">Opt2</label>
+                            </div>
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
+                                    id="mcq3RealizaTarea" value="3">
+                                <label class="form-check-label" for="mcq3RealizaTarea">Opt3</label>
+                            </div>
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
+                                    id="mcq4RealizaTarea" value="4">
+                                <label class="form-check-label" for="mcq4RealizaTarea">Opt4</label>
+                            </div>-->
+                        </div>
+                    </div>
+                    <div id="contenedorvFRealizaTarea" class="row g-1 my-1" hidden>
+                        <label for="vFOpcionesRealizaTarea" class="mt-3">Selecciona la respuesta
+                            correcta</label>
+                        <div id="vFOpcionesRealizaTarea" class="row g-1 form-check">
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="vFRealizaTarea" id="vF1RealizaTarea"
+                                    value="True">
+                                <label class="form-check-label" for="vF1RealizaTarea">Verdadero</label>
+                            </div>
+                            <div class="my-1 form-check">
+                                <input class="form-check-input" type="radio" name="vFRealizaTarea" id="vF2RealizaTarea"
+                                    value="False">
+                                <label class="form-check-label" for="vF2RealizaTarea">Falso</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="contenendorCamara" class="row g-1 justify-content-center my-1" hidden>
+                        <button type="button" class="col-auto btn btn-primary text-center align-items-center"
+                            data-bs-toggle="modal" data-bs-target="#modalCamara" onclick="inicioCamara()"
+                            id="btIniciarCamara">
+                            <img src="./resources/camera.svg" class="pe-2 pb-1">Iniciar cámara
+                        </button>
+                        <label for="btIniciarCamara" class="form-check-label is-invalid" id="lblSinRealizarFoto" hidden>Realiza una fotografía</label>
+                        <div class="row w-50" id="resultadoCaptura" hidden>
+                            <img id="foto" class="img-fluid">
+                        </div>
+                    </div>
+                    <div class="row my-2 justify-content-center">
+                        <button type="button" class="col-auto btn btn-primary" id="finalizarTarea">
+                            Finalizar tarea
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade m-0 p-0" id="modalCamara" tabindex="-1" aria-labelledby="modalCamaraLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen m-0 p-0">
+            <div class="modal-content m-0 p-0">
+                <div class="modal-body m-0 p-0">
+                    <div>
+                        <div class="row p-0 m-0 card border-0 bg-dark">
+                            <div class="row p-0 m-0">
+                                <video id="webcam" autoplay playsinline class="p-0 m-0 img-fluid m-auto" width="640"
+                                    height="480" style="height: 100vh; width: auto;"></video>
+                                <canvas id="canvas" class="d-none"></canvas>
+                            </div>
+                            <div class="row card-img-overlay m-0 p-0">
+                                <div class="row justify-content-end me-2 mt-4">
+                                    <button type="button" class="btn-close btn-danger bg-danger rounded-pill"
+                                        aria-label="Close" onclick="paraCamara()"></button>
+                                </div>
+                                <div class="row  align-items-end m-0 p-2">
+                                    <div class="col-6 text-center">
+                                        <button onclick="reversoCamara()" class="btn btn-secondary rounded-pill"><img
+                                                src="./resources/cameraswitch.svg"></button>
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <button onclick="capturaCamara()" class="btn btn-primary rounded-pill"><img
+                                                src="./resources/camera.svg"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="botonFlotante">
+        <div class="interruptorFlotante rounded-pill px-2 py-1 mb-2" id="interruptorProfesor"
+            onclick="cambiaVistaProfesor()" hidden>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="swVistaProfesor">
+                <label class="form-check-label colorActivo" for="swVistaProfesor" id="labelVistaProfesor">Vista
+                    docente</label>
+            </div>
+        </div>
+        <div class="text-end" id="seguir" onclick="seguir();">
+            <img src="resources/centrar.svg" id="imagenSeguir">
+        </div>
+    </div>
+
+    <script src="./libraries/bootstrap-5.0.1-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./libraries/leaflet-1.7.1/leaflet.js"></script>
+    <script src="./libraries/Leaflet.markercluster-1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="./libraries/mustache.js-4.2.0/mustache.js"></script>
+    <script src="./libraries/webcam-easy/dist/webcam-easy.min.js" charset="utf-8"></script>
+    <script type="text/javascript"
+        src="./libraries/browser-image-compression-1.0.13/dist/browser-image-compression.js"></script>
+
+    <script src="./js/config.js" type="text/javascript"></script>
+    <script src="./js/util.js" type="text/javascript"></script>
+
+    <script src="./js/users.js" type="text/javascript"></script>
+    <script src="./js/tasks.js" type="text/javascript"></script>
+    <script src="./js/contexts.js" type="text/javascript"></script>
+    <script src="./js/mapa.js" type="text/javascript"></script>
+</body>
+
+</html>

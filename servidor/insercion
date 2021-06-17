@@ -1,0 +1,36 @@
+prefix dbc: <http://dbpedia.org/resource/Category:>
+prefix dbo: <http://dbpedia.org/ontology/>
+prefix dc: <http://purl.org/dc/elements/1.1/>
+prefix clo: <https://casuallearn.gsic.uva.es/ontology/>
+prefix clp: <https://casuallearn.gsic.uva.es/property/>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+
+with <localizarte.gsic.uva.es> insert {
+    <https://casuallearn.gsic.uva.es/context/TituloDePlazaValladolid/472889/416519>
+        a clo:physicalPlace ;
+        rdfs:label '''Titulo de Plaza Mayor'''@es , '''Plaza Mayor, Valladolid'''@en ;
+        rdfs:comment '''Descripción modificada por el profe basada en lo que tiene la DBpedia'''@es , '''The P'''@en ;
+        rdfs:seeAlso <http://dbpedia.org/resource/Plaza_Mayor,_Valladolid> ;
+        dc:creator '''pablogz@gsic.uva.es''' ;
+        clp:thumbnail <http://commons.wikimedia.org/wiki/Special:FilePath/ValladolidAyto_20-4-03.JPG?width=300> ;
+        dc:subject dbc:Plazas_in_Spain , dbc:Buildings_and_structures_in_Valladolid , dbc:Tourist_attractions_in_Castile_and_León .
+
+    <http://commons.wikimedia.org/wiki/Special:FilePath/ValladolidAyto_20-4-03.JPG?width=300> 
+        a dbo:Image ;
+        dc:rights <http://en.wikipedia.org/wiki/File:ValladolidAyto_20-4-03.JPG> .
+
+    dbc:Plazas_in_Spain
+        a skos:Concept ;
+        rdfs:label '''Plazas in Spain'''@en ;
+        skos:broader <http://dbpedia.org/resource/Category:Squares_and_plazas_by_country> , <http://dbpedia.org/resource/Category:Squares_in_Europe_by_country> , <http://dbpedia.org/resource/Category:Geography_of_Spain> , <http://dbpedia.org/resource/Category:Parks_in_Spain> , <http://dbpedia.org/resource/Category:Tourist_attractions_in_Spain> .
+    
+    dbc:Buildings_and_structures_in_Valladolid
+        a skos:Concept ;
+        rdfs:label '''Buildings and structures in Valladolid'''@en ;
+        skos:broader <http://dbpedia.org/resource/Category:Valladolid> , <http://dbpedia.org/resource/Category:Buildings_and_structures_in_Spain_by_city> , <http://dbpedia.org/resource/Category:Buildings_and_structures_in_the_Province_of_Valladolid> .
+    
+    dbc:Tourist_attractions_in_Castile_and_León
+        a skos:Concept ;
+        rdfs:label '''Tourist attractions in Castile and León'''@en ;
+        skos:broader <http://dbpedia.org/resource/Category:Castile_and_León> , <http://dbpedia.org/resource/Category:Tourism_in_Castile_and_León> , <http://dbpedia.org/resource/Category:Tourist_attractions_in_Spain_by_autonomous_community> .
+}

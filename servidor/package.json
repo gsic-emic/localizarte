@@ -10,12 +10,26 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "app-root-path": "^3.0.0",
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.19.0",
     "cookie-parser": "~1.4.4",
+    "cors": "^2.8.5",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "http-errors": "~1.6.3",
+    "mongodb": "^3.6.9",
     "morgan": "~1.9.1",
     "mustache": "^4.2.0",
-    "pug": "^3.0.2"
+    "pug": "^3.0.2",
+    "uri-js": "^4.4.1",
+    "uuid": "^8.3.2",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "eslint": "^7.25.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "eslit": "^6.0.0"
   }
 }

@@ -1,0 +1,88 @@
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../fonts/OpenSans-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'Comfortaa';
+    src: url('../fonts/Comfortaa-Medium.ttf');
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    /*padding-top: 50px;*/
+}
+
+.mapa {
+    /*height: 100%;*/
+    position: absolute;
+    top: 55px;
+    bottom: 0;
+    width: 100%;
+}
+
+.navegacion {
+    min-height: 55px;
+    position: absolute;
+    top:0;
+    right: 0;
+    left: 0;
+    background-color: #0c252d;
+    z-index: 1599;
+}
+
+.modal {
+    z-index: 1600;
+}
+
+.imagen {
+    max-width: 300px;
+    max-height: 300px;
+    padding: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.titulo {
+    font-family: 'Comfortaa', cursive;
+}
+
+.descripcion {
+    padding: 10px;
+}
+
+.leaflet-popup-content {
+    text-align: center;
+}
+
+.botonFlotante {
+    display: inline;
+    position: fixed;
+    bottom: 6%;
+    right: 3%;
+    z-index: 1000;
+}
+
+.interruptorFlotante {
+    background-color: #0c252d;
+    color: white;
+}
+
+.fondoPrimario {
+    background-color: #0c252d;
+}
+
+.colorActivo {
+    color: #3388ff;
+}
+
+@media screen and (max-width: 450px) {
+    .imagen {
+        /*max-width: 220px;*/
+        max-width: 100%;
+    }
+    .toast {
+        max-width: 280px;
+    }
+}
