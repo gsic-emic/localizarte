@@ -169,6 +169,7 @@ function seguir() {
             setView: false,
             maxZoom: 19,
             watch: true,
+            timeout: 120000,
         });
 
         map.on('locationfound', (e) => {
