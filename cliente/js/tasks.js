@@ -447,7 +447,7 @@ function realizaTarea(idTarea) {
                                                             break;
                                                         case 'trueFalse':
                                                             //Tengo que comprobar que un rb esté marcado de los de vf
-                                                            if (respuesta.choAns === tarea.rE) {
+                                                            if (respuesta.choAns.toLowerCase() === tarea.rE.toLowerCase()) {
                                                                 notificaLateral('¡Respuesta correcta!<br>Respuesta almacenada.');
                                                             } else {
                                                                 notificaLateralError(mustache.render(
@@ -538,9 +538,19 @@ function reseteaRealizaTarea() {
     document.getElementById('mcqOpcionesRealizaTarea').innerHTML = '';
 }
 
+function reseteaNuevaTarea() {
+    document.getElementById("selectTipoRespuesta").className = 'form-select';
+    document.getElementById("tituloNT")
+    document.getElementById("textoAsociadoNT")
+    document.getElementsByName("cbEspacio").forEach(c => {
+        c.className = 'form-check-input';
+    });
+}
+
 function nuevaTarea(idPoi) {
     const modal = new bootstrap.Modal(document.getElementById('nuevaTareaModal'));
     document.getElementById("formNT").reset();
+    reseteaNuevaTarea();
     const camposTarea = [
         document.getElementById("selectTipoRespuesta"),
         document.getElementById("tituloNT"),
