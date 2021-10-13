@@ -41,9 +41,17 @@ async function usuarioYaRegistrado(email) {
         return false;
 }
 
+async function uidYaRegistrado(uid) {
+    conectaBD();
+    if (await client.db(Config.nombreBD).collection('rapida').findOne({ uid: uid }))
+        return true;
+    else
+        return false;
+}
+
 async function dameColeccionUsuario(email) {
     conectaBD();
-    const documento = await client.db(Config.nombreBD).collection('rapida').findOne({ email: email });
+    const documento = await dameDocumentoRapida({ email: email });
     if (documento && documento.uid)
         return documento.uid;
     else
@@ -52,11 +60,16 @@ async function dameColeccionUsuario(email) {
 
 async function dameColeccionToken(token) {
     conectaBD();
-    const documento = await client.db(Config.nombreBD).collection('rapida').findOne({ sesion: token });
+    const documento = await dameDocumentoRapida({ sesion: token });
     if (documento && documento.uid)
         return documento.uid;
     else
         return null;
+}
+
+async function dameDocumentoRapida(objetoABuscar) {
+    conectaBD();
+    return await client.db(Config.nombreBD).collection('rapida').findOne(objetoABuscar);
 }
 
 async function dameCorreoSiProfe(token) {
@@ -78,6 +91,11 @@ async function dameCorreoSiProfe(token) {
 
 async function dameDatosDeColeccion(coleccion) {
     return dameTareaDeColeccion('datos', coleccion);
+}
+
+async function dameDocumentoDeColeccion(idDoc, coleccion) {
+    conectaBD();
+    return await client.db(Config.nombreBD).collection(coleccion).findOne({ _id: idDoc });
 }
 
 async function dameTareaDeColeccion(tarea, coleccion) {
@@ -105,17 +123,31 @@ async function cierraSesion(token) {
     return await client.db(Config.nombreBD).collection('rapida').updateOne({ sesion: token }, update);
 }
 
+async function correoVerificado(uid, verificado) {
+    const update = {
+        $set: {
+            emailVerified: verificado
+        }
+    };
+    conectaBD();
+    client.db(Config.nombreBD).collection('rapida').updateOne({ uid: uid }, update);
+}
+
 module.exports = {
     dameColeccion,
     desconectaBD,
     guardaDocumentoEnColeccion,
     nuevoUsuarioEnColeccionRapida,
     usuarioYaRegistrado,
-    dameColeccionUsuario,
+    uidYaRegistrado,
+    correoVerificado,
+    dameDocumentoRapida,
+    //dameColeccionUsuario,
     dameDatosDeColeccion,
     dameTareaDeColeccion,
+    dameDocumentoDeColeccion,
     abreSesion,
     cierraSesion,
-    dameColeccionToken,
-    dameCorreoSiProfe,
+    //dameColeccionToken,
+    //dameCorreoSiProfe,
 }

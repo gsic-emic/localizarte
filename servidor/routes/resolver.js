@@ -31,8 +31,9 @@ const Task = require('../resources/tasks/task');
 const Answers = require('../resources/answers/answers');
 
 const Users = require('../resources/users/users');
-const Sesiones = require('../resources/users/sesiones');
-const Sesion = require('../resources/users/sesion');
+const User = require('../resources/users/user');
+//const Sesiones = require('../resources/users/sesiones');
+//const Sesion = require('../resources/users/sesion');
 
 
 // Paths
@@ -83,18 +84,23 @@ Ruter.route(recursos.tarea)
 
 // Creación y obtención de usuarios
 Ruter.route(recursos.users)
-  .get((req, res) => Users.dameUsuarios(req, res))
-  .post((req, res) => Users.newUser(req, res))
+  //.get((req, res) => Users.dameUsuarios(req, res))
+  //.post((req, res) => Users.newUser(req, res))
+  .all(envia405);
+
+Ruter.route(recursos.user)
+  .put((req, res) => User.putUser(req, res))
+  .get((req, res) => User.getInfoUser(req, res))
   .all(envia405);
 
 // Gestión de sesiones
-Ruter.route(recursos.sesiones)
+/*Ruter.route(recursos.sesiones)
   .post((req, res) => Sesiones.login(req, res))
   .all(envia405);
 
 Ruter.route(recursos.sesion)
   .delete((req, res) => Sesion.logout(req, res))
-  .all(envia405);
+  .all(envia405);*/
 
 // Respuestas
 Ruter. route(recursos.respuestas)
