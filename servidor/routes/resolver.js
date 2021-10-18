@@ -45,12 +45,10 @@ const recursos = {
   tarea: '/tasks/:a/:b',
   rutas: '/rutes/',
   ruta: '/rutes/:rute',
-  respuestas: '/answers/',
-  respuesta: '/answers/:answer',
   users: '/users/',
-  user: '/users/:user',
-  sesiones: '/sesiones/',
-  sesion: '/sesiones/:sesion'
+  user: '/users/user',
+  respuestas: '/users/user/answers/',
+  respuesta: '/users/user/answers/:answer',
 };
 
 // Se envía el código de estado para una operación no implementada
@@ -103,9 +101,10 @@ Ruter.route(recursos.sesion)
   .all(envia405);*/
 
 // Respuestas
+//TODO tengo que cambiar el token por la cabecera x-idtoken
 Ruter. route(recursos.respuestas)
-  .post((req, res) => Answers.nuevaRespuesta(req, res))
-  .get((req, res) => Answers.dameRespuestas(req, res))
+  //.post((req, res) => Answers.nuevaRespuesta(req, res))
+  //.get((req, res) => Answers.dameRespuestas(req, res))
   .all(envia405);
 
 module.exports = Ruter;

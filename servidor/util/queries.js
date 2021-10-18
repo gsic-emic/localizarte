@@ -19,7 +19,7 @@ limitations under the License.
 /**
  * Formateo de las consultas SPARQL.
  * autor: Pablo García Zarza
- * version: 202100519
+ * version: 202101015
  */
 
 const Mustache = require('mustache');
@@ -33,7 +33,7 @@ const Auxiliar = require('./auxiliar');
  */
 function contextosZona(puntos) {
   const query = Mustache.render(
-    'select ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen where {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . optional { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } filter ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})). filter ((lang(?titulo) = "es" || lang(?titulo) = "") && (lang(?descr) = "es" || lang(?descr) = ""))} ',
+    'SELECT ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen WHERE {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . OPTIONAL { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } FILTER ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})). FILTER ((lang(?titulo) = "es" || lang(?titulo) = "") && (lang(?descr) = "es" || lang(?descr) = ""))} ',
     puntos,
   );
   return encodeURIComponent(query);
@@ -47,7 +47,7 @@ function contextosZona(puntos) {
  */
 function tipoIRI(id) {
   const query = Mustache.render(
-    'select ?tipo where {<{{{id}}}> a ?tipo}',
+    'SELECT ?tipo WHERE {<{{{id}}}> a ?tipo}',
     { id: id });
   return encodeURIComponent(query);
 }
@@ -83,7 +83,7 @@ function formatoTiposDatos(tipo, valor) {
  */
 function nuevoObjeto(datosObjeto, tipoObjeto) {
   let query = Mustache.render(
-    'with <http://localizarte.gsic.uva.es> insert {<{{{iri}}}> a <{{{tipoObjeto}}}>; ',
+    'WITH <http://localizarte.gsic.uva.es> INSERT {<{{{iri}}}> a <{{{tipoObjeto}}}>; ',
     {
       iri: datosObjeto.iri,
       tipoObjeto: tipoObjeto
@@ -397,7 +397,11 @@ function nuevaTarea(datosTarea) {
  * @returns Query formateada
  */
 function infoContexto(iriContexto) {
-  const query = Mustache.render('select ?lat ?long ?titulo ?descr ?autor ?tipo where {<{{{iriContexto}}}> a ?tipo ; geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor }', { iriContexto: iriContexto });
+  const query = Mustache.render(
+    'SELECT ?lat ?long ?titulo ?descr ?autor ?tipo WHERE {<{{{iriContexto}}}> a ?tipo ; geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor }', 
+    { 
+      iriContexto: iriContexto 
+    });
   return encodeURIComponent(query);
 }
 
@@ -408,7 +412,7 @@ function infoContexto(iriContexto) {
  * @returns Query preparada para enviar al punto SPARQL
  */
 function todaInfo(iri) {
-  const query = Mustache.render('select ?propiedad ?valor where { <{{{iri}}}> ?propiedad ?valor }', { iri: iri });
+  const query = Mustache.render('SELECT ?propiedad ?valor WHERE { <{{{iri}}}> ?propiedad ?valor }', { iri: iri });
   return encodeURIComponent(query);
 }
 
@@ -421,7 +425,7 @@ function todaInfo(iri) {
  */
 function eliminaObjeto(iri, tipo) {
   const query = Mustache.render(
-    'with <http://localizarte.gsic.uva.es> delete where { <{{{iri}}}> a <{{{tipo}}}> ; ?a ?b }',
+    'WITH <http://localizarte.gsic.uva.es> DELETE WHERE { <{{{iri}}}> a <{{{tipo}}}> ; ?a ?b }',
     {
       iri: iri,
       tipo: tipo
@@ -531,16 +535,16 @@ function contenidoInsertDelete(array, extra, tama2, final) {
  * @returns Query para realizar la solicitud de borrados y creaciones para un iri específico
  */
 function actualizaValoresContexto(iri, inserciones, eliminaciones, modificaciones) {
-  let query = 'with <http://localizarte.gsic.uva.es>';
+  let query = 'WITH <http://localizarte.gsic.uva.es>';
   const tama2 = Object.keys(modificaciones).length > 0;
   if (Object.keys(eliminaciones).length > 0 || Object.keys(modificaciones).length > 0) {
-    query += 'delete {';
+    query += 'DELETE {';
     query += `<${iri}> `;
     query += contenidoInsertDelete(eliminaciones, null, tama2, false);
     query += contenidoInsertDelete(modificaciones, 'anterior', tama2, true);
   }
   if (Object.keys(inserciones).length > 0 || Object.keys(modificaciones).length > 0) {
-    query += `insert { <${iri}> `;
+    query += `INSERT { <${iri}> `;
     query += contenidoInsertDelete(inserciones, null, tama2, false);
     query += contenidoInsertDelete(modificaciones, 'nuevo', tama2, true);
   }
@@ -559,7 +563,7 @@ function actualizaValoresTareas(iri, inserciones, eliminaciones, modificaciones)
  */
 function tareasContexto(iriContexto) {
   const query = Mustache.render(
-    'prefix cl: <https://casuallearn.gsic.uva.es/property/> select ?task ?aT ?aTR ?thumb ?spa ?title where { ?task a <https://casuallearn.gsic.uva.es/ontology/task>; cl:hasContext <{{{iriContexto}}}>; cl:answerType ?aT; cl:associatedTextResource ?aTR ; cl:space ?spa . optional{?task <http://es.dbpedia.org/ontology/thumbnail> ?thumb .} optional{?task <https://casuallearn.gsic.uva.es/property/title> ?title} } ',
+    'PREFIX cl: <https://casuallearn.gsic.uva.es/property/> SELECT ?task ?aT ?aTR ?thumb ?spa ?title WHERE { ?task a <https://casuallearn.gsic.uva.es/ontology/task>; cl:hasContext <{{{iriContexto}}}>; cl:answerType ?aT; cl:associatedTextResource ?aTR ; cl:space ?spa . OPTIONAL{?task <http://es.dbpedia.org/ontology/thumbnail> ?thumb .} OPTIONAL{?task <https://casuallearn.gsic.uva.es/property/title> ?title} } ',
     { iriContexto: iriContexto });
   return encodeURIComponent(query);
 }
@@ -571,7 +575,7 @@ function tareasContexto(iriContexto) {
  * @returns Query para realizar una consulta sobre la propiedad label de un contexto
  */
 function tituloContexto(iri) {
-  const query = Mustache.render('select ?titulo where { <{{{iri}}}> a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; rdfs:label ?titulo . filter (lang(?titulo) = "es" || lang(?titulo) = "")}', { iri: iri });
+  const query = Mustache.render('SELECT ?titulo WHERE { <{{{iri}}}> a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; rdfs:label ?titulo . FILTER (lang(?titulo) = "es" || lang(?titulo) = "")}', { iri: iri });
   return encodeURIComponent(query);
 }
 

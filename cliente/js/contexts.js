@@ -319,52 +319,75 @@ function confirmarEliminacion(poi, titulo, mensaje) {
  * @param {JSONObject} poi Información del punto de interés
  */
 function eliminarPI(poi) {
-    const direccion = mustache.render(
-        '{{{dir}}}?token={{{query}}}',
-        {
-            dir: recursoContextoParaElServidor(poi.ctx),
-            query: tokenSesion
-        }
-    );
-    const peticion = {
-        method: 'DELETE',
-        redirect: 'follow'
-    };
 
-    let encontrado = false;
-    let i;
-    for (i = 0; i < pois.length; i++) {
-        if (pois[i].ctx == poi.ctx) {
-            encontrado = true;
-            break;
-        }
-    }
+    estadoBotones([document.getElementById('aceptaBorrar')], false)
+    let modal = new bootstrap.Modal(document.getElementById('confirmarBorrar'));
+    estadoBotones([document.getElementById('aceptaBorrar')], false);
+    modal.show();
+    auth.currentUser.getIdToken()
+        .then(idToken => {
+            let cabeceras = new Headers();
+            cabeceras.append("x-tokenid", idToken);
+            const peticion = {
+                headers: cabeceras,
+                method: 'DELETE',
+                redirect: 'follow'
+            };
+            const direccion = mustache.render(
+                '{{{dir}}}',
+                {
+                    dir: recursoContextoParaElServidor(poi.ctx)
+                }
+            );
 
-    if (encontrado) {
-        fetch(direccion, peticion)
-            .then(response => {
-                if (response.status === 200) {
-                    return response.text();
+            let encontrado = false;
+            let i;
+            for (i = 0; i < pois.length; i++) {
+                if (pois[i].ctx == poi.ctx) {
+                    encontrado = true;
+                    break;
                 }
-                notificaLateralError(mustache.render(
-                    'No se ha podido completar el borrado: {{{status}}}',
-                    { status: response.status }));
-                return null;
-            })
-            .then(result => {
-                if (result) {
-                    pois.splice(i, 1);
-                    pintaPOIs(map.getBounds());
-                    notificaLateral('Punto de interés eliminado.');
-                }
-            })
-            .catch(error => {
-                notificaLateralError(mustache.render(
-                    'Se ha producido un error: {{{error}}}',
-                    { error: error }));
-                console.log('error', error)
-            });
-    }
+            }
+            if (encontrado) {
+                fetch(direccion, peticion)
+                    .then(response => {
+                        if (response.status === 200) {
+                            return response.text();
+                        }
+                        notificaLateralError(mustache.render(
+                            'No se ha podido completar el borrado: {{{status}}}',
+                            { status: response.status }));
+                        return null;
+                    })
+                    .then(result => {
+                        if (result) {
+                            pois.splice(i, 1);
+                            pintaPOIs(map.getBounds());
+                            notificaLateral('Punto de interés eliminado.');
+                        }
+                        modal.hide();
+                        estadoBotones([document.getElementById('aceptaBorrar')], true);
+                    })
+                    .catch(error => {
+                        modal.hide();
+                        estadoBotones([document.getElementById('aceptaBorrar')], true);
+                        notificaLateralError(mustache.render(
+                            'Se ha producido un error: {{{error}}}',
+                            { error: error }));
+                        console.log('error', error);
+                    });
+            } else {
+                modal.hide();
+                estadoBotones([document.getElementById('aceptaBorrar')], true);
+                notificaLateralError('No se ha encontrado el POI en el almacén local.')
+            }
+        })
+        .catch(error => {
+            modal.hide();
+            estadoBotones([document.getElementById('aceptaBorrar')], true);
+            notificaLateralError('El usuario no se encuentra identificado. Inicie sesión.');
+            console.log('error', error);
+        });
 }
 
 /**
@@ -373,10 +396,9 @@ function eliminarPI(poi) {
  */
 function modificarPI(poi) {
     const direccion = mustache.render(
-        '{{{dir}}}?token={{{query}}}',
+        '{{{dir}}}',
         {
-            dir: recursoContextoParaElServidor(poi.ctx),
-            query: tokenSesion
+            dir: recursoContextoParaElServidor(poi.ctx)
         }
     );
     const options = {
@@ -458,6 +480,7 @@ function modificarPI(poi) {
                 botonEnviar.onclick = (ev) => {
                     //Primero compruebo que los datos son correctos.
                     //Tiene que tener título, descripción, latitud y longitud
+                    estadoBotones([botonEnviar], false);
                     ev.preventDefault();
                     let todoOk = true;
                     const mensajes = {
@@ -560,70 +583,83 @@ function modificarPI(poi) {
                                 actual: datos,
                                 modificados: modificados
                             });
-                            let headers = new Headers();
-                            headers.append('Content-Type', 'application/json');
-                            const opciones = {
-                                method: 'PUT',
-                                headers: headers,
-                                body: enviar,
-                                redirect: 'follow'
-                            };
-                            fetch(direccion, opciones)
-                                .then(response => {
-                                    switch (response.status) {
-                                        case 200:
-                                            return { codigo: 200, mensaje: 'OK' };
-                                        case 400:
-                                        case 403:
-                                        case 404:
-                                        case 503:
-                                            return response.text();
-                                        default:
+                            auth.currentUser.getIdToken()
+                                .then(idToken => {
+                                    let headers = new Headers();
+                                    headers.append('Content-Type', 'application/json');
+                                    headers.append("x-tokenid", idToken);
+                                    const opciones = {
+                                        method: 'PUT',
+                                        headers: headers,
+                                        body: enviar,
+                                        redirect: 'follow'
+                                    };
+                                    fetch(direccion, opciones)
+                                        .then(response => {
+                                            switch (response.status) {
+                                                case 200:
+                                                    return { codigo: 200, mensaje: 'OK' };
+                                                case 400:
+                                                case 403:
+                                                case 404:
+                                                case 503:
+                                                    return response.text();
+                                                default:
+                                                    notificaLateralError(mustache.render(
+                                                        'Se ha producido un error desconocido: {{{status}}}',
+                                                        { status: response.status }));
+                                                    return null;
+                                            }
+                                        })
+                                        .then(resultado => {
+                                            if (resultado !== null) {
+                                                if (typeof resultado !== 'string') {
+                                                    //POI modificado en el servidor
+                                                    //Lo elimino de la memoria local
+                                                    (Object.entries(modificados)).forEach(([modK, modV]) => {
+                                                        if (modV === '' && (modK in poi)) {//Se elimina el valor
+                                                            delete poi[modK];
+                                                        } else {
+                                                            poi[modK] = modV;
+                                                        }
+                                                    });
+                                                    pois.some((p, i) => {
+                                                        if (p.ctx === poi.ctx) {
+                                                            pois.splice(i, 1);
+                                                            return true;
+                                                        } else {
+                                                            return false;
+                                                        }
+                                                    });
+                                                    //Lo vuelvo a agregar y pinto:
+                                                    pois.push(poi);
+                                                    pintaPOIs(map.getBounds());
+                                                    modal.hide();
+                                                    notificaLateral('Punto actualizado');
+                                                } else {
+                                                    notificaLateralError(resultado);
+                                                }
+                                            }
+                                            estadoBotones([botonEnviar], true);
+                                        })
+                                        .catch(error => {
                                             notificaLateralError(mustache.render(
-                                                'Se ha producido un error desconocido: {{{status}}}',
-                                                { status: response.status }));
-                                            return null;
-                                    }
-                                })
-                                .then(resultado => {
-                                    if (resultado !== null) {
-                                        if (typeof resultado !== 'string') {
-                                            //POI modificado en el servidor
-                                            //Lo elimino de la memoria local
-                                            (Object.entries(modificados)).forEach(([modK, modV]) => {
-                                                if (modV === '' && (modK in poi)) {//Se elimina el valor
-                                                    delete poi[modK];
-                                                } else {
-                                                    poi[modK] = modV;
-                                                }
-                                            });
-                                            pois.some((p, i) => {
-                                                if (p.ctx === poi.ctx) {
-                                                    pois.splice(i, 1);
-                                                    return true;
-                                                } else {
-                                                    return false;
-                                                }
-                                            });
-                                            //Lo vuelvo a agregar y pinto:
-                                            pois.push(poi);
-                                            pintaPOIs(map.getBounds());
-                                            modal.hide();
-                                            notificaLateral('Punto actualizado');
-                                        } else {
-                                            notificaLateralError(resultado);
-                                        }
-                                    }
+                                                'Se ha producido un error al actualizar el POI: {{{error}}}',
+                                                { error: error }));
+                                            console.log('error', error)
+                                        });
                                 })
                                 .catch(error => {
-                                    notificaLateralError(mustache.render(
-                                        'Se ha producido un error al actualizar el POI: {{{error}}}',
-                                        { error: error }));
-                                    console.log('error', error)
+                                    estadoBotones([botonEnviar], true);
+                                    console.error(error);
+                                    notificaLateralError('No se ha modificado ningún dato.');
                                 });
                         } else {
+                            estadoBotones([botonEnviar], true);
                             notificaLateral('No se ha modificado ningún dato');
                         }
+                    } else {
+                        estadoBotones([botonEnviar], true);
                     }
                 };
                 modal.show();
@@ -1229,6 +1265,7 @@ function modalNPI(id) {
 
         botonEnviar.onclick = (ev) => {
             ev.preventDefault();
+            estadoBotones([botonEnviar], false);
             let todoOk = true;
             const mensajes = {
                 tituloNPI: 'El nuevo punto de interés necesita un título',
@@ -1346,51 +1383,61 @@ function modalNPI(id) {
                     }
                 });
 
-                const enviar = {
-                    token: tokenSesion,
-                    datos: envio
-                };
-
                 //Envío los datos al servidor para que los agregue
-                const direccion = mustache.render('{{{direccionServidor}}}/contexts', { direccionServidor: direccionServidor });
-                let myHeaders = new Headers();
-                myHeaders.append("Content-Type", "application/json");
-                const requestOptions = {
-                    method: 'POST',
-                    headers: myHeaders,
-                    body: JSON.stringify({ token: tokenSesion, datos: envio }),
-                    redirect: 'follow',
-                };
-                fetch(direccion, requestOptions)
-                    .then(response => {
-                        switch (response.status) {
-                            case 201:
-                                return response.json();
-                            case 400:
-                                notificaLateralError('No se han enviado los datos obligatorios o la latitud y la longitud no son números válidos. El POI no se ha creado.');
-                                return null;
-                            case 409:
-                                notificaLateralError('Se ha producido un conflicto al crear el identificador del nuevo POI. El POI no se ha creado.');
-                                return null;
-                            case 500:
-                                notificaLateralError('Se ha producido una excepción en el servidor. El POI no se ha creado.');
-                                return null;
-                            case 503:
-                                notificaLateralError('El repositorio del sistema no se encuentra en estos momentos operativo. El POI no se ha creado.');
-                                return null;
-                            default:
-                                return null;
-                        }
-                    })
-                    .then(data => {
-                        if (data) {
-                            peticionInfoPoi(data.ctx, true, modal);
-                        }
+                const direccion = mustache.render(
+                    '{{{direccionServidor}}}/contexts',
+                    { direccionServidor: direccionServidor }
+                );
+                auth.currentUser.getIdToken()
+                    .then(idToken => {
+                        let myHeaders = new Headers();
+                        myHeaders.append("Content-Type", "application/json");
+                        myHeaders.append("x-tokenid", idToken);
+                        const requestOptions = {
+                            method: 'POST',
+                            headers: myHeaders,
+                            body: JSON.stringify({ datos: envio }),
+                            redirect: 'follow',
+                        };
+                        fetch(direccion, requestOptions)
+                            .then(response => {
+                                switch (response.status) {
+                                    case 201:
+                                        return response.json();
+                                    case 400:
+                                        notificaLateralError('No se han enviado los datos obligatorios o la latitud y la longitud no son números válidos. El POI no se ha creado.');
+                                        return null;
+                                    case 409:
+                                        notificaLateralError('Se ha producido un conflicto al crear el identificador del nuevo POI. El POI no se ha creado.');
+                                        return null;
+                                    case 500:
+                                        notificaLateralError('Se ha producido una excepción en el servidor. El POI no se ha creado.');
+                                        return null;
+                                    case 503:
+                                        notificaLateralError('El repositorio del sistema no se encuentra en estos momentos operativo. El POI no se ha creado.');
+                                        return null;
+                                    default:
+                                        return null;
+                                }
+                            })
+                            .then(data => {
+                                if (data) {
+                                    peticionInfoPoi(data.ctx, true, modal);
+                                } else {
+                                    estadoBotones([botonEnviar], true);
+                                }
+                            })
+                            .catch(error => {
+                                estadoBotones([botonEnviar], true);
+                                notificaLateralError('Se ha producido un error en la transmisión. El POI no se ha creado.');
+                                console.log('error', error);
+                            });
                     })
                     .catch(error => {
-                        notificaLateralError('Se ha producido un error en la transmisión. El POI no se ha creado.');
-                        console.log('error', error);
-                    });
+                        estadoBotones([botonEnviar], true);
+                        notificaLateralError('Se ha producido un error.');
+                        console.error(error);
+                    })
             }
         };
         modal.show();
@@ -1434,11 +1481,13 @@ function peticionInfoPoi(iri, guardaPinta, modal) {
                     notificaLateral('Punto de interés creado.');
                 }
             }
+            estadoBotones([document.getElementById('enviarNPI')], true);
         })
         .catch(error => {
             notificaLateralError(mustache.render(
                 'Se ha producido un error al descargar la información del POI: {{{error}}}',
                 { error: error }));
+            estadoBotones([document.getElementById('enviarNPI')], true);
             console.log('error', error)
         });
 }

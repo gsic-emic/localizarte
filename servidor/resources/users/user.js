@@ -17,61 +17,91 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con el recurso "usuario".
  * autor: Pablo García Zarza
- * version: 20211012
+ * version: 20211018
  */
 
 
 const admin = require('firebase-admin');
-const { uidYaRegistrado, nuevoUsuarioEnColeccionRapida, guardaDocumentoEnColeccion, correoVerificado, dameDocumentoRapida, dameDocumentoDeColeccion } = require('../../util/bd');
+const { uidYaRegistrado, nuevoUsuarioEnColeccionRapida, guardaDocumentoEnColeccion, correoVerificado, dameDocumentoRapida, dameDocumentoDeColeccion, modificaDocumentoDeColeccion } = require('../../util/bd');
 
 
 async function putUser(req, res) {
     try {
-        const uid = req.params.user.trim();
+        const token = req.headers['x-tokenid'];
         const { body } = req;
 
-        if (uid && uid !== '') {
-            uidYaRegistrado(uid)
-                .then(yaRegistrado => {
-                    if (yaRegistrado) {
-                        //Update user's values
-                        //Agregar el instante de modificación
-                        res.sendStatus(200);
-                    } else {
-                        admin.auth().getUser(uid)
-                            .then(async user => {
-                                const { email, nombre, apellido } = body;
-                                nuevoUsuarioEnColeccionRapida({
-                                    uid: uid,
-                                    emailVerified: user.emailVerified,
-                                    rol: 0,
-                                    creationDate: Date.now()
-                                });
-                                guardaDocumentoEnColeccion(
-                                    {
-                                        _id: 'userData',
-                                        name: nombre,
-                                        surname: apellido,
-                                        lastUpdate: Date.now(),
-                                        email: email
-                                    },
-                                    uid);
-                                res.status(201).send(JSON.stringify({
-                                    emailVerified: user.emailVerified
-                                }));
-                            })
-                            .catch(error => {
-                                res.status(400).send(error);
-                            });
-                    }
-                })
-                .catch(e => {
-                    console.error(e);
+        admin.auth().verifyIdToken(token)
+            .then(async decodedToken => {
+                const { uid, email_verified } = decodedToken;
+                if (uid && uid !== '') {
+                    uidYaRegistrado(uid)
+                        .then(async yaRegistrado => {
+                            if (yaRegistrado) {
+                                //Update user's values
+                                if(email_verified) {
+                                    const {name, surname} = body;
+                                    modificaDocumentoDeColeccion(
+                                        {
+                                            name: name, 
+                                            surname: surname, 
+                                            lastUpdate: Date.now()
+                                        }, 'userData', uid)
+                                        .then(respuestaBD => {
+                                            if(respuestaBD.modifiedCount > 0) {
+                                                res.status(200).send(JSON.stringify({
+                                                    name: name,
+                                                    surname: surname
+                                                }));
+                                            } else {
+                                                res.status(512).send('No se han modificado todos los campos');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error(error);
+                                            res.status(500).send('Error en la actualización');
+                                        });
+                                } else {
+                                    res.status(400).send('El usuario no ha verificado su dirección de correo');
+                                }
+                            } else {
+                                admin.auth().getUser(uid)
+                                    .then(async user => {
+                                        const { email, nombre, apellido } = body;
+                                        nuevoUsuarioEnColeccionRapida({
+                                            uid: uid,
+                                            emailVerified: user.emailVerified,
+                                            rol: 0,
+                                            creationDate: Date.now()
+                                        });
+                                        guardaDocumentoEnColeccion(
+                                            {
+                                                _id: 'userData',
+                                                name: nombre,
+                                                surname: apellido,
+                                                lastUpdate: Date.now(),
+                                                email: email
+                                            },
+                                            uid);
+                                        res.status(201).send(JSON.stringify({
+                                            emailVerified: user.emailVerified
+                                        }));
+                                    })
+                                    .catch(error => {
+                                        res.status(400).send(error);
+                                    });
+                            }
+                        })
+                        .catch(e => {
+                            console.error(e);
+                            res.sendStatus(400);
+                        });
+                } else {
                     res.sendStatus(400);
-                });
-        } else {
-            res.sendStatus(400);
-        }
+                }
+            })
+            .catch(error => {
+                res.status(400).send(error);
+            });
     } catch (e) {
         res.sendStatus(500);
     }
@@ -79,7 +109,7 @@ async function putUser(req, res) {
 
 async function getInfoUser(req, res) {
     try {
-        const token = req.params.user;
+        const token = req.headers['x-tokenid'];
         admin.auth().verifyIdToken(token)
             .then(async decodedToken => {
                 const { uid, email_verified } = decodedToken;

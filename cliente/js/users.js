@@ -17,11 +17,14 @@ limitations under the License.
 /**
  * Gestión de los usuarios en el cliente de LocalizARTE.
  * autor: Pablo García Zarza
- * version: 20210608
+ * version: 20211018
  */
 
 function inicioSesionUsuario() {
     const modal = new bootstrap.Modal(document.getElementById('inicioSesionModal'));
+    const btInicio = document.getElementById('inicioEnviar');
+    const btCambiarPass = document.getElementById('cambiarpass');
+    const botones = [btInicio, btCambiarPass];
     const camposObligatorios = [
         document.getElementById('inicioMail'),
         document.getElementById('inicioPass')
@@ -41,8 +44,9 @@ function inicioSesionUsuario() {
         inicioPass: 'pass'
     }
 
-    document.getElementById('cambiarpass').onclick = (ev) => {
+    btCambiarPass.onclick = (ev) => {
         ev.preventDefault();
+        estadoBotones(botones, false);
         let todoOk = true;
         const campo = document.getElementById('inicioMail');
         if (!campo || !campo.value || campo.value.trim() === '') {
@@ -67,13 +71,15 @@ function inicioSesionUsuario() {
             });
             modal.hide();
             notificaLateral('Si la cuenta existe se ha enviado un email para que puedas cambiar la contraseña.');
-            auth.sendPasswordResetEmail(campo.value).then(() => {}).catch(() => {});
+            auth.sendPasswordResetEmail(campo.value).then(() => { }).catch(() => { });
         }
+        estadoBotones(botones, true);
     }
 
 
-    document.getElementById("inicioEnviar").onclick = (ev) => {
+    btInicio.onclick = (ev) => {
         ev.preventDefault();
+        estadoBotones(botones, false);
         let todoOk = true;
         camposObligatorios.forEach(campo => {
             switch (campo.id) {
@@ -121,17 +127,19 @@ function inicioSesionUsuario() {
                 .then(userCredential => {
                     if (userCredential.user.emailVerified) {
                         //Solicito la info al servidor de este usuario. Se la solicito a través de un token
-                        auth.currentUser.getIdToken(true)
+                        auth.currentUser.getIdToken()
                             .then(idToken => {
+                                let cabeceras = new Headers();
+                                cabeceras.append("x-tokenid", idToken);
                                 var opciones = {
+                                    headers: cabeceras,
                                     method: 'GET',
                                     redirect: 'follow'
                                 };
                                 const direccion = mustache.render(
-                                    '{{{dir}}}/users/{{{token}}}',
+                                    '{{{dir}}}/users/user',
                                     {
-                                        dir: direccionServidor,
-                                        token: idToken,
+                                        dir: direccionServidor
                                     });
 
                                 fetch(direccion, opciones)
@@ -166,23 +174,27 @@ function inicioSesionUsuario() {
                                             } else {
                                                 document.getElementById('interruptorProfesor').setAttribute('hidden', 'true');
                                             }
-                                            document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Gestión cuenta</a></li>';
+                                            document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
                                         }
+                                        estadoBotones(botones, true);
                                         modal.hide();
                                     })
                                     .catch(error => {
                                         console.log('error', error);
+                                        estadoBotones(botones, true);
                                         modal.hide();
                                         notificaLateralError('Error desconocido');
                                     });
                             })
                             .catch(error => {
+                                estadoBotones(botones, true);
                                 modal.hide();
                                 notificaLateralError('Error desconocido: ' + error.code);
                                 cerrarSesionFirebase(true);
                             });
                     } else {
                         auth.currentUser.sendEmailVerification();
+                        estadoBotones(botones, true);
                         modal.hide();
                         notificaLateralError('Verifica la dirección de correo antes de iniciar sesión. Te hemos vuelto a enviar un correo de confirmación.');
                         cerrarSesionFirebase(true);
@@ -192,6 +204,7 @@ function inicioSesionUsuario() {
                     switch (error.code) {
                         case 'auth/user-not-found':
                         case 'auth/wrong-password':
+                            estadoBotones(botones, true);
                             notificaLateralError('Error en la dirección de correo o en la contraseña.');
                             camposObligatorios.forEach(campo => {
                                 campo.value = '';
@@ -201,61 +214,14 @@ function inicioSesionUsuario() {
                             });
                             break;
                         default:
+                            estadoBotones(botones, true);
                             modal.hide();
                             notificaLateralError('Error desconocido.');
                             break;
                     }
                 });
-            /*
-            let myHeaders = new Headers();
-            myHeaders.append("Content-Type", "application/json");
-
-            let requestOptions = {
-                method: 'POST',
-                headers: myHeaders,
-                body: JSON.stringify(envio),
-                redirect: 'follow'
-            };
-
-            const direccion = mustache.render('{{{dir}}}/sesiones', { dir: direccionServidor });
-
-            fetch(direccion, requestOptions)
-                .then(response => {
-                    switch (response.status) {
-                        case 201:
-                            return response.json();
-                        case 403:
-                            return response.text();
-                        default:
-                            notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
-                            return null;
-                    }
-                })
-                .then(result => {
-                    if (result) {
-                        if (typeof result !== 'string') {
-                            notificaLateral('Hola de nuevo');
-                            tokenSesion = result.sesion;
-                            rol = result.rol;
-                            if (rol > 0) {
-                                document.getElementById('interruptorProfesor').removeAttribute('hidden');
-                                if (!document.getElementById('swVistaProfesor').checked) {
-                                    document.getElementById('swVistaProfesor').checked = true;
-                                }
-                            } else {
-                                document.getElementById('interruptorProfesor').setAttribute('hidden', 'true');
-                            }
-                            document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Gestión cuenta</a></li>';
-                            modal.hide();
-                        } else {
-                            notificaLateralError(result);
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.log('error', error);
-                    notificaLateralError('Se ha producido un error desconocido');
-                });*/
+        } else {
+            estadoBotones(botones, true);
         }
     }
     modal.show();
@@ -263,6 +229,10 @@ function inicioSesionUsuario() {
 
 function registroUsuario() {
     const modal = new bootstrap.Modal(document.getElementById('nuevoUsuarioModal'));
+    document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = 'Nuevo usuario';
+    const btRegistroEnviar = document.getElementById('registroEnviar');
+    btRegistroEnviar.innerHTML = 'Registrar';
+    const botones = [btRegistroEnviar];
     const campos = [
         document.getElementById('registroMail'),
         document.getElementById('registroPass'),
@@ -273,6 +243,10 @@ function registroUsuario() {
         document.getElementById('registroMail'),
         document.getElementById('registroPass')
     ];
+    camposObligatorios.forEach(campo => {
+        campo.disabled = false;
+    });
+    document.getElementById('camposObligatoriosRegistroLabel').innerHTML = '* Campos obligatorios';
     const camposOpcionales = [
         document.getElementById('registroNombre'),
         document.getElementById('registroApellido')
@@ -296,8 +270,9 @@ function registroUsuario() {
         registroNombre: 'nombre',
         registroApellido: 'apellido'
     }
-    document.getElementById('registroEnviar').onclick = ev => {
+    btRegistroEnviar.onclick = ev => {
         ev.preventDefault();
+        estadoBotones(botones, false);
         let todoOk = true;
         camposObligatorios.forEach(campo => {
             switch (campo.id) {
@@ -367,52 +342,62 @@ function registroUsuario() {
                     let cabeceras = new Headers();
                     cabeceras.append("Content-Type", "application/json");
 
-                    let peticion = {
-                        method: 'PUT',
-                        headers: cabeceras,
-                        body: JSON.stringify(envio), //Envío la dirección de correo y si nos lo ha facilitado, el nombre y el apellido
-                        redirect: 'follow'
-                    };
+                    auth.currentUser.getIdToken()
+                        .then(idToken => {
+                            cabeceras.append("x-tokenid", idToken);
+                            let peticion = {
+                                method: 'PUT',
+                                headers: cabeceras,
+                                body: JSON.stringify(envio), //Envío la dirección de correo y si nos lo ha facilitado, el nombre y el apellido
+                                redirect: 'follow'
+                            };
 
-                    const direccion = mustache.render(
-                        '{{{dir}}}/users/{{{uid}}}',
-                        {
-                            dir: direccionServidor,
-                            uid: userCredential.user.uid
-                        });
+                            const direccion = mustache.render(
+                                '{{{dir}}}/users/user',
+                                {
+                                    dir: direccionServidor,
+                                });
 
-                    fetch(direccion, peticion)
-                        .then(response => {
-                            switch (response.status) {
-                                case 201:
-                                    return response.json();
-                                case 400:
-                                    //TODO mirar si en el servidor meto más códigos de error
-                                    return response.text();
-                                default:
-                                    notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
-                                    return null;
-                            }
-                        })
-                        .then(result => {
-                            if (result) {//Si es null no se entra en esta condición
-                                if (typeof result === 'string') {
-                                    //TODO
-                                    notificaLateralError(result);
-                                } else {
-                                    auth.currentUser.sendEmailVerification();//Envío correo de verificación a la cuenta del usuario
-                                    if (result.verifiedEmail)
-                                        notificaLateral('Ya estás registrado. Inicia sesión para comenzar a usar LocalizARTE');
-                                    else
-                                        notificaLateral('Se te ha enviado un correo para verificar el email. Después de verificarlo podrás identificarte.');
-                                }
-                            }
-                            modal.hide();
-                            cerrarSesionFirebase(true);
+                            fetch(direccion, peticion)
+                                .then(response => {
+                                    switch (response.status) {
+                                        case 201:
+                                            return response.json();
+                                        case 400:
+                                            return response.text();
+                                        default:
+                                            notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
+                                            return null;
+                                    }
+                                })
+                                .then(result => {
+                                    if (result) {//Si es null no se entra en esta condición
+                                        if (typeof result === 'string') {
+                                            notificaLateralError(result);
+                                        } else {
+                                            auth.currentUser.sendEmailVerification();//Envío correo de verificación a la cuenta del usuario
+                                            if (result.verifiedEmail)
+                                                notificaLateral('Ya estás registrado. Inicia sesión para comenzar a usar LocalizARTE');
+                                            else
+                                                notificaLateral('Se te ha enviado un correo para verificar el email. Después de verificarlo podrás identificarte.');
+                                        }
+                                    }
+                                    estadoBotones(botones, true);
+                                    modal.hide();
+                                    cerrarSesionFirebase(true);
+                                })
+                                .catch(error => {
+                                    estadoBotones(botones, true);
+                                    console.log('error', error);
+                                    notificaLateralError('Se ha producido un error desconocido');
+                                });
+
                         })
                         .catch(error => {
-                            console.log('error', error);
-                            notificaLateralError('Se ha producido un error desconocido');
+                            estadoBotones(botones, true);
+                            notificaLateralError('Error desconocido: ' + error.code);
+                            cerrarSesionFirebase(true);
+                            modal.hide();
                         });
                 })
                 .catch((error) => {
@@ -432,8 +417,11 @@ function registroUsuario() {
                             notificaLateralError(mustache.render('Error: {{{codigoError}}}', { codigoError: error.code }));
                             break;
                     }
+                    estadoBotones(botones, true);
                 }
                 );
+        } else {
+            estadoBotones(botones, true);
         }
     }
     modal.show();
@@ -464,6 +452,9 @@ function cerrarSesion() {
         ev.preventDefault();
         document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link"  href="javascript:registroUsuario();">Registro</a></li><li class="nav-item"><a class="nav-link" href="javascript:inicioSesionUsuario();">Identificación</a></li>';
         dUser = null;
+        if (rol !== 0) {
+            document.getElementById('interruptorProfesor').setAttribute('hidden', true);
+        }
         rol = null;
         cerrarSesionFirebase(false);
         modal.hide();
@@ -472,5 +463,114 @@ function cerrarSesion() {
 }
 
 function gestionarCuenta() {
-    console.log('gestionCuenta')
+    const modal = new bootstrap.Modal(document.getElementById('nuevoUsuarioModal'));
+    if (rol > 0) {
+        document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = 'Cuenta de docente';
+        document.getElementById('camposObligatoriosRegistroLabel').innerHTML = '';
+    } else {
+        document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = 'Datos del usuario';
+        document.getElementById('camposObligatoriosRegistroLabel').innerHTML = 'Si quieres disponer de una cuenta de docente para poder crear nuevos POI y tareas educativas envía un correo electrónico a la dirección <em>localizarte@gsic.uva.es</em> para que el equipo de LocalizARTE se pueda poner en contacto contigo.';
+    }
+    const campoNombre = document.getElementById('registroNombre');
+    if (dUser.name !== undefined) {
+        campoNombre.value = dUser.name;
+    }
+    const campoApellido = document.getElementById('registroApellido');
+    if (dUser.surname !== undefined) {
+        campoApellido.value = dUser.surname;
+    }
+    const campoEmail = document.getElementById('registroMail');
+    campoEmail.value = dUser.email;
+    const campoPass = document.getElementById('registroPass');
+    campoPass.value = 'noEsTuContraseña';
+    const camposNoModificables = [campoEmail, campoPass];
+    camposNoModificables.forEach(campo => {
+        campo.disabled = true;
+    });
+    const btRegistroEnviar = document.getElementById('registroEnviar');
+    const botones = [btRegistroEnviar];
+    btRegistroEnviar.innerHTML = 'Actualizar';
+    btRegistroEnviar.onclick = ev => {
+        ev.preventDefault();
+        estadoBotones(botones, false);
+        estadoBotones(botones, true);
+        nuevoNombre = campoNombre.value.trim();
+        nuevoApellido = campoApellido.value.trim();
+        if (dUser.name === nuevoNombre && dUser.surname === nuevoApellido) {
+            notificaLateralError('No has modificado ningún valor');
+            estadoBotones(botones, true);
+            modal.hide();
+        } else {
+            envio = {
+                name: nuevoNombre,
+                surname: nuevoApellido
+            };
+
+            let cabeceras = new Headers();
+            cabeceras.append("Content-Type", "application/json");
+
+            auth.currentUser.getIdToken()
+                .then(idToken => {
+                    cabeceras.append("x-tokenid", idToken);
+                    let peticion = {
+                        method: 'PUT',
+                        headers: cabeceras,
+                        body: JSON.stringify(envio), //Envío la dirección de correo y si nos lo ha facilitado, el nombre y el apellido
+                        redirect: 'follow'
+                    };
+                    const direccion = mustache.render(
+                        '{{{dir}}}/users/user',
+                        {
+                            dir: direccionServidor,
+                        });
+
+                    fetch(direccion, peticion)
+                        .then(response => {
+                            switch (response.status) {
+                                case 200:
+                                    return response.json();
+                                case 400:
+                                    return response.text();
+                                default:
+                                    notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
+                                    return null;
+                            }
+                        })
+                        .then(result => {
+                            if (result) {
+                                if (typeof result === 'string') {
+                                    notificaLateralError(result);
+                                } else {
+                                    dUser.name = nuevoNombre;
+                                    dUser.surname = nuevoApellido;
+                                    notificaLateral('Datos del usuario actualizados');
+                                }
+                            }
+                            estadoBotones(botones, true);
+                            modal.hide();
+                        })
+                        .catch(error => {
+                            estadoBotones(botones, true);
+                            modal.hide();
+                            notificaLateralError(mustache.render(
+                                'Error: {{{e}}}',
+                                {
+                                    e: error
+                                }
+                            ));
+                        });
+                })
+                .catch(error => {
+                    estadoBotones(botones, true);
+                    modal.hide();
+                    notificaLateralError(mustache.render(
+                        'Error: {{{e}}}',
+                        {
+                            e: error
+                        }
+                    ));
+                });
+        }
+    }
+    modal.show();
 }

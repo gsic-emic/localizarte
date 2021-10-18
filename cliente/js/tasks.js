@@ -21,7 +21,12 @@ limitations under the License.
  */
 
 function tareasContexto(iriContexto, poi) {
-    const direccion = mustache.render('{{{direccionServidor}}}/tasks?context={{{iri}}}', { direccionServidor: direccionServidor, iri: iriContexto });
+    const direccion = mustache.render(
+        '{{{direccionServidor}}}/tasks?context={{{iri}}}',
+        {
+            direccionServidor: direccionServidor,
+            iri: iriContexto
+        });
     const opcionesPeticion = {
         method: 'GET',
         redirect: 'follow'
@@ -61,6 +66,7 @@ function tareasContexto(iriContexto, poi) {
                     for (let i = 0; i < resultados.length; i++) {
                         salta = false;
                         const resultado = resultados[i];
+                        resultado.original = JSON.parse(JSON.stringify(resultado));
                         let spa = [];
                         resultado.spa.forEach(espacio => spa.push(espacio.spa));
                         if (spa.includes('https://casuallearn.gsic.uva.es/space/physical') && spa.includes('https://casuallearn.gsic.uva.es/space/virtualMap')) {
@@ -158,7 +164,7 @@ function tareasContexto(iriContexto, poi) {
                         }
                     });
                     const salida = mustache.render(
-                        '{{#resultados}}{{#muestra}}<div id="{{{idh}}}" class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{{id}}}" aria-expanded="false" aria-controls="{{{id}}}"><img class="px-3" src="{{{icon}}}" style="witdth:40;height:40">{{{title}}}</button></h2><div id="{{{id}}}" class="accordion-collapse collapse" aria-labelledby="{{{idh}}}" data-bs-parent="#acordeon"><div class="accordion-body"><div class="d-md-flex flex-md-row py-1 row g-3"><div class="row pb-2"><p>{{{aTR}}}</p></div>{{#mostrarAdmin}}<div class="row py-1  text-white rounded fondoPrimario g-2"><div class="row justify-content"><h6>Gestión de la tarea</h6></div><div class="row g-1 align-items-center justify-content-around my-1"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-warning" onclick="modificarTarea({{{idf}}})">Modificar tarea</button></div><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-danger" onclick="eliminaTareaModal({{{idf}}})">Eliminar tarea</button></div></div></div>{{/mostrarAdmin}}<div class="row g-1 py-2"><div class="col my-1 text-center"><button class="btn btn-success"{{#noPuedeRealizar}} disabled>{{#esProfe}}Desactiva vista docente{{/esProfe}}{{^esProfe}}Identifícate para realizar la tarea{{/esProfe}}{{/noPuedeRealizar}}{{^noPuedeRealizar}}{{#cerca}} onclick="realizaTarea({{{idf}}})">Realizar tarea{{/cerca}}{{^cerca}} disabled>Acércate para realizar la tarea{{/cerca}}{{/noPuedeRealizar}}</button></div></div></div></div></div></div>{{/muestra}}{{/resultados}}',
+                        '{{#resultados}}{{#muestra}}<div id="{{{idh}}}" class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{{id}}}" aria-expanded="false" aria-controls="{{{id}}}"><img class="px-3" src="{{{icon}}}" style="witdth:40;height:40">{{{title}}}</button></h2><div id="{{{id}}}" class="accordion-collapse collapse" aria-labelledby="{{{idh}}}" data-bs-parent="#acordeon"><div class="accordion-body"><div class="d-md-flex flex-md-row py-1 row g-3"><div class="row pb-2"><p>{{{aTR}}}</p></div>{{#mostrarAdmin}}<div class="row py-1  text-white rounded fondoPrimario g-2"><div class="row justify-content"><h6>Gestión de la tarea</h6></div><div class="row g-1 align-items-center justify-content-around my-1"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-warning" onclick="modalPOI.hide(); modificarTarea({{{idf}}})">Modificar tarea</button></div><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-danger" onclick="modalPOI.hide(); eliminaTareaModal({{{idf}}})">Eliminar tarea</button></div></div></div>{{/mostrarAdmin}}<div class="row g-1 py-2"><div class="col my-1 text-center"><button class="btn btn-success"{{#noPuedeRealizar}} disabled>{{#esProfe}}Desactiva vista docente{{/esProfe}}{{^esProfe}}Identifícate para realizar la tarea{{/esProfe}}{{/noPuedeRealizar}}{{^noPuedeRealizar}}{{#cerca}} onclick="modalPOI.hide(); realizaTarea({{{idf}}})">Realizar tarea{{/cerca}}{{^cerca}} disabled>Acércate para realizar la tarea{{/cerca}}{{/noPuedeRealizar}}</button></div></div></div></div></div></div>{{/muestra}}{{/resultados}}',
                         { resultados: resultados }
                     );
                     espacioTareas.innerHTML = mustache.render(
@@ -360,7 +366,6 @@ function realizaTarea(idTarea) {
                                             break;
                                     }
                                     if (todoOk) {
-
                                         let respuesta = {};
                                         finT = (new Date()).getTime();
                                         respuesta.endTime = finT;
@@ -506,15 +511,128 @@ function eliminaTareaModal(idTarea) {
 
 function modificarTarea(idTarea) {
     if (tareasPoI !== null) {
-        let tareaL, tarea;
+        let tareaL = null, tarea = null;
         tareasPoI.some(t => {
             if (t.idf === idTarea) {
                 tareaL = t;
+                tarea = tareaL.original;
                 return true;
             }
             return false;
         });
-        console.log(tareaL);
+        console.log(tarea);
+        if (tarea !== null) {
+            const modal = new bootstrap.Modal(document.getElementById('nuevaTareaModal'));
+            document.getElementById("formNT").reset();
+            reseteaNuevaTarea('Edición de la tarea');
+
+            const selector = document.getElementById("selectTipoRespuesta");
+            const titulo = document.getElementById("tituloNT");
+            const enunciado = document.getElementById("textoAsociadoNT");
+            const cbEspacio = document.getElementsByName("cbEspacio");
+
+            const camposTarea = [
+                selector,
+                titulo,
+                enunciado,
+                cbEspacio
+            ];
+
+            const selectValido = [
+                'tRVF',
+                'tRMcq',
+                'tRTexto',
+                'tRTextoCorto',
+                'tRFoto',
+                'tRFotoTexto',
+                'tRMultiFotos',
+                'tRMultiFotosTexto',
+                'tRVideo',
+                'tRSinRespuesta',
+                'tRVideoTexto'
+            ];
+
+            switch (tarea.aT) {
+                case 'https://casuallearn.gsic.uva.es/answerType/trueFalse':
+                    ocultarOpcionesEspecificasEspacio(false, true);
+                    selector.value = 'tRVF';
+                    break;
+                case 'https://casuallearn.gsic.uva.es/answerType/mcq':
+                    ocultarOpcionesEspecificasEspacio(true, false);
+                    selector.value = 'tRMcq';
+                    break;
+                default:
+                    switch (tarea.aT) {
+                        case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotos':
+                            selector.value = 'tRMultiFotos';
+                            break;
+                        case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotosAndText':
+                            selector.value = 'tRMultiFotosTexto';
+                            break;
+                        case 'https://casuallearn.gsic.uva.es/answerType/noAnswer':
+                            selector.value = 'tRSinRespuesta';
+                            break;
+                        case 'https://casuallearn.gsic.uva.es/answerType/photo':
+                            selector.value = 'tRFoto';
+                            break;
+                        case 'https://casuallearn.gsic.uva.es/answerType/photoAndText':
+                            selector.value = 'tRFotoTexto';
+                            break;
+                        case 'https://casuallearn.gsic.uva.es/answerType/shortText':
+                            selector.value = 'tRTextoCorto';
+                            break;
+                        case 'https://casuallearn.gsic.uva.es/answerType/text':
+                            selector.value = 'tRTexto';
+                            break;
+                        case 'https://casuallearn.gsic.uva.es/answerType/video':
+                            selector.value = 'tRVideo';
+                            break;
+                        default:
+                            break;
+                    }
+                    ocultarOpcionesEspecificasEspacio(true, true);
+                    break;
+            }
+
+            selector.onchange = () => {
+                switch (selector.value) {
+                    case 'tRVF':
+                        ocultarOpcionesEspecificasEspacio(false, true);
+                        break;
+                    case 'tRMcq':
+                        ocultarOpcionesEspecificasEspacio(true, false);
+                        break;
+                    default:
+                        ocultarOpcionesEspecificasEspacio(true, true);
+                        break;
+                }
+            };
+
+            if(tarea.title){
+                titulo.value = tarea.title;
+            }
+            if(tarea.aTR) {
+                enunciado.value = tarea.aTR;
+            }
+
+            tarea.spa.forEach(espacio => {
+                switch (espacio.spa) {
+                    case 'https://casuallearn.gsic.uva.es/space/physical':
+                        document.getElementById('cbEspacio1').checked = true;
+                        break;
+                    case 'https://casuallearn.gsic.uva.es/space/virtualMap':
+                        document.getElementById('cbEspacio2').checked = true;
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+        modal.show();
+
+        } else {
+            notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
+        }
     } else {
         notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
     }
@@ -538,10 +656,11 @@ function reseteaRealizaTarea() {
     document.getElementById('mcqOpcionesRealizaTarea').innerHTML = '';
 }
 
-function reseteaNuevaTarea() {
+function reseteaNuevaTarea(titulo = 'Nueva tarea') {
     document.getElementById("selectTipoRespuesta").className = 'form-select';
-    document.getElementById("tituloNT")
-    document.getElementById("textoAsociadoNT")
+    document.getElementById("encabezadoNT").innerHTML = titulo;
+    document.getElementById('tituloNT').value = '';
+    document.getElementById("textoAsociadoNT").value = '';
     document.getElementsByName("cbEspacio").forEach(c => {
         c.className = 'form-check-input';
     });
@@ -821,7 +940,7 @@ function capturaCamara() {
     let captura = webcam.snap();
     let foto = document.getElementById("foto");
 
-    const options = { maxSizeMB: 0.2, maxWithOrHeight: 1920, useWebWorker: true };
+    const options = { maxSizeMB: 0.2, maxWithOrHeight: 600, useWebWorker: true };
 
     imageCompression.getFilefromDataUrl(captura)
         .then(file => {

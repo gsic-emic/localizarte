@@ -58,15 +58,6 @@ async function dameColeccionUsuario(email) {
         return null;
 }
 
-async function dameColeccionToken(token) {
-    conectaBD();
-    const documento = await dameDocumentoRapida({ sesion: token });
-    if (documento && documento.uid)
-        return documento.uid;
-    else
-        return null;
-}
-
 async function dameDocumentoRapida(objetoABuscar) {
     conectaBD();
     return await client.db(Config.nombreBD).collection('rapida').findOne(objetoABuscar);
@@ -103,26 +94,6 @@ async function dameTareaDeColeccion(tarea, coleccion) {
     return await client.db(Config.nombreBD).collection(coleccion).findOne({ idTarea: tarea });
 }
 
-async function abreSesion(valor, email) {
-    const update = {
-        $set: {
-            sesion: valor
-        }
-    };
-    conectaBD();
-    return await client.db(Config.nombreBD).collection('rapida').updateOne({ email: email }, update);
-}
-
-async function cierraSesion(token) {
-    const update = {
-        $set: {
-            sesion: ''
-        }
-    };
-    conectaBD();
-    return await client.db(Config.nombreBD).collection('rapida').updateOne({ sesion: token }, update);
-}
-
 async function correoVerificado(uid, verificado) {
     const update = {
         $set: {
@@ -131,6 +102,14 @@ async function correoVerificado(uid, verificado) {
     };
     conectaBD();
     client.db(Config.nombreBD).collection('rapida').updateOne({ uid: uid }, update);
+}
+
+async function modificaDocumentoDeColeccion(cambios, idDocumento, coleccion) {
+    const update = {
+        $set: cambios
+    };
+    conectaBD();
+    return await client.db(Config.nombreBD).collection(coleccion).updateOne({ _id: idDocumento }, update);
 }
 
 module.exports = {
@@ -146,8 +125,9 @@ module.exports = {
     dameDatosDeColeccion,
     dameTareaDeColeccion,
     dameDocumentoDeColeccion,
-    abreSesion,
-    cierraSesion,
+    //abreSesion,
+    //cierraSesion,
     //dameColeccionToken,
     //dameCorreoSiProfe,
+    modificaDocumentoDeColeccion,
 }

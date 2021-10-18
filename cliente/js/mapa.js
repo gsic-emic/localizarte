@@ -65,6 +65,11 @@ let dUser;
 let app;
 let auth;
 
+const spinnerCentro = document.getElementById('divSpinner');
+
+let answers;
+
+
 inicio();
 
 /**
@@ -74,6 +79,7 @@ inicio();
 function inicio() {
     zonas = [];
     pois = [];
+    answers = [];
     popup = null;
     faltan = 0;
     map = L.map('mapa',
@@ -143,7 +149,7 @@ function inicio() {
 
     // Pulsación con el botón derecho del ratón o tap largo
     map.on('contextmenu', (pos) => {
-        if(tokenSesion !== null && rol !== null && rol > 0){
+        if(rol !== null && rol > 0){
             creacionNuevoContexto(pos);
         }
     });
