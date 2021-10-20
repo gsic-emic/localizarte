@@ -236,7 +236,7 @@ const equivalencias = {
   },
 };
 
-const tipoRespuetasSoportados = ['tRTexto', 'tRMultiFotosTexto', 'tRMultiFoto', 'tRFotoTexto', 'tRMultiFotos', 'tRTextoCorto', 'tRTextoCorto', 'tRSinRespuesta', 'tRVideo', 'tRVideoTexto', 'tRVF', 'tRMcq'];
+const tipoRespuetasSoportados = ['tRTexto', 'tRMultiFotosTexto', 'tRFoto', 'tRMultiFoto', 'tRFotoTexto', 'tRMultiFotos', 'tRTextoCorto', 'tRTextoCorto', 'tRSinRespuesta', 'tRVideo', 'tRVideoTexto', 'tRVF', 'tRMcq'];
 
 const espaciosSoportados = ['espacioFisico', 'espacioMapaVirtual', 'espacioWeb'];
 

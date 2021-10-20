@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones auxiliares utilizadas en el cliente de LocalizARTE.
  * autor: Pablo García Zarza
- * version: 20210525
+ * version: 20211019
  */
 
 /**
@@ -168,4 +168,97 @@ function notificaLateralError(mensaje) {
  */
 function modalOpen(modal) {
     return modal.className.includes('show');
+}
+
+/**
+ * Función para comprobar que un email puede ser válido. Obtenida de: https://stackoverflow.com/a/46181
+ * 
+ * @param {String} email 
+ * @returns Verdadero si la dirección de correo tiene un formato correcto.
+ */
+function validateEmail(email) {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
+/**
+ * Función para activar o desactivar los botones de un modal.
+ * 
+ * @param {Array} botones Vector con los botones que se van activar o desactivar.
+ * @param {Boolean} activar Indica si los botones tienen que estar activos y spinner oculto (true) o al revés (false)
+ */
+function estadoBotones(botones, activar) {
+    botones.forEach(boton => {
+        boton.disabled = !activar;
+    });
+    if (activar) {
+        spinnerCentro.className = 'centroOFF';
+    } else {
+        spinnerCentro.className = 'centroON';
+    }
+}
+
+/**
+ * Función para establecer la clase de un conjunto de objetos a form-control (formularios).
+ *
+ * @param {Array} campos Array con las referencias de los objetos del formulario.
+ */
+function reseteaCamposValidador(campos) {
+    campos.forEach(campo => {
+        campo.className = 'form-control';
+    });
+}
+
+function conversionTipoTareaSC(valor) {
+    switch (valor) {
+        case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotos':
+            return 'tRMultiFotos';
+        case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotosAndText':
+            return 'tRMultiFotosTexto';
+        case 'https://casuallearn.gsic.uva.es/answerType/noAnswer':
+            return 'tRSinRespuesta';
+        case 'https://casuallearn.gsic.uva.es/answerType/photo':
+            return 'tRFoto';
+        case 'https://casuallearn.gsic.uva.es/answerType/photoAndText':
+            return 'tRFotoTexto';
+        case 'https://casuallearn.gsic.uva.es/answerType/shortText':
+            return 'tRTextoCorto';
+        case 'https://casuallearn.gsic.uva.es/answerType/text':
+            return 'tRTexto';
+        case 'https://casuallearn.gsic.uva.es/answerType/video':
+            return 'tRVideo';
+        case 'https://casuallearn.gsic.uva.es/answerType/trueFalse':
+            return 'tRVF';
+        case 'https://casuallearn.gsic.uva.es/answerType/mcq':
+            return 'tRMcq';
+        default:
+            return null;
+    }
+}
+
+function conversionTipoTareaCS(valor) {
+    switch (valor) {
+        case 'tRMultiFotos':
+            return 'https://casuallearn.gsic.uva.es/answerType/multiplePhotos';
+        case 'tRMultiFotosTexto':
+            return 'https://casuallearn.gsic.uva.es/answerType/multiplePhotosAndText';
+        case 'tRSinRespuesta':
+            return 'https://casuallearn.gsic.uva.es/answerType/noAnswer';
+        case 'tRFoto':
+            return 'https://casuallearn.gsic.uva.es/answerType/photo';
+        case 'tRFotoTexto':
+            return 'https://casuallearn.gsic.uva.es/answerType/photoAndText';
+        case 'tRTextoCorto':
+            return 'https://casuallearn.gsic.uva.es/answerType/shortText';
+        case 'tRTexto':
+            return 'https://casuallearn.gsic.uva.es/answerType/text';
+        case 'tRVideo':
+            return 'https://casuallearn.gsic.uva.es/answerType/video';
+        case 'tRVF':
+            return 'https://casuallearn.gsic.uva.es/answerType/trueFalse';
+        case 'tRMcq':
+            return 'https://casuallearn.gsic.uva.es/answerType/mcq';
+        default:
+            return null;
+    }
 }

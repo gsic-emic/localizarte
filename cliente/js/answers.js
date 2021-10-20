@@ -14,26 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const DB = require('../../util/bd')
-
 /**
- * Cierre de sesión.
+ * Gestión de las respuestas en el cliente de LocalizARTE.
  * autor: Pablo García Zarza
- * version: 20210608
+ * version: 20211014
  */
 
-async function logout(req, res) {
-    try {
-        const { sesion } = req.params;
-        const resultado = await DB.cierraSesion(sesion);
-        if (resultado && resultado.modifiedCount === 1) {
-            res.sendStatus(200);
-        } else {
-            res.sendStatus(400);
-        }
-    } catch (error) { res.sendStatus(500); }
-}
-
-module.exports = {
-    logout,
+function mostrarModalRespuestas() {
+    console.log('mostrarModalRespuestas()');
 }

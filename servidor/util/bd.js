@@ -41,22 +41,26 @@ async function usuarioYaRegistrado(email) {
         return false;
 }
 
+async function uidYaRegistrado(uid) {
+    conectaBD();
+    if (await client.db(Config.nombreBD).collection('rapida').findOne({ uid: uid }))
+        return true;
+    else
+        return false;
+}
+
 async function dameColeccionUsuario(email) {
     conectaBD();
-    const documento = await client.db(Config.nombreBD).collection('rapida').findOne({ email: email });
+    const documento = await dameDocumentoRapida({ email: email });
     if (documento && documento.uid)
         return documento.uid;
     else
         return null;
 }
 
-async function dameColeccionToken(token) {
+async function dameDocumentoRapida(objetoABuscar) {
     conectaBD();
-    const documento = await client.db(Config.nombreBD).collection('rapida').findOne({ sesion: token });
-    if (documento && documento.uid)
-        return documento.uid;
-    else
-        return null;
+    return await client.db(Config.nombreBD).collection('rapida').findOne(objetoABuscar);
 }
 
 async function dameCorreoSiProfe(token) {
@@ -80,29 +84,32 @@ async function dameDatosDeColeccion(coleccion) {
     return dameTareaDeColeccion('datos', coleccion);
 }
 
+async function dameDocumentoDeColeccion(idDoc, coleccion) {
+    conectaBD();
+    return await client.db(Config.nombreBD).collection(coleccion).findOne({ _id: idDoc });
+}
+
 async function dameTareaDeColeccion(tarea, coleccion) {
     conectaBD();
     return await client.db(Config.nombreBD).collection(coleccion).findOne({ idTarea: tarea });
 }
 
-async function abreSesion(valor, email) {
+async function correoVerificado(uid, verificado) {
     const update = {
         $set: {
-            sesion: valor
+            emailVerified: verificado
         }
     };
     conectaBD();
-    return await client.db(Config.nombreBD).collection('rapida').updateOne({ email: email }, update);
+    client.db(Config.nombreBD).collection('rapida').updateOne({ uid: uid }, update);
 }
 
-async function cierraSesion(token) {
+async function modificaDocumentoDeColeccion(cambios, idDocumento, coleccion) {
     const update = {
-        $set: {
-            sesion: ''
-        }
+        $set: cambios
     };
     conectaBD();
-    return await client.db(Config.nombreBD).collection('rapida').updateOne({ sesion: token }, update);
+    return await client.db(Config.nombreBD).collection(coleccion).updateOne({ _id: idDocumento }, update);
 }
 
 module.exports = {
@@ -111,11 +118,16 @@ module.exports = {
     guardaDocumentoEnColeccion,
     nuevoUsuarioEnColeccionRapida,
     usuarioYaRegistrado,
-    dameColeccionUsuario,
+    uidYaRegistrado,
+    correoVerificado,
+    dameDocumentoRapida,
+    //dameColeccionUsuario,
     dameDatosDeColeccion,
     dameTareaDeColeccion,
-    abreSesion,
-    cierraSesion,
-    dameColeccionToken,
-    dameCorreoSiProfe,
+    dameDocumentoDeColeccion,
+    //abreSesion,
+    //cierraSesion,
+    //dameColeccionToken,
+    //dameCorreoSiProfe,
+    modificaDocumentoDeColeccion,
 }

@@ -17,5 +17,149 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con el recurso "usuario".
  * autor: Pablo García Zarza
- * version: 20210422
+ * version: 20211018
  */
+
+
+const admin = require('firebase-admin');
+const { uidYaRegistrado, nuevoUsuarioEnColeccionRapida, guardaDocumentoEnColeccion, correoVerificado, dameDocumentoRapida, dameDocumentoDeColeccion, modificaDocumentoDeColeccion } = require('../../util/bd');
+
+
+async function putUser(req, res) {
+    try {
+        const token = req.headers['x-tokenid'];
+        const { body } = req;
+
+        admin.auth().verifyIdToken(token)
+            .then(async decodedToken => {
+                const { uid, email_verified } = decodedToken;
+                if (uid && uid !== '') {
+                    uidYaRegistrado(uid)
+                        .then(async yaRegistrado => {
+                            if (yaRegistrado) {
+                                //Update user's values
+                                if(email_verified) {
+                                    const {name, surname} = body;
+                                    modificaDocumentoDeColeccion(
+                                        {
+                                            name: name, 
+                                            surname: surname, 
+                                            lastUpdate: Date.now()
+                                        }, 'userData', uid)
+                                        .then(respuestaBD => {
+                                            if(respuestaBD.modifiedCount > 0) {
+                                                res.status(200).send(JSON.stringify({
+                                                    name: name,
+                                                    surname: surname
+                                                }));
+                                            } else {
+                                                res.status(512).send('No se han modificado todos los campos');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error(error);
+                                            res.status(500).send('Error en la actualización');
+                                        });
+                                } else {
+                                    res.status(400).send('El usuario no ha verificado su dirección de correo');
+                                }
+                            } else {
+                                admin.auth().getUser(uid)
+                                    .then(async user => {
+                                        const { email, nombre, apellido } = body;
+                                        nuevoUsuarioEnColeccionRapida({
+                                            uid: uid,
+                                            emailVerified: user.emailVerified,
+                                            rol: 0,
+                                            creationDate: Date.now()
+                                        });
+                                        guardaDocumentoEnColeccion(
+                                            {
+                                                _id: 'userData',
+                                                name: nombre,
+                                                surname: apellido,
+                                                lastUpdate: Date.now(),
+                                                email: email
+                                            },
+                                            uid);
+                                        res.status(201).send(JSON.stringify({
+                                            emailVerified: user.emailVerified
+                                        }));
+                                    })
+                                    .catch(error => {
+                                        res.status(400).send(error);
+                                    });
+                            }
+                        })
+                        .catch(e => {
+                            console.error(e);
+                            res.sendStatus(400);
+                        });
+                } else {
+                    res.sendStatus(400);
+                }
+            })
+            .catch(error => {
+                res.status(400).send(error);
+            });
+    } catch (e) {
+        res.sendStatus(500);
+    }
+}
+
+async function getInfoUser(req, res) {
+    try {
+        const token = req.headers['x-tokenid'];
+        admin.auth().verifyIdToken(token)
+            .then(async decodedToken => {
+                const { uid, email_verified } = decodedToken;
+                if (email_verified) {
+                    uidYaRegistrado(uid)
+                        .then(yaRegistrado => {
+                            if (yaRegistrado) {
+                                dameDocumentoRapida({ uid: uid })
+                                    .then(datosRapida => {
+                                        dameDocumentoDeColeccion('userData', uid)
+                                            .then(datosUsuario => {
+                                                correoVerificado(uid, email_verified);
+                                                res.status(200).send({
+                                                    rol: datosRapida.rol,
+                                                    name: datosUsuario.name,
+                                                    surname: datosUsuario.surname,
+                                                    email: datosUsuario.email
+                                                });
+                                            })
+                                            .catch(error => {
+                                                console.error(error);
+                                                res.sendStatus(400);
+                                            });
+                                    })
+                                    .catch(error => {
+                                        console.error(error);
+                                        res.sendStatus(400);
+                                    });
+                            } else {
+                                res.sendStatus(404);
+                            }
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            res.sendStatus(400);
+                        });
+                } else {
+                    res.sendStatus(404);
+                }
+            })
+            .catch(error => {
+                console.log(error);
+                res.sendStatus(400);
+            });
+    } catch (e) {
+        res.sendStatus(500);
+    }
+}
+
+module.exports = {
+    putUser,
+    getInfoUser,
+}
