@@ -19,7 +19,7 @@ limitations under the License.
 /**
  * Formateo de las consultas SPARQL.
  * autor: Pablo García Zarza
- * version: 202101015
+ * version: 202101019
  */
 
 const Mustache = require('mustache');
@@ -398,9 +398,9 @@ function nuevaTarea(datosTarea) {
  */
 function infoContexto(iriContexto) {
   const query = Mustache.render(
-    'SELECT ?lat ?long ?titulo ?descr ?autor ?tipo WHERE {<{{{iriContexto}}}> a ?tipo ; geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor }', 
-    { 
-      iriContexto: iriContexto 
+    'SELECT ?lat ?long ?titulo ?descr ?autor ?tipo WHERE {<{{{iriContexto}}}> a ?tipo ; geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor }',
+    {
+      iriContexto: iriContexto
     });
   return encodeURIComponent(query);
 }
@@ -466,7 +466,7 @@ function eliminaTarea(iri) {
 function contenidoInsertDelete(array, extra, tama2, final) {
   let query = '';
   let tama = Object.keys(array).length;
-  let v = 0;
+  let v = 0, v2 = 0;
   if ('fuente' in array) {
     if (extra) {
       v = Object.keys(((array['fuente'])[extra]).split(';')).length;
@@ -474,48 +474,73 @@ function contenidoInsertDelete(array, extra, tama2, final) {
       v = Object.keys(array['fuente'].split(';')).length;
     }
   }
+  if ('spa' in array) {
+    if (extra) {
+      v2 = Object.keys(((array['spa'])[extra]).split(';')).length;
+    } else {
+      v2 = Object.keys(array['spa'].split(';')).length;
+    }
+  }
   let d;
   for (let i = 0; i < tama; i++) {
     d = Object.keys(array)[i];
-    if (d === 'fuente') {
-      const fue = (extra) ? (array[d])[extra].split(';') : array[d].split(';');
-      let t = 0;
-      fue.forEach(f => {
-        query = Mustache.render(
-          '{{{query}}}<http://www.w3.org/2000/01/rdf-schema#seeAlso> {{{valor}}}{{{siguiente}}}',
-          {
-            query: query,
-            valor: formatoTiposDatos('uriString', f.trim()),
-            siguiente: (t < (v - 1)) ? '; ' : ''
-          }
-        );
-        ++t;
-      });
-    } else {
-      //TODO cambiar para cuando se tengan varios idiomas
-      let valorCampo;
-      if(d === 'titulo' || d === 'descr'){
-        valorCampo = (extra) ? (array[d])[extra] : (array[d]);
-      }
-      if (d === 'titulo' || d === 'descr' && !valorCampo.includes('@es')) {
-        query = Mustache.render(
-          '{{{query}}}<{{{propiedad}}}> {{{valor}}}@es',
-          {
-            query: query,
-            propiedad: (Auxiliar.equivalencias[d]).prop,
-            valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valorCampo)
-          }
-        );
-      } else {
-        query = Mustache.render(
-          '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
-          {
-            query: query,
-            propiedad: (Auxiliar.equivalencias[d]).prop,
-            valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, (extra) ? (array[d])[extra] : (array[d]))
-          }
-        );
-      }
+    switch (d) {
+      case 'fuente':
+        const fue = (extra) ? (array[d])[extra].split(';') : array[d].split(';');
+        let t = 0;
+        fue.forEach(f => {
+          query = Mustache.render(
+            '{{{query}}}<http://www.w3.org/2000/01/rdf-schema#seeAlso> {{{valor}}}{{{siguiente}}}',
+            {
+              query: query,
+              valor: formatoTiposDatos('uriString', f.trim()),
+              siguiente: (t < (v - 1)) ? '; ' : ''
+            }
+          );
+          ++t;
+        });
+        break;
+      case 'spa':
+        const espacios = (extra) ? (array[d])[extra].split(';') : array[d].split(';');
+        let t2 = 0;
+        espacios.forEach(espacio => {
+          query = Mustache.render(
+            '{{{query}}}<https://casuallearn.gsic.uva.es/property/space> {{{valor}}}{{{siguiente}}}',
+            {
+              query: query,
+              valor: formatoTiposDatos('uriString', espacio.trim()),
+              siguiente: (t2 < (v2 - 1)) ? '; ' : ''
+            }
+          );
+          ++t2;
+        });
+        break;
+      default:
+        //TODO cambiar para cuando se tengan varios idiomas
+        let valorCampo;
+        if (d === 'titulo' || d === 'descr' || d === 'title') {
+          valorCampo = (extra) ? (array[d])[extra] : (array[d]);
+        }
+        if (d === 'titulo' || d === 'descr' || d === 'title' && !valorCampo.includes('@es')) {
+          query = Mustache.render(
+            '{{{query}}}<{{{propiedad}}}> {{{valor}}}@es',
+            {
+              query: query,
+              propiedad: (Auxiliar.equivalencias[d]).prop,
+              valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, valorCampo)
+            }
+          );
+        } else {
+          query = Mustache.render(
+            '{{{query}}}<{{{propiedad}}}> {{{valor}}}',
+            {
+              query: query,
+              propiedad: (Auxiliar.equivalencias[d]).prop,
+              valor: formatoTiposDatos((Auxiliar.equivalencias[d]).tipo, (extra) ? (array[d])[extra] : (array[d]))
+            }
+          );
+        }
+        break;
     }
     if (final) {
       if (i != (tama - 1)) query = Mustache.render('{{{query}}}; ', { query: query });
@@ -535,7 +560,7 @@ function contenidoInsertDelete(array, extra, tama2, final) {
  * @returns Query para realizar la solicitud de borrados y creaciones para un iri específico
  */
 function actualizaValoresContexto(iri, inserciones, eliminaciones, modificaciones) {
-  let query = 'WITH <http://localizarte.gsic.uva.es>';
+  let query = 'WITH <http://localizarte.gsic.uva.es> ';
   const tama2 = Object.keys(modificaciones).length > 0;
   if (Object.keys(eliminaciones).length > 0 || Object.keys(modificaciones).length > 0) {
     query += 'DELETE {';
@@ -548,6 +573,8 @@ function actualizaValoresContexto(iri, inserciones, eliminaciones, modificacione
     query += contenidoInsertDelete(inserciones, null, tama2, false);
     query += contenidoInsertDelete(modificaciones, 'nuevo', tama2, true);
   }
+
+  console.log(query);
   return encodeURIComponent(query);
 }
 
@@ -579,6 +606,14 @@ function tituloContexto(iri) {
   return encodeURIComponent(query);
 }
 
+function numeroTareasAsociadasPOI(iriPOI) {
+  const query = Mustache.render(
+    'SELECT COUNT(DISTINCT ?task) AS ?nTareas WHERE { ?task clp:hasContext <{{{iriPOI}}}> . }',
+    { iriPOI: iriPOI }
+  );
+  return encodeURIComponent(query);
+}
+
 module.exports = {
   contextosZona,
   tipoIRI,
@@ -592,4 +627,5 @@ module.exports = {
   nuevaTarea,
   eliminaTarea,
   actualizaValoresTareas,
+  numeroTareasAsociadasPOI,
 };

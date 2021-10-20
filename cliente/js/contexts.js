@@ -163,7 +163,7 @@ function peticionZona(punto, zona) {
             /*notificaLateralError(mustache.render(
                 'Se ha producido un error al descargar la zona: {{{error}}}',
                 { error: error }));*/
-            console.log('error', error)
+            console.error('error', error)
         })
         .finally(() => { //Siempre decremento por si tengo que pintar
             faltan = (faltan <= 0) ? 0 : faltan - 1;
@@ -244,17 +244,44 @@ function markerPoP(poi) {
         const titulo = document.getElementById('tituloPuntoInteres');
         titulo.innerText = poi.titulo;
         const imagen = document.getElementById('imagenPuntoInteres');
+        const pieImagen = document.getElementById('licenciaImagenPuntoInteres');
+        const enlaceLicencia = document.getElementById('enlaceLicenciaImagenPuntoInteres');
         if (poi.thumb) {
-            imagen.src = poi.thumb;
+            if (poi.thumb.includes('http://')) {
+                imagen.src = poi.thumb.replace('http://', 'https://');
+            } else {
+                imagen.src = poi.thumb;
+            }
+            if (poi.thumb.includes('/Special:FilePath/')) {
+                let aux = poi.thumb.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
+                enlaceLicencia.setAttribute('href', aux);
+                pieImagen.hidden = false;
+            } else {
+                enlaceLicencia.setAttribute('href', '#');
+                pieImagen.hidden = true;
+            }
         } else {
             if (poi.imagen) {
-                imagen.src = poi.imagen;
+                if (poi.imagen.includes('http://')) {
+                    imagen.src = poi.imagen.replace('http://', 'https://');
+                } else {
+                    imagen.src = poi.imagen;
+                }
+                if (poi.imagen.includes('/Special:FilePath/')) {
+                    let aux = poi.imagen.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
+                    enlaceLicencia.setAttribute('href', aux);
+                    pieImagen.hidden = false;
+                } else {
+                    enlaceLicencia.setAttribute('href', '#');
+                    pieImagen.hidden = true;
+                }
             } else {
                 imagen.src = './resources/sinFoto.svg';
+                enlaceLicencia.setAttribute('href', '#');
+                pieImagen.hidden = true;
             }
         }
         imagen.style.display = 'inherit';
-
 
         if (poi.descr) {
             const descripcion = document.getElementById('descripcionPuntoInteres');
@@ -319,11 +346,7 @@ function confirmarEliminacion(poi, titulo, mensaje) {
  * @param {JSONObject} poi Información del punto de interés
  */
 function eliminarPI(poi) {
-
-    estadoBotones([document.getElementById('aceptaBorrar')], false)
-    let modal = new bootstrap.Modal(document.getElementById('confirmarBorrar'));
-    estadoBotones([document.getElementById('aceptaBorrar')], false);
-    modal.show();
+    estadoBotones([], false);
     auth.currentUser.getIdToken()
         .then(idToken => {
             let cabeceras = new Headers();
@@ -351,42 +374,49 @@ function eliminarPI(poi) {
             if (encontrado) {
                 fetch(direccion, peticion)
                     .then(response => {
-                        if (response.status === 200) {
-                            return response.text();
+                        switch (response.status) {
+                            case 200:
+                                return { ok: 'ok' };
+                            case 400:
+                            case 401:
+                            case 403:
+                            case 404:
+                                return response.text();
+                            default:
+                                notificaLateralError(mustache.render(
+                                    'No se ha podido completar el borrado: {{{status}}}',
+                                    { status: response.status }));
+                                return null;
                         }
-                        notificaLateralError(mustache.render(
-                            'No se ha podido completar el borrado: {{{status}}}',
-                            { status: response.status }));
-                        return null;
                     })
                     .then(result => {
                         if (result) {
-                            pois.splice(i, 1);
-                            pintaPOIs(map.getBounds());
-                            notificaLateral('Punto de interés eliminado.');
+                            if (typeof result === 'string') {
+                                notificaLateralError(mustache.render('Error: {{{txt}}}', { txt: result }));
+                            } else {
+                                pois.splice(i, 1);
+                                pintaPOIs(map.getBounds());
+                                notificaLateral('Punto de interés eliminado.');
+                            }
                         }
-                        modal.hide();
-                        estadoBotones([document.getElementById('aceptaBorrar')], true);
+                        estadoBotones([], true);
                     })
                     .catch(error => {
-                        modal.hide();
-                        estadoBotones([document.getElementById('aceptaBorrar')], true);
+                        estadoBotones([], true);
                         notificaLateralError(mustache.render(
                             'Se ha producido un error: {{{error}}}',
                             { error: error }));
-                        console.log('error', error);
+                        console.error('error', error);
                     });
             } else {
-                modal.hide();
-                estadoBotones([document.getElementById('aceptaBorrar')], true);
+                estadoBotones([], true);
                 notificaLateralError('No se ha encontrado el POI en el almacén local.')
             }
         })
         .catch(error => {
-            modal.hide();
-            estadoBotones([document.getElementById('aceptaBorrar')], true);
+            estadoBotones([], true);
             notificaLateralError('El usuario no se encuentra identificado. Inicie sesión.');
-            console.log('error', error);
+            console.error('error', error);
         });
 }
 
@@ -422,8 +452,6 @@ function modificarPI(poi) {
             if (datos) {
                 document.getElementById("formNPI").reset();
                 let modal = new bootstrap.Modal(document.getElementById('nuevoPuntoInteres'));
-                const latitud = document.getElementById('latitudNPI');
-                const longitud = document.getElementById('longitudNPI');
                 const botonEnviar = document.getElementById('enviarNPI');
                 document.getElementById('tituloModalNPI').innerText = 'Edición del punto de interés';
 
@@ -482,61 +510,8 @@ function modificarPI(poi) {
                     //Tiene que tener título, descripción, latitud y longitud
                     estadoBotones([botonEnviar], false);
                     ev.preventDefault();
-                    let todoOk = true;
-                    const mensajes = {
-                        tituloNPI: 'El nuevo punto de interés necesita un título',
-                        descrNPI: 'El punto de interés necesita una descripción',
-                        latitudNPI: 'El punto necesita una latitud',
-                        longitudNPI: 'El punto necesita una longitud',
-                        imagenNPI: 'La imagen se tiene que proporcionar a través de una URL',
-                        licenciaNPI: 'La licencia de la imagen puede ser texto o URL',
-                        fuentesNPI: 'Las fuentes de información pueden ser texto o URL'
-                    };
-                    camposObligatorios.forEach(campo => {
-                        if (!campo || !campo.value || campo.value.trim() === '') {
-                            todoOk = false;
-                            campo.placeholder = mensajes[campo.id];
-                            campo.className = 'form-control is-invalid';
-                        } else {
-                            campo.className = 'form-control is-valid';
-                        }
-                    });
 
-                    camposOpcionales.forEach(campo => {
-                        if (campo.id === 'imagenNPI') {
-                            if (campo.value && campo.value.trim() !== '' && !validIRI(campo.value.trim())) {
-                                todoOk = false;
-                                campo.placeholder = mensajes[campo.id];
-                                campo.value = '';
-                                campo.className = 'form-control is-invalid';
-                            }
-                        } else {
-                            if (campo.value && campo.value.trim() !== '') {
-                                campo.className = 'form-control is-valid';
-                            }
-                        }
-                    });
-
-                    let lat, long;
-                    if (todoOk) {
-                        lat = Number(latitud.value.trim());
-                        if (lat < -90 || lat > 90) {
-                            todoOk = false;
-                            latitud.className = 'form-control is-invalid';
-                        } else {
-                            latitud.className = 'form-control is-valid';
-                        }
-                        if (todoOk) {
-                            long = Number(longitud.value.trim());
-                            if (long < -180 || long > 180) {
-                                todoOk = false;
-                                longitud.className = 'form-control is-invalid';
-                            } else {
-                                longitud.className = 'form-control is-valid';
-                            }
-                        }
-                    }
-                    if (todoOk) {
+                    if (compruebaCamposModalNPI()) {
                         reseteaCamposValidador(campos);
                         //Tengo que comprobar qué campos ha modificado
                         let modificados = {};
@@ -646,7 +621,7 @@ function modificarPI(poi) {
                                             notificaLateralError(mustache.render(
                                                 'Se ha producido un error al actualizar el POI: {{{error}}}',
                                                 { error: error }));
-                                            console.log('error', error)
+                                            console.error('error', error)
                                         });
                                 })
                                 .catch(error => {
@@ -669,7 +644,7 @@ function modificarPI(poi) {
             notificaLateralError(mustache.render(
                 'Se ha producido un error al obtener la información del POI: {{{error}}}',
                 { error: error }));
-            console.log('error', error)
+            console.error('error', error)
         });
 }
 
@@ -768,7 +743,7 @@ function peticionCrafts(lat, lng, contenidoPopup) {
         .catch(error => {
             resultadosEn = null; completadoEn = true;
             sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
-            console.log('error', error);
+            console.error('error', error);
         });
 
     fetch(direccionEs, requestOptions)
@@ -793,7 +768,7 @@ function peticionCrafts(lat, lng, contenidoPopup) {
         .catch(error => {
             resultadosEn = null; completadoEn = true;
             sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
-            console.log('error', error);
+            console.error('error', error);
         });
 }
 
@@ -892,7 +867,7 @@ function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, comp
                             .catch(error => {
                                 resultadosEn = null; completadoEn = true;
                                 pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
-                                console.log('error', error);
+                                console.error('error', error);
                             });
                     } else {
                         pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
@@ -916,7 +891,7 @@ function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, comp
                             .catch(error => {
                                 resultadosEs = null; completadoEs = true;
                                 pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
-                                console.log('error', error);
+                                console.error('error', error);
                             });
                     } else {
                         pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completadoEs, paraMostrar, contenidoPopup);
@@ -1106,17 +1081,6 @@ function datosNuevoContexto(id) {
 }
 
 /**
- * Función para establecer la clase de un conjunto de objetos a form-control (formularios).
- *
- * @param {Array} campos Array con las referencias de los objetos del formulario.
- */
-function reseteaCamposValidador(campos) {
-    campos.forEach(campo => {
-        campo.className = 'form-control';
-    });
-}
-
-/**
  * Función para crear el modal para la creación de un punto de interés. Carga la información
  * que se le pase mediante el identificador en el formulario.
  *
@@ -1128,8 +1092,6 @@ function modalNPI(id) {
         document.getElementById("formNPI").reset();
         popup.remove();
         let modal = new bootstrap.Modal(document.getElementById('nuevoPuntoInteres'));
-        const latitud = document.getElementById('latitudNPI');
-        const longitud = document.getElementById('longitudNPI');
         const botonEnviar = document.getElementById('enviarNPI');
         document.getElementById('tituloModalNPI').innerText = 'Nuevo punto de interés';
 
@@ -1266,60 +1228,8 @@ function modalNPI(id) {
         botonEnviar.onclick = (ev) => {
             ev.preventDefault();
             estadoBotones([botonEnviar], false);
-            let todoOk = true;
-            const mensajes = {
-                tituloNPI: 'El nuevo punto de interés necesita un título',
-                descrNPI: 'El punto de interés necesita una descripción',
-                latitudNPI: 'El punto necesita una latitud',
-                longitudNPI: 'El punto necesita una longitud',
-                imagenNPI: 'La imagen se tiene que proporcionar a través de una URL',
-                licenciaNPI: 'La licencia de la imagen puede ser texto o URL',
-                fuentesNPI: 'Las fuentes de información puden ser texto o URL'
-            };
-            camposObligatorios.forEach(campo => {
-                if (!campo || !campo.value || campo.value.trim() === '') {
-                    todoOk = false;
-                    campo.placeholder = mensajes[campo.id];
-                    campo.className = 'form-control is-invalid';
-                } else {
-                    campo.className = 'form-control is-valid';
-                }
-            });
-            camposOpcionales.forEach(campo => {
-                if (campo.id === 'imagenNPI') {
-                    if (campo.value && campo.value.trim() !== '' && !validIRI(campo.value.trim())) {
-                        todoOk = false;
-                        campo.placeholder = mensajes[campo.id];
-                        campo.value = '';
-                        campo.className = 'form-control is-invalid';
-                    }
-                } else {
-                    if (campo.value && campo.value.trim() !== '') {
-                        campo.className = 'form-control is-valid';
-                    }
-                }
-            });
 
-            let lat, long;
-            if (todoOk) {
-                lat = Number(latitud.value.trim());
-                if (lat < -90 || lat > 90) {
-                    todoOk = false;
-                    latitud.className = 'form-control is-invalid';
-                } else {
-                    latitud.className = 'form-control is-valid';
-                }
-                if (todoOk) {
-                    long = Number(longitud.value.trim());
-                    if (long < -180 || long > 180) {
-                        todoOk = false;
-                        longitud.className = 'form-control is-invalid';
-                    } else {
-                        longitud.className = 'form-control is-valid';
-                    }
-                }
-            }
-            if (todoOk) {
+            if (compruebaCamposModalNPI()) {
                 reseteaCamposValidador(campos);
                 const idsParaServ = {
                     tituloNPI: 'titulo',
@@ -1430,7 +1340,7 @@ function modalNPI(id) {
                             .catch(error => {
                                 estadoBotones([botonEnviar], true);
                                 notificaLateralError('Se ha producido un error en la transmisión. El POI no se ha creado.');
-                                console.log('error', error);
+                                console.error('error', error);
                             });
                     })
                     .catch(error => {
@@ -1438,10 +1348,92 @@ function modalNPI(id) {
                         notificaLateralError('Se ha producido un error.');
                         console.error(error);
                     })
+            } else {
+                estadoBotones([botonEnviar], true);
             }
         };
         modal.show();
     }
+}
+
+function compruebaCamposModalNPI() {
+    const latitud = document.getElementById('latitudNPI');
+    const longitud = document.getElementById('longitudNPI');
+
+    const camposObligatorios = [
+        document.getElementById('tituloNPI'),
+        document.getElementById('descrNPI'),
+        latitud,
+        longitud
+    ];
+    const camposOpcionales = [
+        document.getElementById('fuentesNPI'),
+        document.getElementById('licenciaNPI'),
+        document.getElementById('imagenNPI')
+    ];
+
+    let todoOk = true;
+    const mensajes = {
+        tituloNPI: 'El punto de interés necesita un título',
+        descrNPI: 'El punto de interés necesita una descripción',
+        latitudNPI: 'El punto necesita una latitud',
+        longitudNPI: 'El punto necesita una longitud',
+        imagenNPI: 'La imagen se tiene que proporcionar a través de una URL',
+        licenciaNPI: 'La licencia de la imagen puede ser texto o URL',
+        fuentesNPI: 'Las fuentes de información pueden ser texto o URL'
+    };
+    camposObligatorios.forEach(campo => {
+        if (!campo || !campo.value || campo.value.trim() === '') {
+            todoOk = false;
+            campo.placeholder = mensajes[campo.id];
+            document.getElementById(campo.id + 'Invalid').innerHTML = mensajes[campo.id];
+            campo.className = 'form-control is-invalid';
+        } else {
+            document.getElementById(campo.id + 'Invalid').innerHTML = '';
+            campo.className = 'form-control is-valid';
+        }
+    });
+    camposOpcionales.forEach(campo => {
+        if (campo.id === 'imagenNPI') {
+            if (campo.value && campo.value.trim() !== '' && !validIRI(campo.value.trim())) {
+                todoOk = false;
+                document.getElementById(campo.id + 'Invalid').innerHTML = mensajes[campo.id];
+                campo.placeholder = mensajes[campo.id];
+                campo.value = '';
+                campo.className = 'form-control is-invalid';
+            }
+        } else {
+            if (campo.value && campo.value.trim() !== '') {
+                document.getElementById(campo.id + 'Invalid').innerHTML = '';
+                campo.className = 'form-control is-valid';
+            }
+        }
+    });
+
+    let lat, long;
+    if (todoOk) {
+        lat = Number(latitud.value.trim());
+        if (lat < -90 || lat > 90) {
+            todoOk = false;
+            latitud.className = 'form-control is-invalid';
+            document.getElementById(latitud.id + 'Invalid').innerHTML = mensajes[latitud.id];
+        } else {
+            latitud.className = 'form-control is-valid';
+            document.getElementById(latitud.id + 'Invalid').innerHTML = '';
+        }
+        if (todoOk) {
+            long = Number(longitud.value.trim());
+            if (long < -180 || long > 180) {
+                todoOk = false;
+                longitud.className = 'form-control is-invalid';
+                document.getElementById(longitud.id + 'Invalid').innerHTML = mensajes[longitud.id];
+            } else {
+                longitud.className = 'form-control is-valid';
+                document.getElementById(longitud.id + 'Invalid').innerHTML = '';
+            }
+        }
+    }
+    return todoOk;
 }
 
 /**
@@ -1488,6 +1480,6 @@ function peticionInfoPoi(iri, guardaPinta, modal) {
                 'Se ha producido un error al descargar la información del POI: {{{error}}}',
                 { error: error }));
             estadoBotones([document.getElementById('enviarNPI')], true);
-            console.log('error', error)
+            console.error('error', error)
         });
 }

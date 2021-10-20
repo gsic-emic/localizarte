@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión de las tareas.
  * autor: Pablo García Zarza
- * version: 20210520
+ * version: 20211018
  */
 
 function tareasContexto(iriContexto, poi) {
@@ -174,7 +174,7 @@ function tareasContexto(iriContexto, poi) {
                 }
             }
         })
-        .catch(error => console.log('error', error));
+        .catch(error => console.error('error', error));
 }
 
 
@@ -217,7 +217,6 @@ function realizaTarea(idTarea) {
                     if (result !== null) {
                         if (typeof result !== 'string') {
                             tarea = result;
-                            console.log(tarea);
                             modalPOI.hide();
                             modalPOI = null;
                             const modal = new bootstrap.Modal(document.getElementById('realizarTareaModal'));
@@ -279,8 +278,10 @@ function realizaTarea(idTarea) {
                                     break;
                             }
                             if (muestraModal) {
+                                const botones = [document.getElementById('finalizarTarea')];
                                 document.getElementById('finalizarTarea').onclick = ev => {
                                     ev.preventDefault();
+                                    estadoBotones(botones, false);
                                     let todoOk = true;
                                     let valor;
                                     switch (tarea.aT) {
@@ -414,61 +415,77 @@ function realizaTarea(idTarea) {
                                         enviar.token = tokenSesion;
                                         enviar.respuesta = respuesta;
 
-                                        const direccion = mustache.render('{{{direccionServidor}}}/answers', { direccionServidor: direccionServidor });
-                                        let myHeaders = new Headers();
-                                        myHeaders.append("Content-Type", "application/json");
-                                        const options = {
-                                            method: 'POST',
-                                            headers: myHeaders,
-                                            body: JSON.stringify(enviar),
-                                            redirect: 'follow',
-                                        };
+                                        const direccion = mustache.render(
+                                            '{{{direccionServidor}}}/users/user/answers',
+                                            { direccionServidor: direccionServidor }
+                                        );
 
-                                        fetch(direccion, options)
-                                            .then(response => {
-                                                switch (response.status) {
-                                                    case 201:
-                                                        return response.json();
-                                                    case 400:
-                                                        return response.text();
-                                                    default:
-                                                        return `Error ${response.status} al enviar la respuesta`;
-                                                }
+                                        auth.currentUser.getIdToken()
+                                            .then(idToken => {
+                                                let myHeaders = new Headers();
+                                                myHeaders.append("Content-Type", "application/json");
+                                                myHeaders.append("x-tokenid", idToken);
+                                                const options = {
+                                                    method: 'POST',
+                                                    headers: myHeaders,
+                                                    body: JSON.stringify(enviar),
+                                                    redirect: 'follow',
+                                                };
+
+                                                fetch(direccion, options)
+                                                    .then(response => {
+                                                        switch (response.status) {
+                                                            case 201:
+                                                                return response.json();
+                                                            case 400:
+                                                                return response.text();
+                                                            default:
+                                                                return `Error ${response.status} al enviar la respuesta`;
+                                                        }
+                                                    })
+                                                    .then(datos => {
+                                                        if (typeof datos !== 'string') {
+                                                            //Se le intenta dar realimentación al usuario
+                                                            switch (tarea.aT) {
+                                                                case 'mcq':
+                                                                    if (respuesta.choAns === tarea.correctMcq) {
+                                                                        notificaLateral('¡Respuesta correcta!<br>Respuesta almacenada.');
+                                                                    } else {
+                                                                        notificaLateralError(mustache.render(
+                                                                            'Respuesta errónea :_(<br>La correcta era {{{correcta}}}.<br>Respuesta almacenada.',
+                                                                            { correcta: tarea.correctMcq.toLowerCase() }
+                                                                        ));
+                                                                    }
+                                                                    break;
+                                                                case 'trueFalse':
+                                                                    //Tengo que comprobar que un rb esté marcado de los de vf
+                                                                    if (respuesta.choAns.toLowerCase() === tarea.rE.toLowerCase()) {
+                                                                        notificaLateral('¡Respuesta correcta!<br>Respuesta almacenada.');
+                                                                    } else {
+                                                                        notificaLateralError(mustache.render(
+                                                                            'Respuesta errónea :_(<br>Tenías que haber seleccionado {{{correcta}}}.<br>Respuesta almacenada.',
+                                                                            { correcta: (tarea.rE === 'False') ? 'falso' : 'verdadero' }
+                                                                        ));
+                                                                    }
+                                                                    break;
+                                                                default:
+                                                                    notificaLateral('Respuesta almacenada.');
+                                                                    break;
+                                                            }
+                                                            modal.hide();
+                                                        } else {
+                                                            notificaLateralError(datos);
+                                                        }
+                                                        estadoBotones(botones, true);
+                                                    });
                                             })
-                                            .then(datos => {
-                                                if (typeof datos !== 'string') {
-                                                    modal.hide();
-                                                    //Se le intenta dar realimentación al usuario
-                                                    switch (tarea.aT) {
-                                                        case 'mcq':
-                                                            if (respuesta.choAns === tarea.correctMcq) {
-                                                                notificaLateral('¡Respuesta correcta!<br>Respuesta almacenada.');
-                                                            } else {
-                                                                notificaLateralError(mustache.render(
-                                                                    'Respuesta errónea :_(<br>La correcta era {{{correcta}}}.<br>Respuesta almacenada.',
-                                                                    { correcta: tarea.correctMcq.toLowerCase() }
-                                                                ));
-                                                            }
-                                                            break;
-                                                        case 'trueFalse':
-                                                            //Tengo que comprobar que un rb esté marcado de los de vf
-                                                            if (respuesta.choAns.toLowerCase() === tarea.rE.toLowerCase()) {
-                                                                notificaLateral('¡Respuesta correcta!<br>Respuesta almacenada.');
-                                                            } else {
-                                                                notificaLateralError(mustache.render(
-                                                                    'Respuesta errónea :_(<br>Tenías que haber seleccionado {{{correcta}}}.<br>Respuesta almacenada.',
-                                                                    { correcta: (tarea.rE === 'False') ? 'falso' : 'verdadero' }
-                                                                ));
-                                                            }
-                                                            break;
-                                                        default:
-                                                            notificaLateral('Respuesta almacenada.');
-                                                            break;
-                                                    }
-                                                } else {
-                                                    notificaLateralError(`Error ${datos} al enviar la respuesta`);
-                                                }
+                                            .catch(error => {
+                                                notificaLateralError("Error al recuperar el token del usuario.");
+                                                console.error(error);
+                                                estadoBotones(botones, true);
                                             });
+                                    } else {
+                                        estadoBotones(botones, true);
                                     }
                                 }
                                 modal.show();
@@ -486,6 +503,7 @@ function realizaTarea(idTarea) {
                 })
                 .catch(error => {
                     notificaLateralError('Error desconocido al obtener la información de la tarea.');
+                    console.error(error);
                 });
         }
     } else {
@@ -495,15 +513,71 @@ function realizaTarea(idTarea) {
 
 function eliminaTareaModal(idTarea) {
     if (tareasPoI !== null) {
-        let tareaL, tarea;
+        let tarea;
         tareasPoI.some(t => {
             if (t.idf === idTarea) {
-                tareaL = t;
+                tarea = t;
                 return true;
             }
             return false;
         });
-        console.log(tareaL);
+        let modal = new bootstrap.Modal(document.getElementById('confirmarBorrar'));
+        document.getElementById('tituloConfirmacion').innerHTML = 'Eliminación de la tarea educativa';
+        document.getElementById('mensajeConfirmacion').innerHTML = '¿Estás seguro de eliminar la tarea de aprendizaje?';
+        const botones = [document.getElementById('aceptaBorrar'), document.getElementById('cerrarBorrar')];
+        document.getElementById('aceptaBorrar').onclick = (ev) => {
+            ev.preventDefault();
+            estadoBotones(botones, false);
+            auth.currentUser.getIdToken()
+                .then(idToken => {
+                    let cabeceras = new Headers();
+                    cabeceras.append("x-tokenid", idToken);
+                    const peticion = {
+                        headers: cabeceras,
+                        method: 'DELETE',
+                        redirect: 'follow'
+                    };
+                    const direccion = mustache.render(
+                        '{{{dir}}}',
+                        {
+                            dir: recursoTareaParaElServidor(tarea.task)
+                        }
+                    );
+
+                    fetch(direccion, peticion)
+                        .then(response => {
+                            if (response.status === 200) {
+                                return response.text();
+                            }
+                            notificaLateralError(mustache.render(
+                                'No se ha podido completar el borrado: {{{status}}}',
+                                { status: response.status }));
+                            return null;
+                        })
+                        .then(result => {
+                            if (result) {
+                                notificaLateral('Tarea educativa eliminada.');
+                            }
+                            modal.hide();
+                            estadoBotones(botones, true);
+                        })
+                        .catch(error => {
+                            modal.hide();
+                            estadoBotones(botones, true);
+                            notificaLateralError(mustache.render(
+                                'Se ha producido un error: {{{error}}}',
+                                { error: error }));
+                            console.error('error', error);
+                        });
+                })
+                .catch(error => {
+                    console.error(error);
+                    modal.hide();
+                    estadoBotones(botones, true);
+                    notificaLateralError('El usuario no se encuentra identificado. Inicie sesión.');
+                });
+        };
+        modal.show();
     } else {
         notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
     }
@@ -520,119 +594,273 @@ function modificarTarea(idTarea) {
             }
             return false;
         });
-        console.log(tarea);
-        if (tarea !== null) {
-            const modal = new bootstrap.Modal(document.getElementById('nuevaTareaModal'));
-            document.getElementById("formNT").reset();
-            reseteaNuevaTarea('Edición de la tarea');
 
-            const selector = document.getElementById("selectTipoRespuesta");
-            const titulo = document.getElementById("tituloNT");
-            const enunciado = document.getElementById("textoAsociadoNT");
-            const cbEspacio = document.getElementsByName("cbEspacio");
+        const direccion = recursoTareaParaElServidor(tarea.task);
+        const options = {
+            method: 'GET',
+            redirect: 'follow'
+        };
+        estadoBotones([], false);
+        fetch(direccion, options)
+            .then(response => {
+                switch (response.status) {
+                    case 200:
+                        return response.json();
+                    case 400:
+                    case 404:
+                    case 500:
+                        return response.text();
+                    default:
+                        notificaLateralError(mustache.render(
+                            'Se ha producido un error al obtener la tarea del almacén. Código: {{{codigo}}}',
+                            { codigo: response.status }
+                        ));
+                        return null;
+                }
+            })
+            .then(datos => {
+                estadoBotones([], true);
+                if (datos) {
+                    if (typeof datos === 'string') {
+                        notificaLateralError(datos);
+                    } else {
+                        tarea = datos;
+                        if (tarea !== null) {
+                            const modal = new bootstrap.Modal(document.getElementById('nuevaTareaModal'));
+                            document.getElementById("formNT").reset();
+                            reseteaNuevaTarea('Edición de la tarea');
 
-            const camposTarea = [
-                selector,
-                titulo,
-                enunciado,
-                cbEspacio
-            ];
+                            const selector = document.getElementById("selectTipoRespuesta");
+                            const titulo = document.getElementById("tituloNT");
+                            const enunciado = document.getElementById("textoAsociadoNT");
+                            const cbEspacio = document.getElementsByName("cbEspacio");
 
-            const selectValido = [
-                'tRVF',
-                'tRMcq',
-                'tRTexto',
-                'tRTextoCorto',
-                'tRFoto',
-                'tRFotoTexto',
-                'tRMultiFotos',
-                'tRMultiFotosTexto',
-                'tRVideo',
-                'tRSinRespuesta',
-                'tRVideoTexto'
-            ];
+                            const camposTarea = [
+                                selector,
+                                titulo,
+                                enunciado,
+                                cbEspacio
+                            ];
 
-            switch (tarea.aT) {
-                case 'https://casuallearn.gsic.uva.es/answerType/trueFalse':
-                    ocultarOpcionesEspecificasEspacio(false, true);
-                    selector.value = 'tRVF';
-                    break;
-                case 'https://casuallearn.gsic.uva.es/answerType/mcq':
-                    ocultarOpcionesEspecificasEspacio(true, false);
-                    selector.value = 'tRMcq';
-                    break;
-                default:
-                    switch (tarea.aT) {
-                        case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotos':
-                            selector.value = 'tRMultiFotos';
-                            break;
-                        case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotosAndText':
-                            selector.value = 'tRMultiFotosTexto';
-                            break;
-                        case 'https://casuallearn.gsic.uva.es/answerType/noAnswer':
-                            selector.value = 'tRSinRespuesta';
-                            break;
-                        case 'https://casuallearn.gsic.uva.es/answerType/photo':
-                            selector.value = 'tRFoto';
-                            break;
-                        case 'https://casuallearn.gsic.uva.es/answerType/photoAndText':
-                            selector.value = 'tRFotoTexto';
-                            break;
-                        case 'https://casuallearn.gsic.uva.es/answerType/shortText':
-                            selector.value = 'tRTextoCorto';
-                            break;
-                        case 'https://casuallearn.gsic.uva.es/answerType/text':
-                            selector.value = 'tRTexto';
-                            break;
-                        case 'https://casuallearn.gsic.uva.es/answerType/video':
-                            selector.value = 'tRVideo';
-                            break;
-                        default:
-                            break;
+                            const selectValido = [
+                                'tRVF',
+                                'tRMcq',
+                                'tRTexto',
+                                'tRTextoCorto',
+                                'tRFoto',
+                                'tRFotoTexto',
+                                'tRMultiFotos',
+                                'tRMultiFotosTexto',
+                                'tRVideo',
+                                'tRSinRespuesta',
+                                'tRVideoTexto'
+                            ];
+
+                            switch (tarea.aT) {
+                                case 'https://casuallearn.gsic.uva.es/answerType/trueFalse':
+                                    ocultarOpcionesEspecificasEspacio(false, true);
+                                    selector.value = 'tRVF';
+                                    break;
+                                case 'https://casuallearn.gsic.uva.es/answerType/mcq':
+                                    ocultarOpcionesEspecificasEspacio(true, false);
+                                    selector.value = 'tRMcq';
+                                    break;
+                                default:
+                                    switch (tarea.aT) {
+                                        case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotos':
+                                            selector.value = 'tRMultiFotos';
+                                            break;
+                                        case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotosAndText':
+                                            selector.value = 'tRMultiFotosTexto';
+                                            break;
+                                        case 'https://casuallearn.gsic.uva.es/answerType/noAnswer':
+                                            selector.value = 'tRSinRespuesta';
+                                            break;
+                                        case 'https://casuallearn.gsic.uva.es/answerType/photo':
+                                            selector.value = 'tRFoto';
+                                            break;
+                                        case 'https://casuallearn.gsic.uva.es/answerType/photoAndText':
+                                            selector.value = 'tRFotoTexto';
+                                            break;
+                                        case 'https://casuallearn.gsic.uva.es/answerType/shortText':
+                                            selector.value = 'tRTextoCorto';
+                                            break;
+                                        case 'https://casuallearn.gsic.uva.es/answerType/text':
+                                            selector.value = 'tRTexto';
+                                            break;
+                                        case 'https://casuallearn.gsic.uva.es/answerType/video':
+                                            selector.value = 'tRVideo';
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    ocultarOpcionesEspecificasEspacio(true, true);
+                                    break;
+                            }
+
+                            selector.onchange = () => {
+                                switch (selector.value) {
+                                    case 'tRVF':
+                                        ocultarOpcionesEspecificasEspacio(false, true);
+                                        break;
+                                    case 'tRMcq':
+                                        ocultarOpcionesEspecificasEspacio(true, false);
+                                        break;
+                                    default:
+                                        ocultarOpcionesEspecificasEspacio(true, true);
+                                        break;
+                                }
+                            };
+
+                            if (tarea.title) {
+                                titulo.value = tarea.title;
+                            }
+                            if (tarea.aTR) {
+                                enunciado.value = tarea.aTR;
+                            }
+
+                            spa = tarea.spa.split(' ;');
+
+                            spa.forEach(espacio => {
+                                switch (espacio) {
+                                    case 'https://casuallearn.gsic.uva.es/space/physical':
+                                        document.getElementById('cbEspacio1').checked = true;
+                                        break;
+                                    case 'https://casuallearn.gsic.uva.es/space/virtualMap':
+                                        document.getElementById('cbEspacio2').checked = true;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            });
+
+                            let botones = [document.getElementById("enviarNT")];
+
+                            document.getElementById("enviarNT").onclick = (ev) => {
+                                ev.preventDefault();
+                                estadoBotones(botones, false);
+                                if (compruebaCamposNuevaTareaModal()) {
+                                    tarea.iri = tarea.task;
+                                    delete tarea.task;
+                                    let modificados = recuperaValoresTextoTarea();
+                                    let spa = modificados.espacios;
+                                    let spaMod;
+                                    if (spa.length > 0) {
+                                        let primero = true;
+                                        spa.forEach(s => {
+                                            switch (s.spa) {
+                                                case 'espacioFisico':
+                                                    s = 'https://casuallearn.gsic.uva.es/space/physical';
+                                                    break;
+                                                case 'espacioWeb':
+                                                    s = 'https://casuallearn.gsic.uva.es/space/web';
+                                                    break;
+                                                case 'espacioMapaVirtual':
+                                                    s = 'https://casuallearn.gsic.uva.es/space/virtualMap';
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                            if (primero) {
+                                                spaMod = s;
+                                                primero = false;
+                                            } else {
+                                                spaMod = mustache.render(
+                                                    '{{{actual}}} ;{{{nuevo}}}',
+                                                    {
+                                                        actual: spaMod,
+                                                        nuevo: s
+                                                    }
+                                                );
+                                            }
+                                        });
+                                    }
+                                    modificados.spa = spaMod;
+                                    delete modificados.espacios;
+                                    modificados.title = modificados.title.value;
+                                    modificados.aT = conversionTipoTareaCS(modificados.aT);
+                                    const envio = {
+                                        modificados: modificados,
+                                        actual: tarea
+                                    };
+                                    auth.currentUser.getIdToken()
+                                        .then(idToken => {
+                                            let headers = new Headers();
+                                            headers.append('Content-Type', 'application/json');
+                                            headers.append("x-tokenid", idToken);
+                                            const opciones = {
+                                                method: 'PUT',
+                                                headers: headers,
+                                                body: JSON.stringify(envio),
+                                                redirect: 'follow'
+                                            };
+                                            fetch(direccion, opciones)
+                                                .then(response => {
+                                                    switch (response.status) {
+                                                        case 200:
+                                                            return { codigo: 200, mensaje: 'OK' };
+                                                        case 400:
+                                                        case 403:
+                                                        case 404:
+                                                        case 503:
+                                                            return response.text();
+                                                        default:
+                                                            notificaLateralError(mustache.render(
+                                                                'Se ha producido un error desconocido: {{{status}}}',
+                                                                { status: response.status }
+                                                            ));
+                                                            return null;
+                                                    }
+                                                })
+                                                .then(resultado => {
+                                                    if (resultado !== null) {
+                                                        if (typeof resultado !== 'string') {
+                                                            modal.hide();
+                                                            notificaLateral('Tarea educativa actualizada');
+                                                        } else {
+                                                            notificaLateralError(resultado);
+                                                        }
+                                                    } else {
+                                                        notificaLateralError(resultado);
+                                                    }
+                                                    estadoBotones(botones, true);
+                                                })
+                                                .catch(error => {
+                                                    notificaLateralError(mustache.render(
+                                                        'Se ha producido un error al actualizar el POI: {{{error}}}',
+                                                        { error: error }));
+                                                    console.error('error', error);
+                                                    estadoBotones(botones, true);
+                                                });
+                                        })
+                                        .catch(error => {
+                                            notificaLateralError(mustache.render(
+                                                'Se ha producido un error al obtener la información del POI: {{{error}}}',
+                                                { error: error }));
+                                            console.error('error', error);
+                                            estadoBotones(botones, true);
+                                        });
+                                } else {
+                                    estadoBotones(botones, true);
+                                }
+                            }
+
+                            modal.show();
+
+                        } else {
+                            notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
+                        }
                     }
-                    ocultarOpcionesEspecificasEspacio(true, true);
-                    break;
-            }
-
-            selector.onchange = () => {
-                switch (selector.value) {
-                    case 'tRVF':
-                        ocultarOpcionesEspecificasEspacio(false, true);
-                        break;
-                    case 'tRMcq':
-                        ocultarOpcionesEspecificasEspacio(true, false);
-                        break;
-                    default:
-                        ocultarOpcionesEspecificasEspacio(true, true);
-                        break;
                 }
-            };
-
-            if(tarea.title){
-                titulo.value = tarea.title;
-            }
-            if(tarea.aTR) {
-                enunciado.value = tarea.aTR;
-            }
-
-            tarea.spa.forEach(espacio => {
-                switch (espacio.spa) {
-                    case 'https://casuallearn.gsic.uva.es/space/physical':
-                        document.getElementById('cbEspacio1').checked = true;
-                        break;
-                    case 'https://casuallearn.gsic.uva.es/space/virtualMap':
-                        document.getElementById('cbEspacio2').checked = true;
-                        break;
-                    default:
-                        break;
-                }
+            })
+            .catch(error => {
+                estadoBotones([], true);
+                notificaLateralError(mustache.render(
+                    'Se ha producido un error desconocido: {{{error}}}',
+                    { error: error }
+                ));
+                console.error(error);
             });
-
-        modal.show();
-
-        } else {
-            notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
-        }
     } else {
         notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
     }
@@ -657,26 +885,33 @@ function reseteaRealizaTarea() {
 }
 
 function reseteaNuevaTarea(titulo = 'Nueva tarea') {
+    document.getElementById("formNT").reset();
     document.getElementById("selectTipoRespuesta").className = 'form-select';
     document.getElementById("encabezadoNT").innerHTML = titulo;
-    document.getElementById('tituloNT').value = '';
-    document.getElementById("textoAsociadoNT").value = '';
-    document.getElementsByName("cbEspacio").forEach(c => {
-        c.className = 'form-check-input';
-    });
+    const cuadrosTexto = [
+        document.getElementById('tituloNT'),
+        document.getElementById('textoAsociadoNT'),
+        document.getElementById('rVMCQ'),
+        document.getElementById('rD1MCQ'),
+        document.getElementById('rD2MCQ'),
+        document.getElementById('rD3MCQ')
+    ];
+    cuadrosTexto.forEach(c => { c.value = ''; c.className = 'form-control' });
+    document.getElementsByName('rbVFNT').forEach(c => { c.className = 'form-check-input'; });
+    document.getElementsByName('cbEspacio').forEach(c => { c.className = 'form-check-input'; });
 }
 
 function nuevaTarea(idPoi) {
     const modal = new bootstrap.Modal(document.getElementById('nuevaTareaModal'));
-    document.getElementById("formNT").reset();
     reseteaNuevaTarea();
+    const selector = document.getElementById("selectTipoRespuesta");
+
     const camposTarea = [
-        document.getElementById("selectTipoRespuesta"),
+        selector,
         document.getElementById("tituloNT"),
         document.getElementById("textoAsociadoNT"),
         document.getElementsByName("cbEspacio")
     ];
-    const selector = document.getElementById("selectTipoRespuesta");
 
     ocultarOpcionesEspecificasEspacio(true, true);
     selector.onchange = () => {
@@ -695,209 +930,264 @@ function nuevaTarea(idPoi) {
         }
     };
 
+    const botones = [document.getElementById("enviarNT")];
     document.getElementById("enviarNT").onclick = (ev) => {
         ev.preventDefault();
+        estadoBotones(botones, false);
 
-        let todoOk = true;
-        const mensajes = {
-            tituloNT: 'La tarea necesita un título.',
-            textoAsociadoNT: 'La tarea necesita una descripción textual',
-            cbEspacio: 'Se tiene que seleccionar uno o más espacios para realizar la tarea',
-            selectTipoRespuesta: 'Se tiene que seleccionar un tipo de respuesta'
-        }
-        const selectValido = [
-            'tRVF',
-            'tRMcq',
-            'tRTexto',
-            'tRTextoCorto',
-            'tRFoto',
-            'tRFotoTexto',
-            'tRMultiFotos',
-            'tRMultiFotosTexto',
-            'tRVideo',
-            'tRSinRespuesta',
-            'tRVideoTexto'
-        ];
+        if (compruebaCamposNuevaTareaModal()) {
+            let envio = recuperaValoresTextoTarea();
+            envio.hasContext = idPoi;
 
-        const equivalencias = {
-            textoAsociadoNT: 'aTR',
-            tituloNT: 'title',
-            rVMCQ: 'correct',
-            rD1MCQ: 'distractor1',
-            rD2MCQ: 'distractor2',
-            rD3MCQ: 'distractor3'
-        };
-        let alguno = false;
-        const respuestasMcq = [
-            document.getElementById('rVMCQ'),
-            document.getElementById('rD1MCQ'),
-            document.getElementById('rD2MCQ'),
-            document.getElementById('rD3MCQ')
-        ];
-        camposTarea.forEach(campo => {
-            if (campo.id === undefined && campo.length > 1) {
-                campo.forEach(c => {
-                    if (c.checked) {
-                        alguno = true;
-                    }
-                });
-            } else {
-                switch (campo.id) {
-                    case 'selectTipoRespuesta':
-                        if (selectValido.includes(campo.value)) {
-                            campo.className = 'form-select is-valid';
-                            if (campo.value === 'tRVF') {
-                                if (document.getElementById('rbVFVNT').checked || document.getElementById('rbVFFNT').checked) {
-                                    document.getElementById('rbVFVNT').className = 'form-check-input is-valid';
-                                    document.getElementById('rbVFFNT').className = 'form-check-input is-valid';
-                                } else {
-                                    todoOk = false;
-                                    document.getElementById('rbVFVNT').className = 'form-check-input is-invalid';
-                                    document.getElementById('rbVFFNT').className = 'form-check-input is-invalid';
-                                }
-                            } else {
-                                if (campo.value === 'tRMcq') {
-                                    respuestasMcq.forEach(campo => {
-                                        if (campo && campo.value && campo.value.trim() !== '') {
-                                            campo.className = 'form-control is-valid';
-                                        } else {
-                                            todoOk = false;
-                                            campo.className = 'form-control is-invalid';
-                                        }
-                                    });
-                                }
-                            }
-                        } else {
-                            todoOk = false;
-                            campo.className = 'form-select is-invalid';
-                        }
-                        break;
-                    default:
-                        if (!campo || !campo.value || campo.value.trim() === '') {
-                            todoOk = false;
-                            campo.placeholder = mensajes[campo.id];
-                            campo.className = 'form-control is-invalid';
-                        } else {
-                            campo.className = 'form-control is-valid';
-                        }
-                        break;
-                }
-            }
-        });
-        if (alguno) {
-            document.getElementsByName('cbEspacio').forEach(cb => cb.className = 'form-check-input is-valid');
-        } else {
-            todoOk = false;
-            document.getElementsByName('cbEspacio').forEach(cb => cb.className = 'form-check-input  is-invalid');
-        }
-        if (todoOk) {
-            let envio = {};
-            camposTarea.forEach(campo => {
-                if (campo.id === undefined && campo.length > 1) {
-                    //Espacios
-                    let spa = [];
-                    campo.forEach(c => {
-                        if (c.checked) {
-                            switch (c.id) {
-                                case 'cbEspacio1':
-                                    spa.push({ spa: 'espacioFisico' });
-                                    break;
-                                case 'cbEspacio2':
-                                    spa.push({ spa: 'espacioMapaVirtual' });
-                                    break;
-                                case 'cbEspacio3':
-                                    spa.push({ spa: 'espacioWeb' });
-                                    break;
+            auth.currentUser.getIdToken()
+                .then(idToken => {
+                    //Realizo el envío al servidor
+                    let heads = new Headers();
+                    heads.append("Content-Type", "application/json");
+                    heads.append("x-tokenid", idToken);
+
+                    const peticion = {
+                        method: 'POST',
+                        headers: heads,
+                        body: JSON.stringify({ datos: envio }),
+                        redirect: 'follow'
+                    };
+                    const direccion = mustache.render('{{{dir}}}/tasks', { dir: direccionServidor });
+
+                    fetch(direccion, peticion)
+                        .then(response => {
+                            switch (response.status) {
+                                case 201:
+                                    return { codigo: 201, mensaje: response.json() };
+                                case 400:
+                                case 403:
+                                case 409:
+                                case 500:
+                                case 503:
+                                    return response.text();
                                 default:
-                                    break;
+                                    notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
+                                    return null;
                             }
-                        }
-                    });
-                    if (spa.length > 0) {
-                        envio.espacios = spa;
-                    }
-                } else {
-                    switch (campo.id) {
-                        case 'selectTipoRespuesta':
-                            envio.aT = campo.value;
-                            if (campo.value === 'tRVF') {
-                                if (document.getElementById('rbVFVNT').checked) {
-                                    envio.rE = 'true';
+                        })
+                        .then(result => {
+                            if (result) {
+                                if (typeof result !== 'string') {
+                                    notificaLateral('Tarea creada en el POI');
+                                    modal.hide();
                                 } else {
-                                    envio.rE = 'false';
-                                }
-                            } else {
-                                if (campo.value === 'tRMcq') {
-                                    respuestasMcq.forEach(campo => {
-                                        envio[equivalencias[campo.id]] = campo.value.trim();
-                                    });
+                                    notificaLateralError(result);
                                 }
                             }
+                            estadoBotones(botones, true);
+                        })
+                        .catch(error => {
+                            console.error('error', error);
+                            notificaLateralError('Error desconocido');
+                            estadoBotones(botones, true);
+                        });
+                })
+                .catch(error => {
+                    console.error(error);
+                    notificaLateralError('Error al recuperar el token del usuario');
+                    estadoBotones(botones, true);
+                });
+        } else {
+            estadoBotones(botones, true);
+        }
+    }
+    modal.show();
+}
+
+function recuperaValoresTextoTarea() {
+    let envio = {};
+    const camposTarea = [
+        document.getElementById("selectTipoRespuesta"),
+        document.getElementById("tituloNT"),
+        document.getElementById("textoAsociadoNT"),
+        document.getElementsByName("cbEspacio")
+    ];
+    const equivalencias = {
+        textoAsociadoNT: 'aTR',
+        tituloNT: 'title',
+        rVMCQ: 'correctMcq',
+        rD1MCQ: 'distractor1',
+        rD2MCQ: 'distractor2',
+        rD3MCQ: 'distractor3'
+    };
+    const respuestasMcq = [
+        document.getElementById('rVMCQ'),
+        document.getElementById('rD1MCQ'),
+        document.getElementById('rD2MCQ'),
+        document.getElementById('rD3MCQ')
+    ];
+    camposTarea.forEach(campo => {
+        if (campo.id === undefined && campo.length > 1) {
+            //Espacios
+            let spa = [];
+            campo.forEach(c => {
+                if (c.checked) {
+                    switch (c.id) {
+                        case 'cbEspacio1':
+                            spa.push({ spa: 'espacioFisico' });
                             break;
-                        case 'tituloNT':
-                            let intermedio = {};
-                            intermedio.value = campo.value.trim();
-                            //TODO cambiar cuando haya distintos idiomas
-                            intermedio.lang = "es";
-                            envio[equivalencias[campo.id]] = intermedio;
+                        case 'cbEspacio2':
+                            spa.push({ spa: 'espacioMapaVirtual' });
+                            break;
+                        case 'cbEspacio3':
+                            spa.push({ spa: 'espacioWeb' });
                             break;
                         default:
-                            envio[equivalencias[campo.id]] = campo.value.trim();
                             break;
                     }
                 }
             });
-            envio.hasContext = idPoi;
-            //TODO cambiar por el usuario que esté registrado
-            //envio.autor = 'pablogz@gsic.uva.es';
-
-            //Realizo el envío al servidor
-            let heads = new Headers();
-            heads.append("Content-Type", "application/json");
-
-            const peticion = {
-                method: 'POST',
-                headers: heads,
-                body: JSON.stringify({ token: tokenSesion, datos: envio }),
-                redirect: 'follow'
-            };
-
-            const direccion = mustache.render('{{{dir}}}/tasks', { dir: direccionServidor });
-
-            fetch(direccion, peticion)
-                .then(response => {
-                    switch (response.status) {
-                        case 201:
-                            return { codigo: 201, mensaje: response.json() };
-                        case 400:
-                        case 403:
-                        case 409:
-                        case 500:
-                        case 503:
-                            return response.text();
-                        default:
-                            notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
-                            return null;
-                    }
-                })
-                .then(result => {
-                    if (result) {
-                        if (typeof result !== 'string') {
-                            notificaLateral('Tarea creada en el POI');
-                            modal.hide();
+            if (spa.length > 0) {
+                envio.espacios = spa;
+            }
+        } else {
+            switch (campo.id) {
+                case 'selectTipoRespuesta':
+                    envio.aT = campo.value;
+                    if (campo.value === 'tRVF') {
+                        if (document.getElementById('rbVFVNT').checked) {
+                            envio.rE = 'true';
                         } else {
-                            notificaLateralError(result);
+                            envio.rE = 'false';
+                        }
+                    } else {
+                        if (campo.value === 'tRMcq') {
+                            respuestasMcq.forEach(campo => {
+                                envio[equivalencias[campo.id]] = campo.value.trim();
+                            });
                         }
                     }
-                })
-                .catch(error => {
-                    console.log('error', error);
-                    notificaLateralError('Error desconocido');
-                });
+                    break;
+                case 'tituloNT':
+                    let intermedio = {};
+                    intermedio.value = campo.value.trim();
+                    //TODO cambiar cuando haya distintos idiomas
+                    intermedio.lang = 'es';
+                    envio[equivalencias[campo.id]] = intermedio;
+                    break;
+                default:
+                    envio[equivalencias[campo.id]] = campo.value.trim();
+                    break;
+            }
         }
-    }
+    });
+    return envio;
+}
 
-    modal.show();
+function compruebaCamposNuevaTareaModal() {
+    let todoOk = true;
+    let alguno = false;
+
+    const mensajes = {
+        tituloNT: 'La tarea necesita un título.',
+        textoAsociadoNT: 'La tarea necesita una descripción textual',
+        cbEspacio: 'Se tiene que seleccionar uno o más espacios para realizar la tarea',
+        selectTipoRespuesta: 'Se tiene que seleccionar un tipo de respuesta',
+        verdaderoNTDiv: 'Selecciona la opción verdadera',
+        rVMCQ: 'Escribe la respuesta correcta',
+        rD1MCQ: 'Proporciona un distractor',
+        rD2MCQ: 'Proporciona un distractor',
+        rD3MCQ: 'Proporciona un distractor',
+        cbEspacioDiv: 'Selecciona al menos un espacio donde realizar la tarea',
+    }
+    const selectValido = [
+        'tRVF',
+        'tRMcq',
+        'tRTexto',
+        'tRTextoCorto',
+        'tRFoto',
+        'tRFotoTexto',
+        'tRMultiFotos',
+        'tRMultiFotosTexto',
+        'tRVideo',
+        'tRSinRespuesta',
+        'tRVideoTexto'
+    ];
+
+    const camposTarea = [
+        document.getElementById("selectTipoRespuesta"),
+        document.getElementById("tituloNT"),
+        document.getElementById("textoAsociadoNT"),
+        document.getElementsByName("cbEspacio")
+    ];
+    const respuestasMcq = [
+        document.getElementById('rVMCQ'),
+        document.getElementById('rD1MCQ'),
+        document.getElementById('rD2MCQ'),
+        document.getElementById('rD3MCQ')
+    ];
+
+    camposTarea.forEach(campo => {
+        if (campo.id === undefined && campo.length > 1) {
+            campo.forEach(c => {
+                if (c.checked) {
+                    alguno = true;
+                }
+            });
+        } else {
+            switch (campo.id) {
+                case 'selectTipoRespuesta':
+                    if (selectValido.includes(campo.value)) {
+                        campo.className = 'form-select is-valid';
+                        if (campo.value === 'tRVF') {
+                            if (document.getElementById('rbVFVNT').checked || document.getElementById('rbVFFNT').checked) {
+                                document.getElementById('rbVFVNT').className = 'form-check-input is-valid';
+                                document.getElementById('rbVFVNTInvalid').innerHTML = '';
+                                document.getElementById('rbVFFNT').className = 'form-check-input is-valid';
+                            } else {
+                                todoOk = false;
+                                document.getElementById('rbVFVNT').className = 'form-check-input is-invalid';
+                                document.getElementById('rbVFVNTInvalid').innerHTML = mensajes['verdaderoNTDiv'];
+                                document.getElementById('rbVFFNT').className = 'form-check-input is-invalid';
+                            }
+                        } else {
+                            if (campo.value === 'tRMcq') {
+                                respuestasMcq.forEach(campo => {
+                                    if (campo && campo.value && campo.value.trim() !== '') {
+                                        document.getElementById(campo.id + 'Invalid').innerHTML = '';
+                                        campo.className = 'form-control is-valid';
+                                    } else {
+                                        todoOk = false;
+                                        document.getElementById(campo.id + 'Invalid').innerHTML = mensajes[campo.id];
+                                        campo.className = 'form-control is-invalid';
+                                    }
+                                });
+                            }
+                        }
+                    } else {
+                        todoOk = false;
+                        document.getElementById(campo.id + 'Invalid').innerHTML = mensajes[campo.id];
+                        campo.className = 'form-select is-invalid';
+                    }
+                    break;
+                default:
+                    if (!campo || !campo.value || campo.value.trim() === '') {
+                        todoOk = false;
+                        campo.placeholder = mensajes[campo.id];
+                        document.getElementById(campo.id + 'Invalid').innerHTML = mensajes[campo.id];
+                        campo.className = 'form-control is-invalid';
+                    } else {
+                        document.getElementById(campo.id + 'Invalid').innerHTML = '';
+                        campo.className = 'form-control is-valid';
+                    }
+                    break;
+            }
+        }
+    });
+    if (alguno) {
+        document.getElementById('cbEspacio1Invalid').innerHTML = '';
+        document.getElementsByName('cbEspacio').forEach(cb => cb.className = 'form-check-input is-valid');
+    } else {
+        todoOk = false;
+        document.getElementById('cbEspacio1Invalid').innerHTML = mensajes['cbEspacioDiv'];
+        document.getElementsByName('cbEspacio').forEach(cb => cb.className = 'form-check-input  is-invalid');
+    }
+    return todoOk;
 }
 
 function ocultarOpcionesEspecificasEspacio(tRTF, tRMCQ) {
@@ -920,7 +1210,8 @@ function ocultarOpcionesEspecificasEspacio(tRTF, tRMCQ) {
 
 const webcamElement = document.getElementById('webcam');
 const canvasElement = document.getElementById('canvas');
-const webcam = new Webcam(webcamElement, 'enviroment', canvasElement);
+//const webcam = new Webcam(webcamElement, 'enviroment', canvasElement);
+const webcam = new Webcam(webcamElement, 'user', canvasElement);
 const mCamara = new bootstrap.Modal(document.getElementById('modalCamara'));
 
 function inicioCamara() {
@@ -929,7 +1220,7 @@ function inicioCamara() {
             console.log(`Modo de la cámara: ${result}`);
         })
         .catch(err => {
-            console.log(err);
+            console.error(err);
         });
 }
 function paraCamara() {
@@ -954,11 +1245,11 @@ function capturaCamara() {
                             document.getElementById('finalizarTarea').removeAttribute('disabled');
                             paraCamara();
                         })
-                        .catch(error => console.log(error));
+                        .catch(error => console.error(error));
                 })
-                .catch(error => console.log(error));
+                .catch(error => console.error(error));
         })
-        .catch(error => console.log(error));
+        .catch(error => console.error(error));
 }
 
 function reversoCamara() {

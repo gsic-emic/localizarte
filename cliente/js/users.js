@@ -170,17 +170,18 @@ function inicioSesionUsuario() {
                                                 document.getElementById('interruptorProfesor').removeAttribute('hidden');
                                                 if (!document.getElementById('swVistaProfesor').checked) {
                                                     document.getElementById('swVistaProfesor').checked = true;
+                                                    document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();">Contribuciones</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
                                                 }
                                             } else {
                                                 document.getElementById('interruptorProfesor').setAttribute('hidden', 'true');
+                                                document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
                                             }
-                                            document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
                                         }
                                         estadoBotones(botones, true);
                                         modal.hide();
                                     })
                                     .catch(error => {
-                                        console.log('error', error);
+                                        console.error('error', error);
                                         estadoBotones(botones, true);
                                         modal.hide();
                                         notificaLateralError('Error desconocido');
@@ -388,7 +389,7 @@ function registroUsuario() {
                                 })
                                 .catch(error => {
                                     estadoBotones(botones, true);
-                                    console.log('error', error);
+                                    console.error('error', error);
                                     notificaLateralError('Se ha producido un error desconocido');
                                 });
 
@@ -450,7 +451,7 @@ function cerrarSesion() {
     const modal = new bootstrap.Modal(document.getElementById('confirmarCerrar'));
     document.getElementById('aceptaCerrarSesion').onclick = ev => {
         ev.preventDefault();
-        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link"  href="javascript:registroUsuario();">Registro</a></li><li class="nav-item"><a class="nav-link" href="javascript:inicioSesionUsuario();">Identificación</a></li>';
+        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:informacionDatos();">Información</a></li><li class="nav-item"><a class="nav-link"  href="javascript:registroUsuario();">Registro</a></li><li class="nav-item"><a class="nav-link" href="javascript:inicioSesionUsuario();">Identificación</a></li>';
         dUser = null;
         if (rol !== 0) {
             document.getElementById('interruptorProfesor').setAttribute('hidden', true);
@@ -573,4 +574,8 @@ function gestionarCuenta() {
         }
     }
     modal.show();
+}
+
+function mostrarModalContribuciones() {
+    console.log('mostrarModalContribuciones()');
 }

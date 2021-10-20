@@ -108,51 +108,65 @@ async function eliminaContexto(req, res) {
                 if (docRapida.rol > 0) {//Es profesor
                   const iri = creaIri(req.params.a, req.params.b, req.params.c);
                   if (typeof iri === 'string') {
-                    let options = Auxiliar.creaOptions(Queries.todaInfo(iri));
-                    const consulta = (response) => {
+                    let options = Auxiliar.creaOptions(Queries.numeroTareasAsociadasPOI(iri));
+                    const consultaPrevia = response => {
                       let chunks = [];
                       response.on('data', (chunk) => {
                         chunks.push(chunk);
                       });
                       response.on('end', () => {
-                        let resultados = Auxiliar.procesaJSONSparql(['propiedad', 'valor'], Buffer.concat(chunks).toString());
-                        if (resultados.length > 0) {
-                          resultados = resultados.pop();
-                          resultados.iri = iri;
-                          // Ya tenemos toda la información a eliminar
-                          if (resultados.autor === email) {
-                            options = Auxiliar.creaOptionsAuth(
-                              Queries.eliminaContexto(resultados),
-                              Configuracion.usuarioSPARQLAuth,
-                              Configuracion.contrasenhaSPARQLAuth
-                            );
-                            // Realizo la eliminación
-                            const borrado = (responseB) => {
-                              chunks = [];
-                              responseB.on('data', (chunk) => {
-                                chunks.push(chunk);
-                              });
-                              responseB.on('end', () => {
-                                resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(chunks).toString());
-                                if (resultados.length > 0) {
-                                  res.sendStatus(200);
-                                } else res.status(503).send('El repositorio no puede eliminar el contexto');
-                              });
-                            };
-                            Http.request(options, borrado).end();
-                          } else {
-                            res.status(403).send('No puedes eliminar un POI si no eres el creador');
-                          }
-                        } else { res.status(404).send('La IRI no existe en el repositorio o no es un contexto'); }
+                        let resultados = Auxiliar.procesaJSONSparql(['nTareas'], Buffer.concat(chunks).toString());
+                        resultados = resultados.pop();
+                        if (parseInt(resultados.nTareas) == 0) {
+                          options = Auxiliar.creaOptions(Queries.todaInfo(iri));
+                          const consulta = (response) => {
+                            let chunks = [];
+                            response.on('data', (chunk) => {
+                              chunks.push(chunk);
+                            });
+                            response.on('end', () => {
+                              let resultados = Auxiliar.procesaJSONSparql(['propiedad', 'valor'], Buffer.concat(chunks).toString());
+                              if (resultados.length > 0) {
+                                resultados = resultados.pop();
+                                resultados.iri = iri;
+                                // Ya tenemos toda la información a eliminar
+                                if (resultados.autor === email) {
+                                  options = Auxiliar.creaOptionsAuth(
+                                    Queries.eliminaContexto(resultados),
+                                    Configuracion.usuarioSPARQLAuth,
+                                    Configuracion.contrasenhaSPARQLAuth
+                                  );
+                                  // Realizo la eliminación
+                                  const borrado = (responseB) => {
+                                    chunks = [];
+                                    responseB.on('data', (chunk) => {
+                                      chunks.push(chunk);
+                                    });
+                                    responseB.on('end', () => {
+                                      resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(chunks).toString());
+                                      if (resultados.length > 0) {
+                                        res.sendStatus(200);
+                                      } else res.status(503).send('El repositorio no puede eliminar el contexto');
+                                    });
+                                  };
+                                  Http.request(options, borrado).end();
+                                } else {
+                                  res.status(401).send('No puedes eliminar un POI si no eres el creador');
+                                }
+                              } else { res.status(404).send('La IRI no existe en el repositorio o no es un contexto'); }
+                            });
+                          };
+                          Http.request(options, consulta).end();
+                        } else { res.status(403).send(Mustache.render('No se puede eliminar porque tiene {{{nTareas}}} tareas asociadas', { nTareas: resultados.nTareas })); }
                       });
                     };
-                    Http.request(options, consulta).end();
+                    Http.request(options, consultaPrevia).end();
                   } else { res.status(400).send('El cuerpo del mensaje debe tener un JSONObject del tipo {"iri":"idContexto"}.'); }
-                } else { res.status(403).send('El usuario no tiene rol de docente'); }
+                } else { res.status(401).send('El usuario no tiene rol de docente'); }
               })
               .catch(error => {
                 console.error(error);
-                res.status(500).send('Error al recuperar el rol del docente');
+                res.status(500).send('Error al recuperar el rol del usuario');
               });
           } else { res.status(400).send('El correo del usuario no se ha verificado'); }
         } else { res.status(400).send('No se ha podido decodificar el token'); }
@@ -277,12 +291,14 @@ async function actualizaContexto(req, res) {
                 }
               })
               .catch(error => {
+                console.error(error);
                 res.status(500).send('Error al recuperar el rol del usuario');
               });
           } else { res.status(403).send('El usuario no tiene rol de docente'); }
         } else { res.status(500).send('Problemas con el token enviado'); }
       })
       .catch(error => {
+        console.error(error);
         res.status(500).send('Problemas con la decodificación del token.');
       });
   } catch (e) {

@@ -131,7 +131,7 @@ function inicio() {
     }).addTo(map);*/
 
     //Posición inicial
-    map.setView(position, 18);//4.5
+    map.setView(posicionCyL, 4.5);//18
 
     // El mapa se ve desplazado
     map.on('moveend', () => {
@@ -228,8 +228,10 @@ function cambiaVistaProfesor() {
     if(rol > 0){
         document.getElementById('swVistaProfesor').checked = true;
         document.getElementById('labelVistaProfesor').className = "form-check-label colorActivo";
+        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();">Contribuciones</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
     } else {
         document.getElementById('swVistaProfesor').checked = false;
         document.getElementById('labelVistaProfesor').className = "form-check-label";
+        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
     }
 }
