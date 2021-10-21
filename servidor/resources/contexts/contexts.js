@@ -17,11 +17,10 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con la colección "contextos".
  * autor: Pablo García Zarza
- * version: 20211018
+ * version: 20211021
  */
 
 const Http = require('http');
-const Mustache = require('mustache');
 const admin = require('firebase-admin');
 
 const Queries = require('../../util/queries');
@@ -119,13 +118,7 @@ async function nuevoContexto(req, res) {
                           }
                           return false;
                         });
-                        const iri = Mustache.render(
-                          'https://casuallearn.gsic.uva.es/context/{{{titulo}}}/{{{long}}}/{{{lat}}}',
-                          {
-                            titulo: tituloIRI,
-                            long: long,
-                            lat: lat
-                          });
+                        const iri = Auxiliar.nuevoIriContexto(tituloIRI, lat, long);
                         let options = Auxiliar.creaOptions(Queries.tipoIRI(iri));
                         const consulta = (response) => {
                           let chunks = [];

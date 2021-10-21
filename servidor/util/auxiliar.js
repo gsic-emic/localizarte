@@ -17,7 +17,7 @@ limitations under the License.
 /**
 * Funciones auxiliares.
 * autor: Pablo García Zarza
-* version: 20210525
+* version: 20211021
 */
 
 /**
@@ -26,6 +26,7 @@ limitations under the License.
 * de la propiedad
 */
 const URI = require("uri-js");
+const Mustache = require('mustache');
 
 const Configuracion = require('./config');
 
@@ -413,6 +414,16 @@ function isEmpty(string) {
   return string === '';
 }
 
+function nuevoIriContexto(nombreContexto, latitud, longitud) {
+  return Mustache.render(
+    'https://casuallearn.gsic.uva.es/context/{{{titulo}}}/{{{long}}}/{{{lat}}}',
+    {
+      titulo: nombreContexto.replace(/[^a-zA-Z:_]/g, ''),
+      long: longitud,
+      lat: latitud
+    });
+}
+
 /**
 * Función para crear el identificador de una tarea con el nombre del contexto y
 * el de la propia tarea
@@ -422,7 +433,13 @@ function isEmpty(string) {
 * @returns Identificador de la tarea.
 */
 function nuevoIriTarea(nombreContexto, nombreTarea) {
-  return `https://casuallearn.gsic.uva.es/${nombreContexto.trim().replace(/\s/g, '_')}/${nombreTarea.trim().replace(/\s/g, '').toLowerCase()}`;
+  return Mustache.render(
+    'https://casuallearn.gsic.uva.es/{{{nCtx}}}/{{{nTask}}}',
+    {
+      nCtx: nombreContexto.trim().replace(/\s/g, '_').replace(/[^a-zA-Z:_]/g, ''),
+      nTask: nombreTarea.replace(/[^a-zA-Z:_]/g, '').toLowerCase()
+    }
+  );
 }
 
 /**
@@ -457,6 +474,7 @@ module.exports = {
   numeroStringIRI,
   equivalencias,
   isEmpty,
+  nuevoIriContexto,
   nuevoIriTarea,
   validURL,
   tipoRespuetasSoportados,
