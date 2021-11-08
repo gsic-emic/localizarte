@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión de las tareas.
  * autor: Pablo García Zarza
- * version: 20211018
+ * version: 20211026
  */
 
 function tareasContexto(iriContexto, poi) {
@@ -55,6 +55,16 @@ function tareasContexto(iriContexto, poi) {
         })
         .then(resultados => {
             if (resultados && modalOpen(document.getElementById('puntoInteres'))) {
+                if (auth && auth.currentUser) {
+                    analytics.logEvent('getTasks', {
+                        idObject: iriContexto,
+                        idUser: auth.currentUser.uid
+                    });
+                } else {
+                    analytics.logEvent('getTasks', {
+                        idObject: iriContexto
+                    });
+                }
                 const espacioTareas = document.getElementById('espacioTareas');
                 if (resultados.length === 0) {
                     espacioTareas.innerHTML = '<h6>POI sin tareas asociadas</h6>';
@@ -556,6 +566,10 @@ function eliminaTareaModal(idTarea) {
                         })
                         .then(result => {
                             if (result) {
+                                analytics.logEvent('deleteTask', {
+                                    idObject: tarea.task,
+                                    idUser: auth.currentUser.uid
+                                });
                                 notificaLateral('Tarea educativa eliminada.');
                             }
                             modal.hide();
@@ -815,6 +829,10 @@ function modificarTarea(idTarea) {
                                                 .then(resultado => {
                                                     if (resultado !== null) {
                                                         if (typeof resultado !== 'string') {
+                                                            analytics.logEvent('updateTask', {
+                                                                idObject: tarea.task,
+                                                                idUser: auth.currentUser.uid
+                                                            });
                                                             modal.hide();
                                                             notificaLateral('Tarea educativa actualizada');
                                                         } else {
@@ -973,6 +991,10 @@ function nuevaTarea(idPoi) {
                         .then(result => {
                             if (result) {
                                 if (typeof result !== 'string') {
+                                    analytics.logEvent('newTask', {
+                                        idObject: result.mensaje.iri,
+                                        idUser: auth.currentUser.uid
+                                    });
                                     notificaLateral('Tarea creada en el POI');
                                     modal.hide();
                                 } else {

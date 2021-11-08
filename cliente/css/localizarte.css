@@ -82,7 +82,7 @@ body {
     margin-top: -2rem;
     left: 50%;
     margin-left: -2rem;
-    z-index: 0;
+    z-index: -1;
 }
 
 .interruptorFlotante {

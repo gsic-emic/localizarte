@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión inicial del mapa
  * autor: Pablo García Zarza
- * version: 20210518
+ * version: 20211026
  */
 
 /** Zonas descargadas */
@@ -63,7 +63,7 @@ let rol;
 let dUser;
 
 let app;
-let auth;
+let auth, analytics;
 
 const spinnerCentro = document.getElementById('divSpinner');
 
@@ -165,7 +165,11 @@ function inicio() {
 
     app = firebase.initializeApp(firebaseConfig);
     auth = app.auth();
+    analytics = app.analytics();
     auth.languageCode = 'es';
+    if(auth && auth.currentUser) {
+        recuperaDatosUsuarioServidor(null, null, true);
+    }
 }
 
 
