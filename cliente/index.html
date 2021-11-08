@@ -21,10 +21,6 @@
                     class="d-inline-block align-text-top">
                 LocalizARTE
             </a>
-            <!--<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>-->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#gestionUsuarioContenedor" aria-controls="gestionUsuarioContenedor"
                 aria-expanded="false">
@@ -32,6 +28,9 @@
             </button>
             <div class="collapse navbar-collapse" id="gestionUsuarioContenedor">
                 <ul class="navbar-nav ms-auto mb-1 mb-md-0" id="gestionUsuarioLista">
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:informacionDatos();">Información</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="javascript:registroUsuario();">Registro</a>
                     </li>
@@ -43,6 +42,83 @@
         </div>
     </nav>
     <div class="mapa" id="mapa"></div>
+
+    <div class="modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" id="infoFuentesModal">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title titulo">Información de LocalizARTE</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-md-flex flex-md-row py-1 align-items-center">
+                        <div class="col-md-auto order-md-1 text-center">
+                            <img class="figure-img imagen" src='./resources/logoGrande.svg'
+                                alt="Fuentes de los datos abiertos">
+                        </div>
+                        <div class="col order-md-2 ps-3">
+                            <div class="descripcion">
+                                <p class="h3">¿Qué es LocalizARTE?</p>
+                                <p>LocalizARTE es una aplicación distribuida que utiliza Datos Abiertos de distintas
+                                    fuentes de información para apoyar el aprendizaje ubicuo de Historia del Arte. A
+                                    través de LocalizARTE se puede <b>crear nuevo contenido</b> y <b>realizar tareas
+                                        educativas</b> (usuarios registrados). Estas tareas educativas pueden estar
+                                    diseñadas para ser realizadas cerca del punto de interés o desde cualquier lugar.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-md-flex flex-md-row pb-1 align-items-center">
+                        <div class="col-md-auto order-md-2 text-center">
+                            <img class="figure-img imagen" src='./resources/fuentes.svg'
+                                alt="Fuentes de los datos abiertos">
+                        </div>
+                        <div class="col order-md-1 pe-3">
+                            <div class="descripcion">
+                                <p class="h3">LocalizARTE utiliza Datos Abiertos</p>
+                                <p>Los datos de partida de LocalizARTE fueron generados de manera semiautomática
+                                    utilizando distintas fuentes de <b>Datos Abiertos</b> como los ofrecidos por <a
+                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
+                                        href="https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html">Datos
+                                        Abiertos de la Junta de Castilla y León</a>, <a
+                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
+                                        href="https://wiki.dbpedia.org/">DBpedia</a> y <a
+                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
+                                        href="https://www.wikidata.org/wiki/Wikidata:Main_Page">Wikidata</a>.</p>
+                                <p>Además de estos datos, los <b>docentes</b> podrán agregar nuevos puntos de interés y
+                                    tareas
+                                    educativas a través de la interfaz de LocalizARTE. Esta nueva información se
+                                    almacenará, de forma transparente, como Datos Abiertos. Puedes escribirnos a
+                                    <em>localizarte@gsic.uva.es</em> si deseas poder agregar nueva información a la
+                                    aplicación que pueda ser utilizada por tus estudiantes.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-md-flex flex-md-row pb-1 align-items-center">
+                        <div class="col-md-auto order-md-1text-center">
+                            <img class="figure-img imagen" src='./resources/gsicUVa.svg'
+                                alt="Fuentes de los datos abiertos">
+                        </div>
+                        <div class="col order-md-2 ps-3">
+                            <div class="descripcion">
+                                <p class="h3">Una aplicación del grupo GSIC</p>
+                                <p>LocalizARTE se está diseñando y desarrollando dentro del <a
+                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
+                                        href="https://gsic.uva.es">grupo de investigación GSIC/EMIC</a>. Este grupo está
+                                    formado por ingenieros y educadores de la Escuela Técnica Superior de
+                                    Ingenieros de Telecomunicación, la Escuela de Ingeniería Informática y la Facultad
+                                    de Educación y Trabajo Social de la <a class="text-muted text-decoration-underline"
+                                        rel="noopener" target="_blank" href="https://uva.es">Universidad de
+                                        Valladolid</a>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" id="puntoInteres">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
@@ -71,7 +147,11 @@
                     </div>
                     <div class="d-md-flex flex-md-row py-1 align-items-center">
                         <div class="col-md-auto p-1 order-md-1 text-center">
-                            <img class="imagen" id="imagenPuntoInteres" alt="Imagen Punto Interés">
+                            <img class="figure-img rounded imagen" id="imagenPuntoInteres" alt="Imagen Punto Interés">
+                            <figcaption class="figure-caption text-start" id="licenciaImagenPuntoInteres"><a
+                                    class="text-decoration-underline text-muted" rel="noopener" target="_blank" href="#"
+                                    id="enlaceLicenciaImagenPuntoInteres">Licencia</a>
+                            </figcaption>
                         </div>
                         <div class="col order-md-2">
                             <div id="descripcionPuntoInteres" class="descripcion"></div>
@@ -97,7 +177,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-danger" id="aceptaBorrar">Borrar</button>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                        id="cerrarBorrar">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -141,6 +222,7 @@
                                 <label for="tituloNPI" class="form-label">Título*</label>
                                 <input type="text" id="tituloNPI" class="form-control"
                                     placeholder="Escribe aquí el título del nuevo punto de interés">
+                                <div class="invalid-feedback" id="tituloNPIInvalid"></div>
                                 <small class="text-muted">
                                     El identificador único del punto de interés se creará utilizando el título que
                                     indiques.
@@ -152,6 +234,7 @@
                                 <label for="descrNPI" class="form-label">Descripción*</label>
                                 <textarea class="form-control" id="descrNPI" name="descrNPI"
                                     placeholder="Descripción del punto de interés"></textarea>
+                                <div class="invalid-feedback" id="descrNPIInvalid"></div>
                             </div>
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
@@ -159,6 +242,7 @@
                                 <label for="fuentesNPI" class="form-label">Fuentes de información</label>
                                 <input type="text" id="fuentesNPI" class="form-control"
                                     placeholder="Escribe aquí las URLs de las fuentes de donde has obtenido la información">
+                                <div class="invalid-feedback" id="fuentesNPIInvalid"></div>
                                 <small class="text-muted">
                                     Si la información la has obtenido de varias fuentes sepáralas con el carácter
                                     <b>;</b>. Las fuentes pueden ser expresadas mediante URLs o con cadenas de texto.
@@ -169,21 +253,25 @@
                             <div class="col-sm-6">
                                 <label for="latitudNPI" class="form-label">Latitud*</label>
                                 <input type="text" id="latitudNPI" class="form-control" readonly required>
+                                <div class="invalid-feedback" id="latitudNPIInvalid"></div>
                             </div>
                             <div class="col-sm-6">
                                 <label for="longitudNPI" class="form-label">Longitud*</label>
                                 <input type="text" id="longitudNPI" class="form-control" readonly required>
+                                <div class="invalid-feedback" id="longitudNPIInvalid"></div>
                             </div>
                         </div>
                         <div class="row g-2 align-items-center mx-1 mb-4">
                             <div class="col-sm-6">
                                 <label for="imagenNPI" class="form-label">URL de la imagen</label>
                                 <input type="text" id="imagenNPI" class="form-control" placeholder="https://...">
+                                <div class="invalid-feedback" id="ImagenNPIInvalid"></div>
                             </div>
                             <div class="col-sm-6">
                                 <label for="licenciaNPI" class="form-label">Licencia</label>
                                 <input type="text" id="licenciaNPI" class="form-control"
                                     placeholder="Licencia de la imagen">
+                                <div class="invalid-feedback" id="licenciaNPIInvalid"></div>
                             </div>
                         </div>
                         <div class="row mx-1 mb-4">
@@ -207,7 +295,7 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="encabezadoNT">Nueva tarea</h5>
+                    <h5 class="modal-title" id="encabezadoNT"></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -223,16 +311,20 @@
                                 <option value="tRTextoCorto">Texto corto</option>
                                 <option value="tRFoto">Fotografía</option>
                                 <option value="tRFotoTexto">Fotografía y texto</option>
-                                <option value="tRMultiFotos">Múltiple fotografías</option>
+                                <option value="tRMultiFotos">Múltiples fotografías</option>
                                 <option value="tRMultiFotosTexto">Múltiples fotos y texto</option>
                                 <option value="tRVideo">Vídeo</option>
+                                <option value="tRSinRespuesta">Sin respuesta</option>
+                                <option value="trVideoTexto">Vídeo y texto</option>
                             </select>
+                            <div class="invalid-feedback" id="selectTipoRespuestaInvalid"></div>
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
                             <div class="col-sm-12">
                                 <label for="tituloNT" class="form-label">Título*</label>
                                 <input type="text" id="tituloNT" class="form-control"
                                     placeholder="Escribe aquí el título de la nueva tarea">
+                                <div class="invalid-feedback" id="tituloNTInvalid"></div>
                                 <small class="text-muted">
                                     El identificador único de la tarea se creará utilizando este título.
                                 </small>
@@ -243,6 +335,7 @@
                                 <label for="textoAsociadoNT" class="form-label">Enunciado de la tarea*</label>
                                 <textarea class="form-control" id="textoAsociadoNT" name="textoAsociadoNT"
                                     placeholder="Texto asociado a la tarea que tendrán que realizar"></textarea>
+                                <div class="invalid-feedback" id="textoAsociadoNTInvalid"></div>
                             </div>
                         </div>
                         <div id="tRcamposExtra" class="row g-1 align-items-center mx-1 mb-4" hidden>
@@ -250,6 +343,7 @@
                                 <label for="verdaderoNTDiv" class="form-label">Respuesta correcta*</label>
                                 <div id="verdaderoNTDiv" class="row g-1">
                                     <div class="col-sm-6 form-check">
+                                        <div class="invalid-feedback" id="rbVFVNTInvalid"></div>
                                         <input class="form-check-input" type="radio" name="rbVFNT" id="rbVFVNT"
                                             value="verdadero">
                                         <label class="form-check-label" for="rbVFVNT">Verdadero</label>
@@ -267,11 +361,13 @@
                                         <label class="form-label" for="rVMCQ">Respuesta verdadera*</label>
                                         <input type="text" id="rVMCQ" class="form-control"
                                             placeholder="Escribe aquí la respuesta verdadera">
+                                        <div class="invalid-feedback" id="rVMCQInvalid"></div>
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="form-label" for="rD1MCQ">Distracción 1*</label>
                                         <input type="text" id="rD1MCQ" class="form-control"
                                             placeholder="Opción falsa 1">
+                                        <div class="invalid-feedback" id="rD1MCQInvalid"></div>
                                     </div>
                                 </div>
                                 <div class="row g-2 align-items-center">
@@ -279,11 +375,13 @@
                                         <label class="form-label" for="rD2MCQ">Distracción 2*</label>
                                         <input type="text" id="rD2MCQ" class="form-control"
                                             placeholder="Opción falsa 2">
+                                        <div class="invalid-feedback" id="rD2MCQInvalid"></div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label" for="rD3MCQ">Distracción 3*</label>
                                         <input type="text" id="rD3MCQ" class="form-control"
                                             placeholder="Opción falsa 3">
+                                        <div class="invalid-feedback" id="rD3MCQInvalid"></div>
                                     </div>
                                 </div>
                             </div>
@@ -297,6 +395,7 @@
                                 </label>
                                 <div class="row mx-1" id="cbEspacioDiv">
                                     <div class="form-check col-md-4">
+                                        <div class="invalid-feedback" id="cbEspacio1Invalid"></div>
                                         <input class="form-check-input" type="checkbox" name="cbEspacio" id="cbEspacio1"
                                             value="physical">
                                         <label class="form-check-label" for="rbEspacio1">Físico</label>
@@ -344,14 +443,20 @@
                             <div class="col-md-5">
                                 <label for="inicioMail" class="form-label">Dirección de correo</label>
                                 <input type="text" id="inicioMail" class="form-control" placeholder="ejemplo@email.es">
+                                <div class="invalid-feedback" id="inicioMailInvalid"></div>
                             </div>
                             <div class="col-md-5">
                                 <label for="inicioPass" class="form-label">Contraseña</label>
                                 <input type="password" id="inicioPass" class="form-control" placeholder="Tu contraseña">
+                                <div class="invalid-feedback" id="inicioPassInvalid"></div>
                             </div>
                         </div>
-                        <div class="row justify-content-center">
-                            <div class="col-8 text-center">
+                        <div class="row justify-content-around align-items-center">
+                            <div class="col text-center">
+                                <button type="button" class="btn btn-outline-secondary" id="cambiarpass">Cambiar
+                                    contraseña</button>
+                            </div>
+                            <div class="col text-center">
                                 <button type="button" class="btn btn-primary" id="inicioEnviar">Iniciar sesión</button>
                             </div>
                         </div>
@@ -366,7 +471,7 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Nuevo usuario</h3>
+                    <h3 id="tituloModalnuevoUsuarioModal"></h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -376,11 +481,13 @@
                                 <label for="registroMail" class="form-label">Dirección de correo*</label>
                                 <input type="text" id="registroMail" class="form-control"
                                     placeholder="ejemplo@email.es">
+                                <div class="invalid-feedback" id="registroMailInvalid"></div>
                             </div>
                             <div class="col-md-5">
                                 <label for="registroPass" class="form-label">Contraseña*</label>
                                 <input type="password" id="registroPass" class="form-control"
                                     placeholder="Nueva contraseña">
+                                <div class="invalid-feedback" id="registroPassInvalid"></div>
                             </div>
                         </div>
                         <div class="row g-1 justify-content-around mx-1 mb-4">
@@ -394,9 +501,7 @@
                             </div>
                         </div>
                         <div class="row mx-1 mb-4">
-                            <small class="text-muted">
-                                * Campos obligatorios
-                            </small>
+                            <small class="text-muted" id="camposObligatoriosRegistroLabel"></small>
                         </div>
                         <div class="row justify-content-center">
                             <div class="col-8 text-center">
@@ -453,28 +558,7 @@
                     <div id="contenedorMcqRealizaTarea" class="row g-1 my-1" hidden>
                         <label for="mcqOpcionesRealizaTarea" class="mt-3">Selecciona la respuesta
                             correcta</label>
-                        <div id="mcqOpcionesRealizaTarea" class="row g-1 form-check">
-                            <!--<div class="my-1 form-check">
-                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
-                                    id="mcq1RealizaTarea" value="1">
-                                <label class="form-check-label" for="mcq1RealizaTarea">Opt1</label>
-                            </div>
-                            <div class="my-1 form-check">
-                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
-                                    id="mcq2RealizaTarea" value="2">
-                                <label class="form-check-label" for="mcq2RealizaTarea">Opt2</label>
-                            </div>
-                            <div class="my-1 form-check">
-                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
-                                    id="mcq3RealizaTarea" value="3">
-                                <label class="form-check-label" for="mcq3RealizaTarea">Opt3</label>
-                            </div>
-                            <div class="my-1 form-check">
-                                <input class="form-check-input" type="radio" name="mcqRealizaTarea"
-                                    id="mcq4RealizaTarea" value="4">
-                                <label class="form-check-label" for="mcq4RealizaTarea">Opt4</label>
-                            </div>-->
-                        </div>
+                        <div id="mcqOpcionesRealizaTarea" class="row g-1 form-check"></div>
                     </div>
                     <div id="contenedorvFRealizaTarea" class="row g-1 my-1" hidden>
                         <label for="vFOpcionesRealizaTarea" class="mt-3">Selecciona la respuesta
@@ -498,7 +582,8 @@
                             id="btIniciarCamara">
                             <img src="./resources/camera.svg" class="pe-2 pb-1">Iniciar cámara
                         </button>
-                        <label for="btIniciarCamara" class="form-check-label is-invalid" id="lblSinRealizarFoto" hidden>Realiza una fotografía</label>
+                        <label for="btIniciarCamara" class="form-check-label is-invalid" id="lblSinRealizarFoto"
+                            hidden>Realiza una fotografía</label>
                         <div class="row w-50" id="resultadoCaptura" hidden>
                             <img id="foto" class="img-fluid">
                         </div>
@@ -513,41 +598,34 @@
         </div>
     </div>
 
-    <div class="modal fade m-0 p-0" id="modalCamara" tabindex="-1" aria-labelledby="modalCamaraLabel"
+    <div class="modal fade bg-dark" id="modalCamara" tabindex="-1" aria-labelledby="modalCamaraLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen m-0 p-0">
-            <div class="modal-content m-0 p-0">
-                <div class="modal-body m-0 p-0">
-                    <div>
-                        <div class="row p-0 m-0 card border-0 bg-dark">
-                            <div class="row p-0 m-0">
-                                <video id="webcam" autoplay playsinline class="p-0 m-0 img-fluid m-auto" width="640"
-                                    height="480" style="height: 100vh; width: auto;"></video>
-                                <canvas id="canvas" class="d-none"></canvas>
-                            </div>
-                            <div class="row card-img-overlay m-0 p-0">
-                                <div class="row justify-content-end me-2 mt-4">
-                                    <button type="button" class="btn-close btn-danger bg-danger rounded-pill"
-                                        aria-label="Close" onclick="paraCamara()"></button>
-                                </div>
-                                <div class="row  align-items-end m-0 p-2">
-                                    <div class="col-6 text-center">
-                                        <button onclick="reversoCamara()" class="btn btn-secondary rounded-pill"><img
-                                                src="./resources/cameraswitch.svg"></button>
-                                    </div>
-                                    <div class="col-6 text-center">
-                                        <button onclick="capturaCamara()" class="btn btn-primary rounded-pill"><img
-                                                src="./resources/camera.svg"></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        <div class="modal-dialog modal-fullscreen bg-dark">
+            <div class="modal-content">
+                <div class="modal-body bg-dark">
+                    <div class="row card bg-dark">
+                        <video id="webcam" autoplay playsinline class="img-fluid m-auto" width="640" height="480"
+                            style="height: 75vh; width: auto;"></video>
+                        <canvas id="canvas" class="d-none"></canvas>
+                    </div>
+                </div>
+                <div class="modal-footer align-items-center justify-content-around bg-dark border-0">
+                    <div class="col text-center">
+                        <button type="button" class="btn-close btn-danger bg-danger btn-lg rounded-pill"
+                            aria-label="Close" onclick="paraCamara()"></button>
+                    </div>
+                    <div class="col text-center">
+                        <button onclick="capturaCamara()" class="btn btn-primary btn-lg rounded-pill"><img
+                                src="./resources/camera.svg"></button>
+                    </div>
+                    <div class="col text-center">
+                        <button onclick="reversoCamara()" class="btn btn-secondary btn-lg rounded-pill"><img
+                                src="./resources/cameraswitch.svg"></button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 
     <div class="botonFlotante">
         <div class="interruptorFlotante rounded-pill px-2 py-1 mb-2" id="interruptorProfesor"
@@ -563,6 +641,12 @@
         </div>
     </div>
 
+    <div class="centroOFF" id="divSpinner">
+        <div class="spinner-border" style="width: 4rem; height: 4rem;" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
     <script src="./libraries/bootstrap-5.0.1-dist/js/bootstrap.bundle.min.js"></script>
     <script src="./libraries/leaflet-1.7.1/leaflet.js"></script>
     <script src="./libraries/Leaflet.markercluster-1.4.1/dist/leaflet.markercluster.js"></script>
@@ -570,14 +654,19 @@
     <script src="./libraries/webcam-easy/dist/webcam-easy.min.js" charset="utf-8"></script>
     <script type="text/javascript"
         src="./libraries/browser-image-compression-1.0.13/dist/browser-image-compression.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/9.1.2/firebase-analytics-compat.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
 
     <script src="./js/config.js" type="text/javascript"></script>
     <script src="./js/util.js" type="text/javascript"></script>
 
+    <script src="./js/answers.js" type="text/javascript"></script>
     <script src="./js/users.js" type="text/javascript"></script>
     <script src="./js/tasks.js" type="text/javascript"></script>
     <script src="./js/contexts.js" type="text/javascript"></script>
     <script src="./js/mapa.js" type="text/javascript"></script>
+    <script src="./js/info.js" type="text/javascript"></script>
 </body>
 
 </html>

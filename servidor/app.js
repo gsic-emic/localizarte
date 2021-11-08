@@ -4,6 +4,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const cors = require('cors');
+const admin = require('firebase-admin');
+const serviceAcount = require('./util/localizarte-752d0-firebase-adminsdk-vukyk-36b20d136a.json');
 
 const winston = require('./util/winston');
 const resolver = require('./routes/resolver');
@@ -14,12 +16,16 @@ app.use(cors());
 
 //app.use(morgan('combined', { stream: winston.logger }));
 //app.use(morgan('dev'));
-app.use(express.json({ limit: '50mb'}));
+app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', resolver);
+app.use('/app', resolver);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAcount)
+});
 
 // catch 404 and forward to error handler
 app.use((_req, _res, next) => {
