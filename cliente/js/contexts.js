@@ -237,6 +237,7 @@ function pintaPOIs(zona) {
 
 let modalInfo = false;
 let modalPOI;
+let lastOpenModal = 0;
 /**
  * Función para crear un marcador para un punto de interés.
  *
@@ -245,42 +246,28 @@ let modalPOI;
 function markerPoP(poi) {
     let marker = L.marker(poi.posicion, { icon: iconoMarcadores });
     marker.on('click', () => {
-        const puntoInteresModal = document.getElementById('puntoInteres');
-        modalPOI = new bootstrap.Modal(puntoInteresModal);
-        tareasContexto(poi.ctx, poi);
-        if (rol !== null && rol > 0) {
-            document.getElementById('administracionPOI').removeAttribute('hidden');
-        } else {
-            document.getElementById('administracionPOI').setAttribute('hidden', true);
-        }
-        const titulo = document.getElementById('tituloPuntoInteres');
-        titulo.innerText = poi.titulo;
-        const imagen = document.getElementById('imagenPuntoInteres');
-        const pieImagen = document.getElementById('licenciaImagenPuntoInteres');
-        const enlaceLicencia = document.getElementById('enlaceLicenciaImagenPuntoInteres');
-        if (poi.thumb) {
-            if (poi.thumb.includes('http://')) {
-                imagen.src = poi.thumb.replace('http://', 'https://');
+        if (lastOpenModal + 200 < Date.now()) {
+            const puntoInteresModal = document.getElementById('puntoInteres');
+            modalPOI = new bootstrap.Modal(puntoInteresModal);
+            tareasContexto(poi.ctx, poi);
+            if (rol !== null && rol > 0) {
+                document.getElementById('administracionPOI').removeAttribute('hidden');
             } else {
-                imagen.src = poi.thumb;
+                document.getElementById('administracionPOI').setAttribute('hidden', true);
             }
-            if (poi.thumb.includes('/Special:FilePath/')) {
-                let aux = poi.thumb.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
-                enlaceLicencia.setAttribute('href', aux);
-                pieImagen.hidden = false;
-            } else {
-                enlaceLicencia.setAttribute('href', '#');
-                pieImagen.hidden = true;
-            }
-        } else {
-            if (poi.imagen) {
-                if (poi.imagen.includes('http://')) {
-                    imagen.src = poi.imagen.replace('http://', 'https://');
+            const titulo = document.getElementById('tituloPuntoInteres');
+            titulo.innerText = poi.titulo;
+            const imagen = document.getElementById('imagenPuntoInteres');
+            const pieImagen = document.getElementById('licenciaImagenPuntoInteres');
+            const enlaceLicencia = document.getElementById('enlaceLicenciaImagenPuntoInteres');
+            if (poi.thumb) {
+                if (poi.thumb.includes('http://')) {
+                    imagen.src = poi.thumb.replace('http://', 'https://');
                 } else {
-                    imagen.src = poi.imagen;
+                    imagen.src = poi.thumb;
                 }
-                if (poi.imagen.includes('/Special:FilePath/')) {
-                    let aux = poi.imagen.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
+                if (poi.thumb.includes('/Special:FilePath/')) {
+                    let aux = poi.thumb.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
                     enlaceLicencia.setAttribute('href', aux);
                     pieImagen.hidden = false;
                 } else {
@@ -288,40 +275,56 @@ function markerPoP(poi) {
                     pieImagen.hidden = true;
                 }
             } else {
-                imagen.src = './resources/sinFoto.svg';
-                enlaceLicencia.setAttribute('href', '#');
-                pieImagen.hidden = true;
+                if (poi.imagen) {
+                    if (poi.imagen.includes('http://')) {
+                        imagen.src = poi.imagen.replace('http://', 'https://');
+                    } else {
+                        imagen.src = poi.imagen;
+                    }
+                    if (poi.imagen.includes('/Special:FilePath/')) {
+                        let aux = poi.imagen.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
+                        enlaceLicencia.setAttribute('href', aux);
+                        pieImagen.hidden = false;
+                    } else {
+                        enlaceLicencia.setAttribute('href', '#');
+                        pieImagen.hidden = true;
+                    }
+                } else {
+                    imagen.src = './resources/sinFoto.svg';
+                    enlaceLicencia.setAttribute('href', '#');
+                    pieImagen.hidden = true;
+                }
             }
+            imagen.style.display = 'inherit';
+
+            if (poi.descr) {
+                const descripcion = document.getElementById('descripcionPuntoInteres');
+                descripcion.innerHTML = poi.descr.replaceAll('<a ', '<a target="_blank" ');
+            }
+
+            document.getElementById('cerrarModalMarcador').onclick = () => {
+                modalPOI.hide();
+                cerrarPI()
+            };
+
+            document.getElementById('eliminarPI').onclick = () => {
+                confirmarEliminacion(poi, 'Eliminación punto de interés', '¿Estás seguro de eliminar el punto de interés?');
+                modalPOI.hide();
+            };
+
+            document.getElementById('modificarPI').onclick = () => {
+                modalPOI.hide();
+                modificarPI(poi)
+            };
+
+            document.getElementById('agregarTarea').onclick = () => {
+                modalPOI.hide();
+                nuevaTarea(poi.ctx);
+            }
+            lastOpenModal = Date.now();
+            modalPOI.show();
         }
-        imagen.style.display = 'inherit';
-
-        if (poi.descr) {
-            const descripcion = document.getElementById('descripcionPuntoInteres');
-            descripcion.innerHTML = poi.descr.replaceAll('<a ', '<a target="_blank" ');
-        }
-
-        document.getElementById('cerrarModalMarcador').onclick = () => {
-            modalPOI.hide();
-            cerrarPI()
-        };
-
-        document.getElementById('eliminarPI').onclick = () => {
-            confirmarEliminacion(poi, 'Eliminación punto de interés', '¿Estás seguro de eliminar el punto de interés?');
-            modalPOI.hide();
-        };
-
-        document.getElementById('modificarPI').onclick = () => {
-            modalPOI.hide();
-            modificarPI(poi)
-        };
-
-        document.getElementById('agregarTarea').onclick = () => {
-            modalPOI.hide();
-            nuevaTarea(poi.ctx);
-        }
-
-        modalPOI.show();
-    }, { once: true });
+    });
     markers.addLayer(marker);
 }
 

@@ -127,73 +127,7 @@ function inicioSesionUsuario() {
                 .then(userCredential => {
                     if (userCredential.user.emailVerified) {
                         //Solicito la info al servidor de este usuario. Se la solicito a través de un token
-                        auth.currentUser.getIdToken()
-                            .then(idToken => {
-                                let cabeceras = new Headers();
-                                cabeceras.append("x-tokenid", idToken);
-                                var opciones = {
-                                    headers: cabeceras,
-                                    method: 'GET',
-                                    redirect: 'follow'
-                                };
-                                const direccion = mustache.render(
-                                    '{{{dir}}}/users/user',
-                                    {
-                                        dir: direccionServidor
-                                    });
-
-                                fetch(direccion, opciones)
-                                    .then(response => {
-                                        switch (response.status) {
-                                            case 200:
-                                                return response.json();
-                                            case 400:
-                                            case 404:
-                                                cerrarSesionFirebase(true);
-                                                notificaLateralError('No se ha encontrado al usuario');
-                                                return null;
-                                            default:
-                                                notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
-                                                return null;
-                                        }
-                                    })
-                                    .then(result => {
-                                        if (result && result.rol !== undefined && result.email !== undefined) {
-                                            dUser = result;
-                                            rol = result.rol;
-                                            notificaLateral(mustache.render(
-                                                'Hola de nuevo {{{nombre}}}',
-                                                {
-                                                    nombre: dUser.name
-                                                }));
-                                            if (rol > 0) {
-                                                document.getElementById('interruptorProfesor').removeAttribute('hidden');
-                                                if (!document.getElementById('swVistaProfesor').checked) {
-                                                    document.getElementById('swVistaProfesor').checked = true;
-                                                }
-                                                document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();">Contribuciones</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
-
-                                            } else {
-                                                document.getElementById('interruptorProfesor').setAttribute('hidden', 'true');
-                                                document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
-                                            }
-                                        }
-                                        estadoBotones(botones, true);
-                                        modal.hide();
-                                    })
-                                    .catch(error => {
-                                        console.error('error', error);
-                                        estadoBotones(botones, true);
-                                        modal.hide();
-                                        notificaLateralError('Error desconocido');
-                                    });
-                            })
-                            .catch(error => {
-                                estadoBotones(botones, true);
-                                modal.hide();
-                                notificaLateralError('Error desconocido: ' + error.code);
-                                cerrarSesionFirebase(true);
-                            });
+                        recuperaDatosUsuarioServidor(modal, botones, false);
                     } else {
                         auth.currentUser.sendEmailVerification();
                         estadoBotones(botones, true);
@@ -227,6 +161,89 @@ function inicioSesionUsuario() {
         }
     }
     modal.show();
+}
+
+function recuperaDatosUsuarioServidor(modal = null, botones = [], silencio = false) {
+    auth.currentUser.getIdToken()
+        .then(idToken => {
+            let cabeceras = new Headers();
+            cabeceras.append("x-tokenid", idToken);
+            var opciones = {
+                headers: cabeceras,
+                method: 'GET',
+                redirect: 'follow'
+            };
+            const direccion = mustache.render(
+                '{{{dir}}}/users/user',
+                {
+                    dir: direccionServidor
+                });
+
+            fetch(direccion, opciones)
+                .then(response => {
+                    switch (response.status) {
+                        case 200:
+                            return response.json();
+                        case 400:
+                        case 404:
+                            cerrarSesionFirebase(silencio);
+                            if (!silencio) {
+                                notificaLateralError('No se ha encontrado al usuario');
+                            }
+                            return null;
+                        default:
+                            cerrarSesionFirebase(silencio)
+                            if (!silencio) {
+                                notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
+                            }
+                            return null;
+                    }
+                })
+                .then(result => {
+                    if (result && result.rol !== undefined && result.email !== undefined) {
+                        dUser = result;
+                        rol = result.rol;
+                        if (!silencio) {
+                            notificaLateral(mustache.render(
+                                'Hola de nuevo {{{nombre}}}',
+                                {
+                                    nombre: dUser.name
+                                }));
+                        }
+                        if (rol > 0) {
+                            document.getElementById('interruptorProfesor').removeAttribute('hidden');
+                            if (!document.getElementById('swVistaProfesor').checked) {
+                                document.getElementById('swVistaProfesor').checked = true;
+                            }
+                            document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();">Contribuciones</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
+
+                        } else {
+                            document.getElementById('interruptorProfesor').setAttribute('hidden', 'true');
+                            document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
+                        }
+                    }
+                    estadoBotones(botones, true);
+                    if (modal) {
+                        modal.hide();
+                    }
+                })
+                .catch(error => {
+                    console.error('error', error);
+                    estadoBotones(botones, true);
+                    if (modal) {
+                        modal.hide();
+                    }
+                    if (!silencio) {
+                        notificaLateralError('Error desconocido');
+                    }
+                });
+        })
+        .catch(error => {
+            estadoBotones(botones, true);
+            modal.hide();
+            notificaLateralError('Error desconocido: ' + error.code);
+            cerrarSesionFirebase(true);
+        });
 }
 
 function registroUsuario() {

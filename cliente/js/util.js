@@ -188,13 +188,15 @@ function validateEmail(email) {
  * @param {Boolean} activar Indica si los botones tienen que estar activos y spinner oculto (true) o al revés (false)
  */
 function estadoBotones(botones, activar) {
-    botones.forEach(boton => {
-        boton.disabled = !activar;
-    });
-    if (activar) {
-        spinnerCentro.className = 'centroOFF';
-    } else {
-        spinnerCentro.className = 'centroON';
+    if (botones) {
+        botones.forEach(boton => {
+            boton.disabled = !activar;
+        });
+        if (activar) {
+            spinnerCentro.className = 'centroOFF';
+        } else {
+            spinnerCentro.className = 'centroON';
+        }
     }
 }
 

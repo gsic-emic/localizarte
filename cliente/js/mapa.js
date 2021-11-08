@@ -167,6 +167,9 @@ function inicio() {
     auth = app.auth();
     analytics = app.analytics();
     auth.languageCode = 'es';
+    if(auth && auth.currentUser) {
+        recuperaDatosUsuarioServidor(null, null, true);
+    }
 }
 
 
