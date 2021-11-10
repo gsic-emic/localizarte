@@ -17,16 +17,26 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con el recurso "usuario".
  * autor: Pablo García Zarza
- * version: 20211018
+ * version: 20211109
  */
 
 
 const admin = require('firebase-admin');
+const Mustache = require('mustache');
+
 const { uidYaRegistrado, nuevoUsuarioEnColeccionRapida, guardaDocumentoEnColeccion, correoVerificado, dameDocumentoRapida, dameDocumentoDeColeccion, modificaDocumentoDeColeccion } = require('../../util/bd');
+const winston = require('../../util/winston');
+const Auxiliar = require('../../util/auxiliar');
 
-
+/**
+ * Function to add or update a user in the server. In request header the client must had sent a token in the field x-tokenid.
+ * 
+ * @param {Object} req Request
+ * @param {Object} res Response
+ */
 async function putUser(req, res) {
     try {
+        const start = Date.now();
         const token = req.headers['x-tokenid'];
         const { body } = req;
 
@@ -48,20 +58,27 @@ async function putUser(req, res) {
                                         }, 'userData', uid)
                                         .then(respuestaBD => {
                                             if(respuestaBD.modifiedCount > 0) {
-                                                res.status(200).send(JSON.stringify({
+                                                winston.info(Mustache.render(
+                                                    'putUser || updateUser || {{{idUser}}} || {{{time}}} ',
+                                                    {
+                                                        idUser: uid,
+                                                        time: Date.now() - start
+                                                    }
+                                                ));
+                                                Auxiliar.logHttp(req, res, 200, 'putUserL', start).send(JSON.stringify({
                                                     name: name,
                                                     surname: surname
                                                 }));
                                             } else {
-                                                res.status(512).send('No se han modificado todos los campos');
+                                                Auxiliar.logHttp(req, res, 512, 'putUserLE', start).send('No se han modificado todos los campos');
                                             }
                                         })
                                         .catch(error => {
                                             console.error(error);
-                                            res.status(500).send('Error en la actualización');
+                                            Auxiliar.logHttp(req, res, 500, 'putUserLE', start).send('Error en la actualización');
                                         });
                                 } else {
-                                    res.status(400).send('El usuario no ha verificado su dirección de correo');
+                                    Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send('El usuario no ha verificado su dirección de correo');
                                 }
                             } else {
                                 admin.auth().getUser(uid)
@@ -82,33 +99,46 @@ async function putUser(req, res) {
                                                 email: email
                                             },
                                             uid);
-                                        res.status(201).send(JSON.stringify({
+                                            winston.info(Mustache.render(
+                                                'putUser || newUser || {{{idUser}}} || {{{time}}} ',
+                                                {
+                                                    idUser: uid,
+                                                    time: Date.now() - start
+                                                }
+                                            ));
+                                            Auxiliar.logHttp(req, res, 201, 'putUserL', start).send(JSON.stringify({
                                             emailVerified: user.emailVerified
                                         }));
                                     })
                                     .catch(error => {
-                                        res.status(400).send(error);
+                                        Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send(error);
                                     });
                             }
                         })
                         .catch(e => {
                             console.error(e);
-                            res.sendStatus(400);
+                            Auxiliar.logHttp(req, res, 400, 'putUserLE', start).end();
                         });
                 } else {
-                    res.sendStatus(400);
+                    Auxiliar.logHttp(req, res, 400, 'putUserLE', start).end();
                 }
             })
             .catch(error => {
-                res.status(400).send(error);
+                Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send(error);
             });
     } catch (e) {
-        res.sendStatus(500);
+        Auxiliar.logHttp(req, res, 500, 'putUserLE').end();
     }
 }
 
+/**
+ * Function to get the information of a user. In request header the client must had sent a token in the field x-tokenid.
+ * @param {Object} req Request
+ * @param {Object} res Response
+ */
 async function getInfoUser(req, res) {
     try {
+        const start = Date.now();
         const token = req.headers['x-tokenid'];
         admin.auth().verifyIdToken(token)
             .then(async decodedToken => {
@@ -122,7 +152,14 @@ async function getInfoUser(req, res) {
                                         dameDocumentoDeColeccion('userData', uid)
                                             .then(datosUsuario => {
                                                 correoVerificado(uid, email_verified);
-                                                res.status(200).send({
+                                                winston.info(Mustache.render(
+                                                    'getUser || {{{userId}}} || {{{time}}}',
+                                                    {
+                                                        userId: uid,
+                                                        time: Date.now() - start
+                                                    }
+                                                ));
+                                                Auxiliar.logHttp(req, res, 200, 'getUserL', start).send({
                                                     rol: datosRapida.rol,
                                                     name: datosUsuario.name,
                                                     surname: datosUsuario.surname,
@@ -131,31 +168,31 @@ async function getInfoUser(req, res) {
                                             })
                                             .catch(error => {
                                                 console.error(error);
-                                                res.sendStatus(400);
+                                                Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
                                             });
                                     })
                                     .catch(error => {
                                         console.error(error);
-                                        res.sendStatus(400);
+                                        Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
                                     });
                             } else {
-                                res.sendStatus(404);
+                                Auxiliar.logHttp(req, res, 404, 'getUserLE', start).end();
                             }
                         })
                         .catch(error => {
                             console.error(error);
-                            res.sendStatus(400);
+                            Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
                         });
                 } else {
-                    res.sendStatus(404);
+                    Auxiliar.logHttp(req, res, 404, 'getUserLE', start).end();
                 }
             })
             .catch(error => {
                 console.log(error);
-                res.sendStatus(400);
+                Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
             });
     } catch (e) {
-        res.sendStatus(500);
+        Auxiliar.logHttp(req, res, 500, 'getUserLE').end();
     }
 }
 

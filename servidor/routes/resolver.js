@@ -24,6 +24,7 @@ const express = require('express');
 
 const Ruter = express.Router();
 
+const winston = require('../util/winston');
 const Contexts = require('../resources/contexts/contexts');
 const Context = require('../resources/contexts/context');
 const Tasks = require('../resources/tasks/tasks');
@@ -52,7 +53,10 @@ const recursos = {
 };
 
 // Se envía el código de estado para una operación no implementada
-const envia405 = (req, res) => res.status(405).send('Operación no implementada para el recurso o la colección');
+const envia405 = (req, res) => {
+  winston.http(`405 || Método no implementado - ${req.originalUrl} - ${req.method} - ${req.ip}`);
+  res.status(405).send('Operación no implementada para el recurso o la colección')
+};
 
 // Contextos
 Ruter.route(recursos.contextos)
@@ -102,7 +106,7 @@ Ruter.route(recursos.sesion)
 
 // Respuestas
 //TODO tengo que cambiar el token por la cabecera x-idtoken
-Ruter. route(recursos.respuestas)
+Ruter.route(recursos.respuestas)
   //.post((req, res) => Answers.nuevaRespuesta(req, res))
   //.get((req, res) => Answers.dameRespuestas(req, res))
   .all(envia405);
