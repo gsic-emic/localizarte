@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Creación de las rutas del servidor.
  * autor: Pablo
- * version: 20210613
+ * version: 20211110
  */
 
 const express = require('express');
@@ -25,14 +25,20 @@ const express = require('express');
 const Ruter = express.Router();
 
 const winston = require('../util/winston');
-const Contexts = require('../resources/contexts/contexts');
-const Context = require('../resources/contexts/context');
-const Tasks = require('../resources/tasks/tasks');
-const Task = require('../resources/tasks/task');
-const Answers = require('../resources/answers/answers');
+const Contexts = require('./contexts/contexts');
+const Context = require('./contexts/context');
+const Tasks = require('./tasks/tasks');
+const Task = require('./tasks/task');
 
-const Users = require('../resources/users/users');
-const User = require('../resources/users/user');
+const Users = require('./users/users');
+const User = require('./users/user');
+const Answers = require('./users/answers/answers');
+const Answer = require('./users/answers/answer');
+const Contributions = require('./users/contributions/contributions');
+const Contribution = require('./users/contributions/contribution');
+const Reviews = require('./users/reviews/reviews');
+const Review = require('./users/reviews/review');
+
 //const Sesiones = require('../resources/users/sesiones');
 //const Sesion = require('../resources/users/sesion');
 
@@ -40,7 +46,7 @@ const User = require('../resources/users/user');
 // Paths
 const recursos = {
   contextos: '/contexts/',
-  /* contexto: '/contexts/:context', */
+  /* contexto: '/contexts/:context', Change when the IRI of contexts and tasks are valid*/
   contexto: '/contexts/:a/:b/:c',
   tareas: '/tasks/',
   tarea: '/tasks/:a/:b',
@@ -50,6 +56,10 @@ const recursos = {
   user: '/users/user',
   respuestas: '/users/user/answers/',
   respuesta: '/users/user/answers/:answer',
+  contributions: '/users/user/contributions',
+  contribution: '/users/user/contributions/:contribution',
+  reviews: 'users/user/reviews',
+  review: 'users/user/reviews/:review',
 };
 
 // Se envía el código de estado para una operación no implementada
@@ -84,7 +94,7 @@ Ruter.route(recursos.tarea)
   .delete((req, res) => Task.eliminaTarea(req, res))
   .all(envia405);
 
-// Creación y obtención de usuarios
+// Usuarios
 Ruter.route(recursos.users)
   //.get((req, res) => Users.dameUsuarios(req, res))
   //.post((req, res) => Users.newUser(req, res))
@@ -95,20 +105,38 @@ Ruter.route(recursos.user)
   .get((req, res) => User.getInfoUser(req, res))
   .all(envia405);
 
-// Gestión de sesiones
-/*Ruter.route(recursos.sesiones)
-  .post((req, res) => Sesiones.login(req, res))
+// Contributions
+Ruter.route(recursos.contributions)
+  .get((req, res) => Contributions.getContributions(req, res))
+  //.post((req, res) => Users.newUser(req, res))
   .all(envia405);
 
-Ruter.route(recursos.sesion)
-  .delete((req, res) => Sesion.logout(req, res))
-  .all(envia405);*/
+Ruter.route(recursos.contribution)
+  //.get((req, res) => Users.dameUsuarios(req, res))
+  //.post((req, res) => Users.newUser(req, res))
+  .all(envia405);
+
+//Reviews
+Ruter.route(recursos.reviews)
+  //.get((req, res) => Users.dameUsuarios(req, res))
+  //.post((req, res) => Users.newUser(req, res))
+  .all(envia405);
+
+Ruter.route(recursos.review)
+  //.get((req, res) => Users.dameUsuarios(req, res))
+  //.post((req, res) => Users.newUser(req, res))
+  .all(envia405);
 
 // Respuestas
 //TODO tengo que cambiar el token por la cabecera x-idtoken
 Ruter.route(recursos.respuestas)
   //.post((req, res) => Answers.nuevaRespuesta(req, res))
   //.get((req, res) => Answers.dameRespuestas(req, res))
+  .all(envia405);
+
+Ruter.route(recursos.respuesta)
+  //.get((req, res) => Users.dameUsuarios(req, res))
+  //.post((req, res) => Users.newUser(req, res))
   .all(envia405);
 
 module.exports = Ruter;

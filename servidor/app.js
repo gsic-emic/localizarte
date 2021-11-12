@@ -8,7 +8,7 @@ const admin = require('firebase-admin');
 const serviceAcount = require('./util/localizarte-752d0-firebase-adminsdk-vukyk-36b20d136a.json');
 
 const winston = require('./util/winston');
-const resolver = require('./routes/resolver');
+const resolver = require('./resources/resolver');
 
 const app = express();
 

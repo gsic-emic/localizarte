@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión inicial del mapa
  * autor: Pablo García Zarza
- * version: 20211026
+ * version: 20211112
  */
 
 /** Zonas descargadas */
@@ -69,6 +69,8 @@ const spinnerCentro = document.getElementById('divSpinner');
 
 let answers;
 
+let language;
+
 
 inicio();
 
@@ -82,6 +84,13 @@ function inicio() {
     answers = [];
     popup = null;
     faltan = 0;
+
+    if (/^es\b/.test(navigator.language)) {
+        setLanguage('es');
+    } else {
+        setLanguage('en');
+    }
+
     map = L.map('mapa',
         {
             zoomControl: false,
@@ -149,14 +158,14 @@ function inicio() {
 
     // Pulsación con el botón derecho del ratón o tap largo
     map.on('contextmenu', (pos) => {
-        if(rol !== null && rol > 0){
+        if (rol !== null && rol > 0) {
             creacionNuevoContexto(pos);
         }
     });
 
     popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-      return new bootstrap.Popover(popoverTriggerEl)
+        return new bootstrap.Popover(popoverTriggerEl)
     });
 
     tokenSesion = null;
@@ -166,8 +175,8 @@ function inicio() {
     app = firebase.initializeApp(firebaseConfig);
     auth = app.auth();
     analytics = app.analytics();
-    auth.languageCode = 'es';
-    if(auth && auth.currentUser) {
+    auth.languageCode = language;
+    if (auth && auth.currentUser) {
         recuperaDatosUsuarioServidor(null, null, true);
     }
 }
@@ -229,13 +238,28 @@ function seguir() {
 
 function cambiaVistaProfesor() {
     rol = rol * -1;
-    if(rol > 0){
+    if (rol > 0) {
         document.getElementById('swVistaProfesor').checked = true;
         document.getElementById('labelVistaProfesor').className = "form-check-label colorActivo";
-        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();">Contribuciones</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
+        document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+            '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();" id="contributionsNavBar">{{{contribuciones}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();" id="signOutNavBar">{{{signOut}}}</a></li>',
+            {
+                actualLanguage: language.toUpperCase(),
+                contribuciones: translate.contributionsNavBar[language],
+                userData: translate.userDataNavBar[language],
+                signOut: translate.signOutNavBar[language]
+            });
     } else {
         document.getElementById('swVistaProfesor').checked = false;
         document.getElementById('labelVistaProfesor').className = "form-check-label";
-        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
+        document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+            '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();" id="answersNavBar">{{{respuestas}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();" id="signOutNavBar">{{{signOut}}}</a></li>',
+            {
+                actualLanguage: language.toUpperCase(),
+                respuestas: translate.answersNavBar[language],
+                userData: translate.userDataNavBar[language],
+                signOut: translate.signOutNavBar[language],
+            }
+        );
     }
 }

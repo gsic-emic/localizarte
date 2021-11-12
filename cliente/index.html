@@ -49,16 +49,25 @@
                 aria-expanded="false">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="gestionUsuarioContenedor">
                 <ul class="navbar-nav ms-auto mb-1 mb-md-0" id="gestionUsuarioLista">
-                    <li class="nav-item">
-                        <a class="nav-link" href="javascript:informacionDatos();">Información</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false" id="dropdownLanguage"></a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage">
+                            <li><a class="dropdown-item" href="#" onclick="setLanguage('es');">ES - Español</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setLanguage('en');">EN - English</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:registroUsuario();">Registro</a>
+                        <a class="nav-link" href="javascript:informacionDatos();" id="infoNavBar"></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:inicioSesionUsuario();">Identificación</a>
+                        <a class="nav-link" href="javascript:registroUsuario();" id="signUpNavBar"></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:inicioSesionUsuario();" id="signInNavBar"></a>
                     </li>
                 </ul>
             </div>
@@ -70,27 +79,18 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title titulo">Información de LocalizARTE</h3>
+                    <h3 class="modal-title titulo" id="modalInfoTitulo"></h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="d-md-flex flex-md-row py-1 align-items-center">
                         <div class="col-md-auto order-md-1 text-center">
-                            <img class="figure-img imagen" src='./resources/logoGrande.svg'
-                                alt="Fuentes de los datos abiertos">
+                            <img class="figure-img imagen" src='./resources/logoGrande.svg' alt="Logo LocalizARTE">
                         </div>
                         <div class="col order-md-2 ps-3">
                             <div class="descripcion">
-                                <p class="h3">¿Qué es LocalizARTE?</p>
-                                <p>LocalizARTE es una aplicación distribuida que utiliza Datos Abiertos de distintas
-                                    fuentes de información para apoyar el aprendizaje ubicuo de Historia del Arte. A
-                                    través de LocalizARTE se puede <b>crear nuevo contenido</b> y <b>realizar tareas
-                                        educativas</b> (usuarios registrados). Estas tareas educativas pueden estar
-                                    diseñadas para ser realizadas cerca del punto de interés o desde cualquier lugar.
-                                    Puedes acceder a nuestra política de privacidad utilizando <a
-                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
-                                        href="https://localizarte.gsic.uva.es/privacidad">este enlace</a>.
-                                </p>
+                                <p class="h3" id="modalInfoQueEsLocalizarte0"></p>
+                                <p id="modalInfoQueEsLocalizarte1"></p>
                             </div>
                         </div>
                     </div>
@@ -101,45 +101,20 @@
                         </div>
                         <div class="col order-md-1 pe-3">
                             <div class="descripcion">
-                                <p class="h3">LocalizARTE utiliza Datos Abiertos</p>
-                                <p>Los datos de partida de LocalizARTE fueron generados de manera semiautomática
-                                    utilizando distintas fuentes de <b>Datos Abiertos</b> como los ofrecidos por <a
-                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
-                                        href="https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html">Datos
-                                        Abiertos de la Junta de Castilla y León</a>, <a
-                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
-                                        href="https://wiki.dbpedia.org/">DBpedia</a> y <a
-                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
-                                        href="https://www.wikidata.org/wiki/Wikidata:Main_Page">Wikidata</a>.</p>
-                                <p>Además de estos datos, los <b>docentes</b> podrán agregar nuevos puntos de interés y
-                                    tareas
-                                    educativas a través de la interfaz de LocalizARTE. Esta nueva información se
-                                    almacenará, de forma transparente, como Datos Abiertos. Puedes escribirnos a <a
-                                        class="text-muted text-decoration-none"
-                                        href="mailto:localizarte@gsic.uva.es">localizarte@gsic.uva.es</a> si deseas
-                                    poder agregar nueva información a la
-                                    aplicación que pueda ser utilizada por tus estudiantes.
-                                </p>
+                                <p class="h3" id="modalInfoDatosAbiertos0"></p>
+                                <p id="modalInfoDatosAbiertos1"></p>
+                                <p id="modalInfoDatosAbiertos2"></p>
                             </div>
                         </div>
                     </div>
                     <div class="d-md-flex flex-md-row pb-1 align-items-center">
                         <div class="col-md-auto order-md-1text-center">
-                            <img class="figure-img imagen" src='./resources/gsicUVa.svg'
-                                alt="Fuentes de los datos abiertos">
+                            <img class="figure-img imagen" src='./resources/gsicUVa.svg' alt="Logo GSIC/EMIC y UVa">
                         </div>
                         <div class="col order-md-2 ps-3">
                             <div class="descripcion">
-                                <p class="h3">Una aplicación del grupo GSIC</p>
-                                <p>LocalizARTE se está diseñando y desarrollando dentro del <a
-                                        class="text-muted text-decoration-underline" rel="noopener" target="_blank"
-                                        href="https://gsic.uva.es">grupo de investigación GSIC/EMIC</a>. Este grupo está
-                                    formado por ingenieros y educadores de la Escuela Técnica Superior de
-                                    Ingenieros de Telecomunicación, la Escuela de Ingeniería Informática y la Facultad
-                                    de Educación y Trabajo Social de la <a class="text-muted text-decoration-underline"
-                                        rel="noopener" target="_blank" href="https://uva.es">Universidad de
-                                        Valladolid</a>.
-                                </p>
+                                <p class="h3" id="modalInfoGSIC0"></p>
+                                <p id="modalInfoGSIC1"></p>
                             </div>
                         </div>
                     </div>
@@ -159,26 +134,26 @@
                 <div class="modal-body">
                     <div class="py-1 row g-2 text-white rounded fondoPrimario" id="administracionPOI">
                         <div class="row justify-content">
-                            <h6>Administración del POI</h6>
+                            <h6 id="modalPOIAdministracionPOI"></h6>
                         </div>
                         <div class="row g-3 align-items-center justify-content-around my-1">
                             <div class="col my-1 d-flex justify-content-center">
-                                <button class="btn btn-primary" id="agregarTarea">Agregar tarea</button>
+                                <button class="btn btn-primary" id="agregarTarea"></button>
                             </div>
                             <div class="col my-1 d-flex justify-content-center">
-                                <button class="btn btn-outline-warning" id="modificarPI">Modificar POI</button>
+                                <button class="btn btn-outline-warning" id="modificarPI"></button>
                             </div>
                             <div class="col my-1 d-flex justify-content-center">
-                                <button class="btn btn-outline-danger" id="eliminarPI">Eliminar POI</button>
+                                <button class="btn btn-outline-danger" id="eliminarPI"></button>
                             </div>
                         </div>
                     </div>
                     <div class="d-md-flex flex-md-row py-1 align-items-center">
                         <div class="col-md-auto p-1 order-md-1 text-center">
-                            <img class="figure-img rounded imagen" id="imagenPuntoInteres" alt="Imagen Punto Interés">
+                            <img class="figure-img rounded imagen" id="imagenPuntoInteres" alt="Imagen POI">
                             <figcaption class="figure-caption text-start" id="licenciaImagenPuntoInteres"><a
                                     class="text-decoration-underline text-muted" rel="noopener" target="_blank" href="#"
-                                    id="enlaceLicenciaImagenPuntoInteres">Licencia</a>
+                                    id="enlaceLicenciaImagenPuntoInteres"></a>
                             </figcaption>
                         </div>
                         <div class="col order-md-2">
@@ -204,9 +179,8 @@
                     <h5 id="mensajeConfirmacion"></h5>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-danger" id="aceptaBorrar">Borrar</button>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-                        id="cerrarBorrar">Cerrar</button>
+                    <button type="button" class="btn btn-outline-danger" id="aceptaBorrar"></button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="cerrarBorrar"></button>
                 </div>
             </div>
         </div>
@@ -247,69 +221,61 @@
                     <form id="formNPI">
                         <div class="row g-1 align-items-center mx-1 mb-4">
                             <div class="col-sm-12">
-                                <label for="tituloNPI" class="form-label">Título*</label>
+                                <label for="tituloNPI" class="form-label" id="modalNuevoPuntoInteresTitle"></label>
                                 <input type="text" id="tituloNPI" class="form-control"
-                                    placeholder="Escribe aquí el título del nuevo punto de interés">
+                                    placeholder="">
                                 <div class="invalid-feedback" id="tituloNPIInvalid"></div>
-                                <small class="text-muted">
-                                    El identificador único del punto de interés se creará utilizando el título que
-                                    indiques.
-                                </small>
+                                <small class="text-muted" id="modalNuevoPuntoInteresIdentificadorUnico"></small>
                             </div>
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
                             <div for="col-sm-12">
-                                <label for="descrNPI" class="form-label">Descripción*</label>
+                                <label for="descrNPI" class="form-label" id="modalNuevoPuntoInteresDescription"></label>
                                 <textarea class="form-control" id="descrNPI" name="descrNPI"
-                                    placeholder="Descripción del punto de interés"></textarea>
+                                    placeholder=""></textarea>
                                 <div class="invalid-feedback" id="descrNPIInvalid"></div>
                             </div>
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
                             <div class="col-sm-12">
-                                <label for="fuentesNPI" class="form-label">Fuentes de información</label>
+                                <label for="fuentesNPI" class="form-label" id="modalNuevoPuntoInteresFuentes"></label>
                                 <input type="text" id="fuentesNPI" class="form-control"
-                                    placeholder="Escribe aquí las URLs de las fuentes de donde has obtenido la información">
+                                    placeholder="">
                                 <div class="invalid-feedback" id="fuentesNPIInvalid"></div>
-                                <small class="text-muted">
-                                    Si la información la has obtenido de varias fuentes sepáralas con el carácter
-                                    <b>;</b>. Las fuentes pueden ser expresadas mediante URLs o con cadenas de texto.
-                                </small>
+                                <small class="text-muted" id="modalNuevoPuntoInteresVariasFuentes"></small>
                             </div>
                         </div>
                         <div class="row g-2 align-items-center mx-1 mb-4">
                             <div class="col-sm-6">
-                                <label for="latitudNPI" class="form-label">Latitud*</label>
+                                <label for="latitudNPI" class="form-label"></label>
                                 <input type="text" id="latitudNPI" class="form-control" readonly required>
                                 <div class="invalid-feedback" id="latitudNPIInvalid"></div>
                             </div>
                             <div class="col-sm-6">
-                                <label for="longitudNPI" class="form-label">Longitud*</label>
+                                <label for="longitudNPI" class="form-label"></label>
                                 <input type="text" id="longitudNPI" class="form-control" readonly required>
                                 <div class="invalid-feedback" id="longitudNPIInvalid"></div>
                             </div>
                         </div>
                         <div class="row g-2 align-items-center mx-1 mb-4">
                             <div class="col-sm-6">
-                                <label for="imagenNPI" class="form-label">URL de la imagen</label>
+                                <label for="imagenNPI" class="form-label" id="imagenNPILabel"></label>
                                 <input type="text" id="imagenNPI" class="form-control" placeholder="https://...">
                                 <div class="invalid-feedback" id="ImagenNPIInvalid"></div>
                             </div>
                             <div class="col-sm-6">
-                                <label for="licenciaNPI" class="form-label">Licencia</label>
+                                <label for="licenciaNPI" class="form-label" id="licenciaNPILabel"></label>
                                 <input type="text" id="licenciaNPI" class="form-control"
-                                    placeholder="Licencia de la imagen">
+                                    placeholder="">
                                 <div class="invalid-feedback" id="licenciaNPIInvalid"></div>
                             </div>
                         </div>
                         <div class="row mx-1 mb-4">
-                            <small class="text-muted">
-                                * Campos obligatorios
-                            </small>
+                            <small class="text-muted" id="modalNuevoPuntosInteresCamposObligatorios"></small>
                         </div>
                         <div class="row justify-content-center">
                             <div class="col-8 text-center">
-                                <button class="btn btn-primary" type="button" id="enviarNPI">Enviar</button>
+                                <button class="btn btn-primary" type="button" id="enviarNPI"></button>
                             </div>
                         </div>
                     </form>
@@ -329,86 +295,83 @@
                 <div class="modal-body">
                     <form id="formNT">
                         <div class="row g-1 align-items-center mx-1 mb-4" id="seleccionadorEspacio">
-                            <label class="form-label" for="selectTipoRespuesta">Selecciona el tipo de
-                                respuesta de la tarea*</label>
+                            <label class="form-label" for="selectTipoRespuesta" id="selectTipoRespuestaLabel"></label>
                             <select id="selectTipoRespuesta" class="form-select">
-                                <option selected>Selecciona un tipo</option>
-                                <option value="tRVF">Verdadero o falso</option>
-                                <option value="tRMcq">Pregunta opción múltiple</option>
-                                <option value="tRTexto">Texto</option>
-                                <option value="tRTextoCorto">Texto corto</option>
-                                <option value="tRFoto">Fotografía</option>
-                                <option value="tRFotoTexto">Fotografía y texto</option>
-                                <option value="tRMultiFotos">Múltiples fotografías</option>
-                                <option value="tRMultiFotosTexto">Múltiples fotos y texto</option>
-                                <option value="tRVideo">Vídeo</option>
-                                <option value="tRSinRespuesta">Sin respuesta</option>
-                                <option value="trVideoTexto">Vídeo y texto</option>
+                                <option selected id="selectTipoRespuestaEnunciado"></option>
+                                <option value="tRVF" id="selectTipoRespuestaVF"></option>
+                                <option value="tRMcq" id="selectTipoRespuestaMcq"></option>
+                                <option value="tRTexto" id="selectTipoRespuestaTexto"></option>
+                                <option value="tRTextoCorto" id="selectTipoRespuestaShortText"></option>
+                                <option value="tRFoto" id="selectTipoRespuestaPhoto"></option>
+                                <option value="tRFotoTexto" id="selectTipoRespuestaPhotoText"></option>
+                                <option value="tRMultiFotos" id="selectTipoRespuestaMultiPhotos"></option>
+                                <option value="tRMultiFotosTexto" id="selectTipoRespuestaMultiPhotosText"></option>
+                                <option value="tRVideo" id="selectTipoRespuestaVideo"></option>
+                                <option value="tRSinRespuesta" id="selectTipoRespuestaSR"></option>
+                                <option value="trVideoTexto" id="selectTipoRespuestaVideoText"></option>
                             </select>
                             <div class="invalid-feedback" id="selectTipoRespuestaInvalid"></div>
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
                             <div class="col-sm-12">
-                                <label for="tituloNT" class="form-label">Título*</label>
+                                <label for="tituloNT" class="form-label" id="tituloNTLabel"></label>
                                 <input type="text" id="tituloNT" class="form-control"
-                                    placeholder="Escribe aquí el título de la nueva tarea">
+                                    placeholder="">
                                 <div class="invalid-feedback" id="tituloNTInvalid"></div>
-                                <small class="text-muted">
-                                    El identificador único de la tarea se creará utilizando este título.
-                                </small>
+                                <small class="text-muted" id="tituloNTExplica"></small>
                             </div>
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
                             <div for="col-sm-12">
-                                <label for="textoAsociadoNT" class="form-label">Enunciado de la tarea*</label>
+                                <label for="textoAsociadoNT" class="form-label" id="textAsociadoNTLabel"></label>
                                 <textarea class="form-control" id="textoAsociadoNT" name="textoAsociadoNT"
-                                    placeholder="Texto asociado a la tarea que tendrán que realizar"></textarea>
+                                    placeholder=""></textarea>
                                 <div class="invalid-feedback" id="textoAsociadoNTInvalid"></div>
                             </div>
                         </div>
                         <div id="tRcamposExtra" class="row g-1 align-items-center mx-1 mb-4" hidden>
                             <div id="tRverdaderoFalso" class="row align-items-center my-1 g-1" hidden>
-                                <label for="verdaderoNTDiv" class="form-label">Respuesta correcta*</label>
+                                <label for="verdaderoNTDiv" class="form-label" id="verdaderoNTDivLabel"></label>
                                 <div id="verdaderoNTDiv" class="row g-1">
                                     <div class="col-sm-6 form-check">
                                         <div class="invalid-feedback" id="rbVFVNTInvalid"></div>
                                         <input class="form-check-input" type="radio" name="rbVFNT" id="rbVFVNT"
                                             value="verdadero">
-                                        <label class="form-check-label" for="rbVFVNT">Verdadero</label>
+                                        <label class="form-check-label" for="rbVFVNT" id="rbVFVNTVLabel"></label>
                                     </div>
                                     <div class="col-sm-6 form-check">
                                         <input class="form-check-input" type="radio" name="rbVFNT" id="rbVFFNT"
                                             value="falso">
-                                        <label class="form-check-label" for="rbVFFNT">Falso</label>
+                                        <label class="form-check-label" for="rbVFFNT" id="rbVFFNTLabel"></label>
                                     </div>
                                 </div>
                             </div>
                             <div id="tRMCQ" class="row g-2 align-items-center my-1" hidden>
                                 <div class="row g-2 align-items-center">
                                     <div class="col-sm-6">
-                                        <label class="form-label" for="rVMCQ">Respuesta verdadera*</label>
+                                        <label class="form-label" for="rVMCQ" id="rVMCQLabel"></label>
                                         <input type="text" id="rVMCQ" class="form-control"
-                                            placeholder="Escribe aquí la respuesta verdadera">
+                                            placeholder="">
                                         <div class="invalid-feedback" id="rVMCQInvalid"></div>
                                     </div>
                                     <div class="col-sm-6">
-                                        <label class="form-label" for="rD1MCQ">Distracción 1*</label>
+                                        <label class="form-label" for="rD1MCQ" id="rD1MCQLabel"></label>
                                         <input type="text" id="rD1MCQ" class="form-control"
-                                            placeholder="Opción falsa 1">
+                                            placeholder="">
                                         <div class="invalid-feedback" id="rD1MCQInvalid"></div>
                                     </div>
                                 </div>
                                 <div class="row g-2 align-items-center">
                                     <div class="col-md-6">
-                                        <label class="form-label" for="rD2MCQ">Distracción 2*</label>
+                                        <label class="form-label" for="rD2MCQ" id="rD2MCQLabel"></label>
                                         <input type="text" id="rD2MCQ" class="form-control"
-                                            placeholder="Opción falsa 2">
+                                            placeholder="">
                                         <div class="invalid-feedback" id="rD2MCQInvalid"></div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label" for="rD3MCQ">Distracción 3*</label>
+                                        <label class="form-label" for="rD3MCQ" id="rD3MCQLabel"></label>
                                         <input type="text" id="rD3MCQ" class="form-control"
-                                            placeholder="Opción falsa 3">
+                                            placeholder="">
                                         <div class="invalid-feedback" id="rD3MCQInvalid"></div>
                                     </div>
                                 </div>
@@ -416,39 +379,39 @@
                         </div>
                         <div class="row g-1 align-items-center mx-1 mb-4">
                             <div class="row g-1">
-                                <label class="form-label" for="cbEspacioDiv">Espacio donde se podrá completar la tarea*
+                                <label class="form-label" for="cbEspacioDiv">
+                                    <span id="cbEspacioDivLabel"></span>
                                     <a role="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="popover"
                                         data-bs-content="<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de LocalizARTE desde cualquier lugar."
-                                        data-bs-container="#nuevaTareaModal" data-bs-html="true">?</a>
+                                        data-bs-container="#nuevaTareaModal" data-bs-html="true"
+                                        id="cbEspacioDivPopover">?</a>
                                 </label>
                                 <div class="row mx-1" id="cbEspacioDiv">
                                     <div class="form-check col-md-4">
                                         <div class="invalid-feedback" id="cbEspacio1Invalid"></div>
                                         <input class="form-check-input" type="checkbox" name="cbEspacio" id="cbEspacio1"
                                             value="physical">
-                                        <label class="form-check-label" for="rbEspacio1">Físico</label>
+                                        <label class="form-check-label" for="rbEspacio1" id="rbEspacio1Label"></label>
                                     </div>
                                     <div class="form-check col-md-4">
                                         <input class="form-check-input" type="checkbox" name="cbEspacio" id="cbEspacio2"
                                             value="virtualMap">
-                                        <label class="form-check-label" for="rbEspacio2">Mapa virtual</label>
+                                        <label class="form-check-label" for="rbEspacio2" id="rbEspacio2Label"></label>
                                     </div>
                                     <div class="form-check col-md-4" hidden>
                                         <input class="form-check-input" type="checkbox" name="cbEspacio" id="cbEspacio3"
                                             value="web">
-                                        <label class="form-check-label" for="rbEspacio3">Web (Moodle)</label>
+                                        <label class="form-check-label" for="rbEspacio3" id="rbEspacio3Label"></label>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="row mx-1 mb-4">
-                            <small class="text-muted">
-                                * Campos obligatorios
-                            </small>
+                            <small class="text-muted" id="modalNuevaTareaObligatorios"></small>
                         </div>
                         <div class="row justify-content-center">
                             <div class="col-8 text-center">
-                                <button class="btn btn-primary" type="button" id="enviarNT">Enviar</button>
+                                <button class="btn btn-primary" type="button" id="enviarNT"></button>
                             </div>
                         </div>
                     </form>
@@ -461,31 +424,30 @@
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Iniciar sesión</h3>
+                <div class="modal-header titulo">
+                    <h3 id="modalIniciaSesionTitle"></h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formInicio">
                         <div class="row g-1 justify-content-around mx-1 mb-4">
                             <div class="col-md-5">
-                                <label for="inicioMail" class="form-label">Dirección de correo</label>
+                                <label for="inicioMail" class="form-label" id="inicioMailLabel"></label>
                                 <input type="text" id="inicioMail" class="form-control" placeholder="ejemplo@email.es">
                                 <div class="invalid-feedback" id="inicioMailInvalid"></div>
                             </div>
                             <div class="col-md-5">
-                                <label for="inicioPass" class="form-label">Contraseña</label>
-                                <input type="password" id="inicioPass" class="form-control" placeholder="Tu contraseña">
+                                <label for="inicioPass" class="form-label" id="inicioPassLabel"></label>
+                                <input type="password" id="inicioPass" class="form-control" placeholder="superman">
                                 <div class="invalid-feedback" id="inicioPassInvalid"></div>
                             </div>
                         </div>
                         <div class="row justify-content-around align-items-center">
                             <div class="col text-center">
-                                <button type="button" class="btn btn-outline-secondary" id="cambiarpass">Cambiar
-                                    contraseña</button>
+                                <button type="button" class="btn btn-outline-secondary" id="cambiarpass"></button>
                             </div>
                             <div class="col text-center">
-                                <button type="button" class="btn btn-primary" id="inicioEnviar">Iniciar sesión</button>
+                                <button type="button" class="btn btn-primary" id="inicioEnviar"></button>
                             </div>
                         </div>
                     </form>
@@ -506,25 +468,25 @@
                     <form id="formRegistro">
                         <div class="row g-1 justify-content-around mx-1 mb-4">
                             <div class="col-md-5">
-                                <label for="registroMail" class="form-label">Dirección de correo*</label>
+                                <label for="registroMail" class="form-label" id="registroMailLabel"></label>
                                 <input type="text" id="registroMail" class="form-control"
                                     placeholder="ejemplo@email.es">
                                 <div class="invalid-feedback" id="registroMailInvalid"></div>
                             </div>
                             <div class="col-md-5">
-                                <label for="registroPass" class="form-label">Contraseña*</label>
+                                <label for="registroPass" class="form-label" id="registroPassLabel"></label>
                                 <input type="password" id="registroPass" class="form-control"
-                                    placeholder="Nueva contraseña">
+                                    placeholder="superman">
                                 <div class="invalid-feedback" id="registroPassInvalid"></div>
                             </div>
                         </div>
                         <div class="row g-1 justify-content-around mx-1 mb-4">
                             <div class="col-md-5">
-                                <label for="registroNombre" class="form-label">Nombre</label>
+                                <label for="registroNombre" class="form-label" id="registroNombreLabel"></label>
                                 <input type="text" id="registroNombre" class="form-control" placeholder="Claude">
                             </div>
                             <div class="col-md-5">
-                                <label for="registroApellido" class="form-label">Apellido</label>
+                                <label for="registroApellido" class="form-label" id="registroApellidoLabel"></label>
                                 <input type="text" id="registroApellido" class="form-control" placeholder="Shannon">
                             </div>
                         </div>
@@ -533,7 +495,7 @@
                         </div>
                         <div class="row justify-content-center">
                             <div class="col-8 text-center">
-                                <button type="button" class="btn btn-primary" id="registroEnviar">Registrar</button>
+                                <button type="button" class="btn btn-primary" id="registroEnviar"></button>
                             </div>
                         </div>
                     </form>
@@ -546,11 +508,11 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Cierre de sesión</h3>
+                    <h3 id="modalConfirmarCierreTitle"></h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <h5 class="text-center">¿Quieres cerrar la sesión?</h5>
+                    <h5 class="text-center" id="modalConfirmarCierreAsk"></h5>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-danger" id="aceptaCerrarSesion">Cerrar sesión</button>
@@ -575,32 +537,22 @@
                             <div id="atrRealizaTarea" class="py-2 px-1"></div>
                         </div>
                     </div>
-                    <div class="row g-1 my-1">
-                        <div class="col-12">
-                            <label for="notasRealizaTarea" class="form-label" id="lblnotasRealizaTarea">Tus
-                                anotaciones</label>
-                            <input type="text" id="tbnotasRealizaTarea" class="form-control"
-                                placeholder="Agrega alguna nota si lo deseas">
-                        </div>
-                    </div>
                     <div id="contenedorMcqRealizaTarea" class="row g-1 my-1" hidden>
-                        <label for="mcqOpcionesRealizaTarea" class="mt-3">Selecciona la respuesta
-                            correcta</label>
+                        <label for="mcqOpcionesRealizaTarea" class="mt-3" id="mcqOpcionesRealizaTareaLabel"></label>
                         <div id="mcqOpcionesRealizaTarea" class="row g-1 form-check"></div>
                     </div>
                     <div id="contenedorvFRealizaTarea" class="row g-1 my-1" hidden>
-                        <label for="vFOpcionesRealizaTarea" class="mt-3">Selecciona la respuesta
-                            correcta</label>
+                        <label for="vFOpcionesRealizaTarea" class="mt-3" id="vFOpcionesRealizaTareaLabel"></label>
                         <div id="vFOpcionesRealizaTarea" class="row g-1 form-check">
                             <div class="my-1 form-check">
                                 <input class="form-check-input" type="radio" name="vFRealizaTarea" id="vF1RealizaTarea"
                                     value="True">
-                                <label class="form-check-label" for="vF1RealizaTarea">Verdadero</label>
+                                <label class="form-check-label" for="vF1RealizaTarea" id="vF1RealizaTareaLabel"></label>
                             </div>
                             <div class="my-1 form-check">
                                 <input class="form-check-input" type="radio" name="vFRealizaTarea" id="vF2RealizaTarea"
                                     value="False">
-                                <label class="form-check-label" for="vF2RealizaTarea">Falso</label>
+                                <label class="form-check-label" for="vF2RealizaTarea" id="vF2RealizaTareaLabel"></label>
                             </div>
                         </div>
                     </div>
@@ -611,15 +563,20 @@
                             <img src="./resources/camera.svg" class="pe-2 pb-1">Iniciar cámara
                         </button>
                         <label for="btIniciarCamara" class="form-check-label is-invalid" id="lblSinRealizarFoto"
-                            hidden>Realiza una fotografía</label>
+                            hidden></label>
                         <div class="row w-50" id="resultadoCaptura" hidden>
                             <img id="foto" class="img-fluid">
                         </div>
                     </div>
+                    <div class="row g-1 my-1">
+                        <div class="col-12">
+                            <label for="notasRealizaTarea" class="form-label" id="lblnotasRealizaTareaLabel"></label>
+                            <input type="text" id="tbnotasRealizaTarea" class="form-control"
+                                placeholder="">
+                        </div>
+                    </div>
                     <div class="row my-2 justify-content-center">
-                        <button type="button" class="col-auto btn btn-primary" id="finalizarTarea">
-                            Finalizar tarea
-                        </button>
+                        <button type="button" class="col-auto btn btn-primary" id="finalizarTarea"></button>
                     </div>
                 </div>
             </div>
@@ -660,8 +617,7 @@
             onclick="cambiaVistaProfesor()" hidden>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="swVistaProfesor">
-                <label class="form-check-label colorActivo" for="swVistaProfesor" id="labelVistaProfesor">Vista
-                    docente</label>
+                <label class="form-check-label colorActivo" for="swVistaProfesor" id="labelVistaProfesor"></label>
             </div>
         </div>
         <div class="text-end" id="seguir" onclick="seguir();">
@@ -672,6 +628,18 @@
     <div class="centroOFF" id="divSpinner">
         <div class="spinner-border" style="width: 4rem; height: 4rem;" role="status">
             <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <div class="modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" id="contributionsModal">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title titulo" id="titleContributionsModal"></h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="bodyContributionsModal"></div>
+            </div>
         </div>
     </div>
 
@@ -686,10 +654,12 @@
     <script type="text/javascript" src="https://www.gstatic.com/firebasejs/9.1.2/firebase-analytics-compat.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
 
+    <script src="./js/languages/translate.js" type="text/javascript"></script>
     <script src="./js/config.js" type="text/javascript"></script>
     <script src="./js/util.js" type="text/javascript"></script>
 
     <script src="./js/answers.js" type="text/javascript"></script>
+    <script src="./js/contributions.js" type="text/javascript"></script>
     <script src="./js/users.js" type="text/javascript"></script>
     <script src="./js/tasks.js" type="text/javascript"></script>
     <script src="./js/contexts.js" type="text/javascript"></script>

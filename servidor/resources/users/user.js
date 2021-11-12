@@ -35,100 +35,100 @@ const Auxiliar = require('../../util/auxiliar');
  * @param {Object} res Response
  */
 async function putUser(req, res) {
-    try {
-        const start = Date.now();
-        const token = req.headers['x-tokenid'];
-        const { body } = req;
+  try {
+    const start = Date.now();
+    const token = req.headers['x-tokenid'];
+    const { body } = req;
 
-        admin.auth().verifyIdToken(token)
-            .then(async decodedToken => {
-                const { uid, email_verified } = decodedToken;
-                if (uid && uid !== '') {
-                    uidYaRegistrado(uid)
-                        .then(async yaRegistrado => {
-                            if (yaRegistrado) {
-                                //Update user's values
-                                if(email_verified) {
-                                    const {name, surname} = body;
-                                    modificaDocumentoDeColeccion(
-                                        {
-                                            name: name, 
-                                            surname: surname, 
-                                            lastUpdate: Date.now()
-                                        }, 'userData', uid)
-                                        .then(respuestaBD => {
-                                            if(respuestaBD.modifiedCount > 0) {
-                                                winston.info(Mustache.render(
-                                                    'putUser || updateUser || {{{idUser}}} || {{{time}}} ',
-                                                    {
-                                                        idUser: uid,
-                                                        time: Date.now() - start
-                                                    }
-                                                ));
-                                                Auxiliar.logHttp(req, res, 200, 'putUserL', start).send(JSON.stringify({
-                                                    name: name,
-                                                    surname: surname
-                                                }));
-                                            } else {
-                                                Auxiliar.logHttp(req, res, 512, 'putUserLE', start).send('No se han modificado todos los campos');
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error(error);
-                                            Auxiliar.logHttp(req, res, 500, 'putUserLE', start).send('Error en la actualización');
-                                        });
-                                } else {
-                                    Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send('El usuario no ha verificado su dirección de correo');
-                                }
-                            } else {
-                                admin.auth().getUser(uid)
-                                    .then(async user => {
-                                        const { email, nombre, apellido } = body;
-                                        nuevoUsuarioEnColeccionRapida({
-                                            uid: uid,
-                                            emailVerified: user.emailVerified,
-                                            rol: 0,
-                                            creationDate: Date.now()
-                                        });
-                                        guardaDocumentoEnColeccion(
-                                            {
-                                                _id: 'userData',
-                                                name: nombre,
-                                                surname: apellido,
-                                                lastUpdate: Date.now(),
-                                                email: email
-                                            },
-                                            uid);
-                                            winston.info(Mustache.render(
-                                                'putUser || newUser || {{{idUser}}} || {{{time}}} ',
-                                                {
-                                                    idUser: uid,
-                                                    time: Date.now() - start
-                                                }
-                                            ));
-                                            Auxiliar.logHttp(req, res, 201, 'putUserL', start).send(JSON.stringify({
-                                            emailVerified: user.emailVerified
-                                        }));
-                                    })
-                                    .catch(error => {
-                                        Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send(error);
-                                    });
-                            }
-                        })
-                        .catch(e => {
-                            console.error(e);
-                            Auxiliar.logHttp(req, res, 400, 'putUserLE', start).end();
-                        });
+    admin.auth().verifyIdToken(token)
+      .then(async decodedToken => {
+        const { uid, email_verified } = decodedToken;
+        if (uid && uid !== '') {
+          uidYaRegistrado(uid)
+            .then(async yaRegistrado => {
+              if (yaRegistrado) {
+                //Update user's values
+                if (email_verified) {
+                  const { name, surname } = body;
+                  modificaDocumentoDeColeccion(
+                    {
+                      name: name,
+                      surname: surname,
+                      lastUpdate: Date.now()
+                    }, 'userData', uid)
+                    .then(respuestaBD => {
+                      if (respuestaBD.modifiedCount > 0) {
+                        winston.info(Mustache.render(
+                          'putUser || updateUser || {{{idUser}}} || {{{time}}} ',
+                          {
+                            idUser: uid,
+                            time: Date.now() - start
+                          }
+                        ));
+                        Auxiliar.logHttp(req, res, 200, 'putUserL', start).send(JSON.stringify({
+                          name: name,
+                          surname: surname
+                        }));
+                      } else {
+                        Auxiliar.logHttp(req, res, 512, 'putUserLE', start).send('No se han modificado todos los campos');
+                      }
+                    })
+                    .catch(error => {
+                      console.error(error);
+                      Auxiliar.logHttp(req, res, 500, 'putUserLE', start).send('Error en la actualización');
+                    });
                 } else {
-                    Auxiliar.logHttp(req, res, 400, 'putUserLE', start).end();
+                  Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send('El usuario no ha verificado su dirección de correo');
                 }
+              } else {
+                admin.auth().getUser(uid)
+                  .then(async user => {
+                    const { email, nombre, apellido } = body;
+                    nuevoUsuarioEnColeccionRapida({
+                      uid: uid,
+                      emailVerified: user.emailVerified,
+                      rol: 0,
+                      creationDate: Date.now()
+                    });
+                    guardaDocumentoEnColeccion(
+                      {
+                        _id: 'userData',
+                        name: nombre,
+                        surname: apellido,
+                        lastUpdate: Date.now(),
+                        email: email
+                      },
+                      uid);
+                    winston.info(Mustache.render(
+                      'putUser || newUser || {{{idUser}}} || {{{time}}} ',
+                      {
+                        idUser: uid,
+                        time: Date.now() - start
+                      }
+                    ));
+                    Auxiliar.logHttp(req, res, 201, 'putUserL', start).send(JSON.stringify({
+                      emailVerified: user.emailVerified
+                    }));
+                  })
+                  .catch(error => {
+                    Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send(error);
+                  });
+              }
             })
-            .catch(error => {
-                Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send(error);
+            .catch(e => {
+              console.error(e);
+              Auxiliar.logHttp(req, res, 400, 'putUserLE', start).end();
             });
-    } catch (e) {
-        Auxiliar.logHttp(req, res, 500, 'putUserLE').end();
-    }
+        } else {
+          Auxiliar.logHttp(req, res, 400, 'putUserLE', start).end();
+        }
+      })
+      .catch(error => {
+        Auxiliar.logHttp(req, res, 400, 'putUserLE', start).send(error);
+      });
+  } catch (e) {
+    Auxiliar.logHttp(req, res, 500, 'putUserLE').end();
+  }
 }
 
 /**
@@ -137,66 +137,66 @@ async function putUser(req, res) {
  * @param {Object} res Response
  */
 async function getInfoUser(req, res) {
-    try {
-        const start = Date.now();
-        const token = req.headers['x-tokenid'];
-        admin.auth().verifyIdToken(token)
-            .then(async decodedToken => {
-                const { uid, email_verified } = decodedToken;
-                if (email_verified) {
-                    uidYaRegistrado(uid)
-                        .then(yaRegistrado => {
-                            if (yaRegistrado) {
-                                dameDocumentoRapida({ uid: uid })
-                                    .then(datosRapida => {
-                                        dameDocumentoDeColeccion('userData', uid)
-                                            .then(datosUsuario => {
-                                                correoVerificado(uid, email_verified);
-                                                winston.info(Mustache.render(
-                                                    'getUser || {{{userId}}} || {{{time}}}',
-                                                    {
-                                                        userId: uid,
-                                                        time: Date.now() - start
-                                                    }
-                                                ));
-                                                Auxiliar.logHttp(req, res, 200, 'getUserL', start).send({
-                                                    rol: datosRapida.rol,
-                                                    name: datosUsuario.name,
-                                                    surname: datosUsuario.surname,
-                                                    email: datosUsuario.email
-                                                });
-                                            })
-                                            .catch(error => {
-                                                console.error(error);
-                                                Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
-                                            });
-                                    })
-                                    .catch(error => {
-                                        console.error(error);
-                                        Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
-                                    });
-                            } else {
-                                Auxiliar.logHttp(req, res, 404, 'getUserLE', start).end();
-                            }
-                        })
-                        .catch(error => {
-                            console.error(error);
-                            Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
+  try {
+    const start = Date.now();
+    const token = req.headers['x-tokenid'];
+    admin.auth().verifyIdToken(token)
+      .then(async decodedToken => {
+        const { uid, email_verified } = decodedToken;
+        if (email_verified) {
+          uidYaRegistrado(uid)
+            .then(yaRegistrado => {
+              if (yaRegistrado) {
+                dameDocumentoRapida({ uid: uid })
+                  .then(datosRapida => {
+                    dameDocumentoDeColeccion('userData', uid)
+                      .then(datosUsuario => {
+                        correoVerificado(uid, email_verified);
+                        winston.info(Mustache.render(
+                          'getUser || {{{userId}}} || {{{time}}}',
+                          {
+                            userId: uid,
+                            time: Date.now() - start
+                          }
+                        ));
+                        Auxiliar.logHttp(req, res, 200, 'getUserL', start).send({
+                          rol: datosRapida.rol,
+                          name: datosUsuario.name,
+                          surname: datosUsuario.surname,
+                          email: datosUsuario.email
                         });
-                } else {
-                    Auxiliar.logHttp(req, res, 404, 'getUserLE', start).end();
-                }
+                      })
+                      .catch(error => {
+                        console.error(error);
+                        Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
+                      });
+                  })
+                  .catch(error => {
+                    console.error(error);
+                    Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
+                  });
+              } else {
+                Auxiliar.logHttp(req, res, 404, 'getUserLE', start).end();
+              }
             })
             .catch(error => {
-                console.log(error);
-                Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
+              console.error(error);
+              Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
             });
-    } catch (e) {
-        Auxiliar.logHttp(req, res, 500, 'getUserLE').end();
-    }
+        } else {
+          Auxiliar.logHttp(req, res, 404, 'getUserLE', start).end();
+        }
+      })
+      .catch(error => {
+        console.log(error);
+        Auxiliar.logHttp(req, res, 400, 'getUserLE', start).end();
+      });
+  } catch (e) {
+    Auxiliar.logHttp(req, res, 500, 'getUserLE').end();
+  }
 }
 
 module.exports = {
-    putUser,
-    getInfoUser,
+  putUser,
+  getInfoUser,
 }

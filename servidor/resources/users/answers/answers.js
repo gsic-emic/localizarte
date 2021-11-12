@@ -22,9 +22,9 @@ limitations under the License.
 
 const { v4: uuidv4 } = require('uuid');
 
-const DB = require('../../util/bd');
-const Auxiliar = require('../../util/auxiliar');
-const Configuracion = require('../../util/config');
+const DB = require('../../../util/bd');
+const Auxiliar = require('../../../util/auxiliar');
+const Configuracion = require('../../../util/config');
 
 /**
  * Función para la creación de una respuesta en la colección de un usuario. No permite la creación si el usuario había respondido a la tarea previamente.
