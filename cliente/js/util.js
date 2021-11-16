@@ -355,6 +355,13 @@ function translateInterface() {
         document.getElementById('lblSinRealizarFoto'),
         document.getElementById('finalizarTarea'),
         document.getElementById('labelVistaProfesor'),
+        document.getElementById('newLinkURLLabel'),
+        document.getElementById('newLinkURLInvalid'),
+        document.getElementById('newLinkTextLabel'),
+        document.getElementById('newLinkTextInvalid'),
+        document.getElementById('newLinkModalCancelar'),
+        document.getElementById('newLinkModalInsertar'),
+        document.getElementById('cbPoliPrivLabel'),
     ];
 
     const placeHolders = [
@@ -369,25 +376,117 @@ function translateInterface() {
         document.getElementById('rD2MCQ'),
         document.getElementById('rD3MCQ'),
         document.getElementById('tbnotasRealizaTarea'),
+        document.getElementById('newLinkURL'),
+        document.getElementById('newLinkText'),
+    ];
+
+    const popovers = [
+        document.getElementById('cbEspacioDivPopover'),
+    ];
+
+    const tooltips = [
+        document.getElementById('btInsertarLinkNPI'),
+        document.getElementById('btInsertarLinkNT'),
     ];
 
     contentHTML.forEach(element => {
         try {
             element.innerHTML = translate[element.id][language];
         } catch (error) {
-            console.error(error);
+            console.error('contentHTML', error);
         }
     });
     placeHolders.forEach(element => {
         try {
             element.placeholder = translate[element.id][language];
         } catch (error) {
-            console.error(error);
+            console.error('placeHolder', error);
         }
-    })
+    });
+
+    popovers.forEach(element => {
+        try {
+            element.setAttribute('data-bs-content', translate[element.id][language]);
+        } catch (error) {
+            console.error('popover', error);
+        }
+    });
+
+    tooltips.forEach(element => {
+        try {
+            element.setAttribute('data-bs-original-title', translate[element.id][language]);
+        } catch (error) {
+            console.error('tooltip', error);
+        }
+    });
+
 }
 
 function setLanguage(lng) {
     language = ((lng === 'es') ? 'es' : 'en');
     translateInterface();
+}
+
+function insertarLink(textArea) {
+    const linkModal = new bootstrap.Modal(document.getElementById('newLinkModal'));
+    const insertar = document.getElementById('newLinkModalInsertar');
+    const cancelar = document.getElementById('newLinkModalCancelar');
+    const cuadroEnlace = document.getElementById('newLinkURL');
+    const cuadroTexto = document.getElementById('newLinkText');
+    const cuadros = [cuadroEnlace, cuadroTexto];
+
+    cuadros.forEach(cuadro => {
+        cuadro.className = 'form-control';
+        cuadro.value = '';
+    });
+
+    insertar.onclick = (ev) => {
+        ev.preventDefault();
+        let todoOk = true;
+        cuadros.forEach(cuadro => {
+            if (!cuadro || !cuadro.value || cuadro.value.trim() === '') {
+                todoOk = false;
+                cuadro.className = 'form-control is-invalid';
+            } else {
+                if (cuadro.id === 'newLinkURL' && !validURL(cuadro.value.trim())) {
+                    todoOk = false;
+                    cuadro.className = 'form-control is-invalid';
+                } else {
+                    cuadro.className = 'form-control is-valid';
+                }
+            }
+        });
+
+        if (todoOk) {
+            let texto, url;
+            cuadros.forEach(cuadro => {
+                switch (cuadro.id) {
+                    case 'newLinkURL':
+                        url = cuadro.value.trim();
+                        break;
+                    case 'newLinkText':
+                        texto = cuadro.value.trim();
+                        break;
+                    default:
+                        break;
+                }
+            });
+            textArea.value = mustache.render(
+                '{{{anterior}}}<a href="{{{enlace}}}">{{{texto}}}</a>',
+                {
+                    anterior: textArea.value,
+                    enlace: url,
+                    texto: texto
+                }
+            );
+            linkModal.hide();
+        }
+    };
+
+    cancelar.onclick = (ev) => {
+        ev.preventDefault();
+        linkModal.hide();
+    };
+
+    linkModal.show();
 }

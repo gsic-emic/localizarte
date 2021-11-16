@@ -140,7 +140,7 @@ function peticionZona(punto, zona) {
         })
         .then(result => {
             if (result) {
-                if (auth && auth.currentUser) {
+                /*if (auth && auth.currentUser) {
                     analytics.logEvent('getPois', {
                         lat: punto.lat,
                         lng: punto.lng,
@@ -151,7 +151,7 @@ function peticionZona(punto, zona) {
                         lat: punto.lat,
                         lng: punto.lng
                     });
-                }
+                }*/
                 let encontrado = false;
                 for (let zona of zonas) {
                     if (zona.equals(punto)) {
@@ -220,7 +220,7 @@ function pintaPOIs(zona) {
                             iconSize: new L.Point(40, 40)
                         });
                     },
-                    maxClusterRadius: 40
+                    maxClusterRadius: 50
                 }
             );
         }
@@ -244,7 +244,21 @@ let lastOpenModal = 0;
  * @param {JSONObject} poi Información del punto de interés
  */
 function markerPoP(poi) {
-    let marker = L.marker(poi.posicion, { icon: iconoMarcadores });
+    let marker;
+    if (false && poi.imagen && poi.imagen !== undefined && poi.imagen.includes('commons.wikimedia.org')) {
+        let imagen = poi.imagen.replace('http://', 'https://');
+        if (!imagen.includes('width=')) {
+            imagen = mustache.render('{{{imagen}}}?width=48', { imagen: imagen });
+        }
+        marker = L.marker(poi.posicion, {
+            icon: L.icon({
+                iconSize: [48, 48],
+                iconUrl: imagen
+            })
+        });
+    } else {
+        marker = L.marker(poi.posicion, { icon: iconoMarcadores });
+    }
     marker.on('click', () => {
         if (lastOpenModal + 200 < Date.now()) {
             const puntoInteresModal = document.getElementById('puntoInteres');
@@ -276,22 +290,28 @@ function markerPoP(poi) {
                 }
             } else {
                 if (poi.imagen) {
-                    if (poi.imagen.includes('http://')) {
-                        imagen.src = poi.imagen.replace('http://', 'https://');
+                    poi.imagen = poi.imagen.replace('http://', 'https://');
+                    if (poi.imagen.includes('commons.wikimedia.org') && !poi.imagen.includes('?width')) {
+                        imagen.src = mustache.render('{{{enlace}}}?width=300', { enlace: poi.imagen });
                     } else {
                         imagen.src = poi.imagen;
                     }
                     if (poi.imagen.includes('/Special:FilePath/')) {
                         let aux = poi.imagen.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
-                        enlaceLicencia.setAttribute('href', aux);
+                        pieImagen.innerHTML = mustache.render(
+                            '<a class="text-decoration-underline text-muted" rel="noopener" target="_blank" href="{{{enlace}}}" id="enlaceLicenciaImagenPuntoInteres">{{{texto}}}</a>',
+                            {
+                                enlace: aux,
+                                texto: translate.enlaceLicenciaImagenPuntoInteres[language],
+                            }
+                        );
                         pieImagen.hidden = false;
                     } else {
-                        enlaceLicencia.setAttribute('href', '#');
-                        pieImagen.hidden = true;
+                        pieImagen.innerHTML = translate.licenciaNotFound[language];
+                        pieImagen.hidden = false;
                     }
                 } else {
                     imagen.src = './resources/sinFoto.svg';
-                    enlaceLicencia.setAttribute('href', '#');
                     pieImagen.hidden = true;
                 }
             }
@@ -409,10 +429,10 @@ function eliminarPI(poi) {
                     })
                     .then(result => {
                         if (result) {
-                            analytics.logEvent('deletePoi', {
+                            /*analytics.logEvent('deletePoi', {
                                 idObject: poi.ctx,
                                 idUser: auth.currentUser.uid
-                            });
+                            });*/
                             if (typeof result === 'string') {
                                 notificaLateralError(mustache.render('Error: {{{txt}}}', { txt: result }));
                             } else {
@@ -523,6 +543,11 @@ function modificarPI(poi) {
                     }
                 });
 
+                document.getElementById('btInsertarLinkNPI').onclick = (ev) => {
+                    ev.preventDefault();
+                    insertarLink(document.getElementById('descrNPI'));
+                }
+
                 document.getElementById('cerrarModalNPI').onclick = (ev) => {
                     reseteaCamposValidador(campos);
                 };
@@ -556,7 +581,7 @@ function modificarPI(poi) {
                                     }
                                     break;
                                 default:
-                                    valor = campo.value.trim();
+                                    valor = campo.value.replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim();
                                     break;
                             }
                             //Si la key no está en lo que envía el cliente será una creación.
@@ -611,10 +636,10 @@ function modificarPI(poi) {
                                         .then(resultado => {
                                             if (resultado !== null) {
                                                 if (typeof resultado !== 'string') {
-                                                    analytics.logEvent('updatePoi', {
+                                                    /*analytics.logEvent('updatePoi', {
                                                         idObject: poi.ctx,
                                                         idUser: auth.currentUser.uid
-                                                    });
+                                                    });*/
                                                     //POI modificado en el servidor
                                                     //Lo elimino de la memoria local
                                                     (Object.entries(modificados)).forEach(([modK, modV]) => {
@@ -1251,6 +1276,11 @@ function modalNPI(id) {
             reseteaCamposValidador(campos);
         };
 
+        document.getElementById('btInsertarLinkNPI').onclick = (ev) => {
+            ev.preventDefault();
+            insertarLink(document.getElementById('descrNPI'));
+        }
+
         botonEnviar.onclick = (ev) => {
             ev.preventDefault();
             estadoBotones([botonEnviar], false);
@@ -1297,7 +1327,7 @@ function modalNPI(id) {
                         case 'descrNPI':
                             envio[idsParaServ[campoId]] = [{
                                 lang: 'es',
-                                value: campo.value.trim()
+                                value: campo.value.replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim()
                             }];
                             dato = datos[nombresServ[campoId]];
                             if (dato && dato.length && dato.length > 0) {//Más de un idioma
@@ -1305,7 +1335,7 @@ function modalNPI(id) {
                                     if (Object.keys(d)[0] !== 'es') {
                                         envio[idsParaServ[campoId]].push({
                                             lang: Object.keys(d)[0],
-                                            value: Object.values(d)[0]
+                                            value: Object.values(d.replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim())[0]
                                         });
                                     }
                                 });
@@ -1313,7 +1343,7 @@ function modalNPI(id) {
                             break;
                         default:
                             if (campo.value.trim() !== '') {
-                                envio[idsParaServ[campoId]] = campo.value.trim();
+                                envio[idsParaServ[campoId]] = campo.value.replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim();
                             }
                             break;
                     }
@@ -1492,10 +1522,10 @@ function peticionInfoPoi(iri, guardaPinta, modal) {
         .then(result => {
             if (result) {
                 if (guardaPinta) {
-                    analytics.logEvent('newPoi', {
+                    /*analytics.logEvent('newPoi', {
                         idObject: iri,
                         idUser: auth.currentUser.uid
-                    });
+                    });*/
                     result.posicion = L.latLng(result.lat, result.long);
                     pois.push(result);
                     pintaPOIs(map.getBounds());

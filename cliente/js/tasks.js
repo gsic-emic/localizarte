@@ -55,6 +55,7 @@ function tareasContexto(iriContexto, poi) {
         })
         .then(resultados => {
             if (resultados && modalOpen(document.getElementById('puntoInteres'))) {
+                /*
                 if (auth && auth.currentUser) {
                     analytics.logEvent('getTasks', {
                         idObject: iriContexto,
@@ -65,6 +66,7 @@ function tareasContexto(iriContexto, poi) {
                         idObject: iriContexto
                     });
                 }
+                */
                 const espacioTareas = document.getElementById('espacioTareas');
                 if (resultados.length === 0) {
                     espacioTareas.innerHTML = mustache.render('<h6>{{{msg}}}</h6>', { msg: translate.poiSinTareas[language] });
@@ -593,10 +595,10 @@ function eliminaTareaModal(idTarea) {
                         })
                         .then(result => {
                             if (result) {
-                                analytics.logEvent('deleteTask', {
+                                /*analytics.logEvent('deleteTask', {
                                     idObject: tarea.task,
                                     idUser: auth.currentUser.uid
-                                });
+                                });*/
                                 notificaLateral(translate.borrarTarea2[language]);
                             }
                             modal.hide();
@@ -778,6 +780,11 @@ function modificarTarea(idTarea) {
                                 }
                             });
 
+                            document.getElementById('btInsertarLinkNT').onclick = ev => {
+                                ev.preventDefault();
+                                insertarLink(document.getElementById('textoAsociadoNT'));
+                            };
+
                             let botones = [document.getElementById("enviarNT")];
 
                             document.getElementById("enviarNT").onclick = (ev) => {
@@ -861,10 +868,10 @@ function modificarTarea(idTarea) {
                                                 .then(resultado => {
                                                     if (resultado !== null) {
                                                         if (typeof resultado !== 'string') {
-                                                            analytics.logEvent('updateTask', {
+                                                            /*analytics.logEvent('updateTask', {
                                                                 idObject: tarea.task,
                                                                 idUser: auth.currentUser.uid
-                                                            });
+                                                            });*/
                                                             modal.hide();
                                                             notificaLateral(translate.tareaActualizada[language]);
                                                         } else {
@@ -936,7 +943,7 @@ function reseteaRealizaTarea() {
     document.getElementById('mcqOpcionesRealizaTarea').innerHTML = '';
 }
 
-function reseteaNuevaTarea(titulo = translate.nuevaTarea[language]) {
+function reseteaNuevaTarea(titulo = translate.nuevaTarea0[language]) {
     document.getElementById("formNT").reset();
     document.getElementById("selectTipoRespuesta").className = 'form-select';
     document.getElementById("encabezadoNT").innerHTML = titulo;
@@ -982,6 +989,11 @@ function nuevaTarea(idPoi) {
         }
     };
 
+    document.getElementById('btInsertarLinkNT').onclick = ev => {
+        ev.preventDefault();
+        insertarLink(document.getElementById('textoAsociadoNT'));
+    }
+
     const botones = [document.getElementById("enviarNT")];
     document.getElementById("enviarNT").onclick = (ev) => {
         ev.preventDefault();
@@ -1025,10 +1037,10 @@ function nuevaTarea(idPoi) {
                         .then(result => {
                             if (result) {
                                 if (typeof result !== 'string') {
-                                    analytics.logEvent('newTask', {
+                                    /*analytics.logEvent('newTask', {
                                         idObject: result.mensaje.iri,
                                         idUser: auth.currentUser.uid
-                                    });
+                                    });*/
                                     notificaLateral('Tarea creada en el POI');
                                     modal.hide();
                                 } else {
@@ -1127,7 +1139,7 @@ function recuperaValoresTextoTarea() {
                     envio[equivalencias[campo.id]] = intermedio;
                     break;
                 default:
-                    envio[equivalencias[campo.id]] = campo.value.trim();
+                    envio[equivalencias[campo.id]] = campo.value.replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim();
                     break;
             }
         }
@@ -1140,16 +1152,16 @@ function compruebaCamposNuevaTareaModal() {
     let alguno = false;
 
     const mensajes = {
-        tituloNT: translate.nuevaTarea1[language],
-        textoAsociadoNT: translate.nuevaTarea2[language],
-        cbEspacio: translate.nuevaTarea3[language],
-        selectTipoRespuesta: translate.nuevaTarea4[language],
-        verdaderoNTDiv: translate.nuevaTarea5[language],
-        rVMCQ: translate.nuevaTarea6[language],
-        rD1MCQ: translate.nuevaTarea7[language],
-        rD2MCQ: translate.nuevaTarea7[language],
-        rD3MCQ: translate.nuevaTarea7[language],
-        cbEspacioDiv: translate.nuevaTarea8[language],
+        tituloNT: translate.mNuevaTarea1[language],
+        textoAsociadoNT: translate.mNuevaTarea2[language],
+        cbEspacio: translate.mNuevaTarea3[language],
+        selectTipoRespuesta: translate.mNuevaTarea4[language],
+        verdaderoNTDiv: translate.mNuevaTarea5[language],
+        rVMCQ: translate.mNuevaTarea6[language],
+        rD1MCQ: translate.mNuevaTarea7[language],
+        rD2MCQ: translate.mNuevaTarea7[language],
+        rD3MCQ: translate.mNuevaTarea7[language],
+        cbEspacioDiv: translate.mNuevaTarea8[language],
     }
     const selectValido = [
         'tRVF',

@@ -437,7 +437,7 @@ const translate = {
         es: "Se ha producido un error al intentar obtener la información del repositorio:",
         en: "An error ocurred while trying to get repository information:",
     },
-    modalModificaPI: {
+    modalModificaPI0: {
         es: "Edición del punto de interés",
         en: "Point of interest edition",
     },
@@ -820,5 +820,61 @@ const translate = {
     mDatosUsuarioActualizados: {
         es: "Datos del usuario actualizados",
         en: "User data updated",
+    },
+    newLinkURLLabel: {
+        es: "URL del enlace",
+        en: "URL link",
+    },
+    newLinkURL: {
+        es: "https://...",
+        en: "https://...",
+    },
+    newLinkURLInvalid: {
+        es: "Se necesita una URL",
+        en: "An URL is needed",
+    },
+    newLinkTextLabel: {
+        es: "Texto que se le muestra al usuario",
+        en: "Text displayed to the user",
+    },
+    newLinkText: {
+        es: "en este enlace",
+        en: "in this link",
+    },
+    newLinkTextInvalid: {
+        es: "Se necesita un texto para indicar al usuario que es un enlace",
+        en: "A text is needed to indicate that it is a link",
+    },
+    newLinkModalCancelar: {
+        es: "Cancelar",
+        en: "Cancel",
+    },
+    newLinkModalInsertar: {
+        es: "Insertar",
+        en: "Insert",
+    },
+    btInsertarLinkNPI: {
+        es: "Insertar URL",
+        en: "Insert URL",
+    },
+    btInsertarLinkNT: {
+        es: "Insertar URL",
+        en: "Insert URL",
+    },
+    cbPoliPrivLabel: {
+        es: "He leído y acepto la política de privacidad de LocalizARTE contenida en <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">este sitio web</a>",
+        en: "I have read and accept LocalizARTE's privacy policy contained in <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">this website</a>",
+    },
+    licenciaNotFound: {
+        es: "No se ha conseguido encontrar la licencia de la imagen",
+        en: "Image license could not be found",
+    },
+    mContribuciones: {
+        es: "Contribuciones",
+        en: "Contributions",
+    },
+    mSinContribuciones: {
+        es: "Todavía no tienes contribuciones",
+        en: "You have not got yet contributions",
     },
 }

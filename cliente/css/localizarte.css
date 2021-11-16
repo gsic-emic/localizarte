@@ -35,6 +35,10 @@ body {
     z-index: 1600;
 }
 
+.tooltip {
+    z-index: 1601; 
+}
+
 .imagen {
     max-width: 300px;
     max-height: 300px;

@@ -24,7 +24,7 @@ function mostrarModalContribuciones() {
     if (rol > 0) {
         estadoBotones([], false);
         const modal = new bootstrap.Modal(document.getElementById('contributionsModal'));
-        document.getElementById('titleContributionsModal').innerHTML = 'Contribuciones';
+        document.getElementById('titleContributionsModal').innerHTML = translate.mContribuciones[language];
         auth.currentUser.getIdToken()
             .then(idToken => {
                 let headers = new Headers();
@@ -47,7 +47,7 @@ function mostrarModalContribuciones() {
                             case 204:
                                 return [];
                             default:
-                                notificaLateralError(mustache.render('Error : {{{codigo}}}', { codigo: response.status }));
+                                notificaLateralError(mustache.render('Error: {{{codigo}}}', { codigo: response.status }));
                                 return null;
                         }
                     })
@@ -88,7 +88,7 @@ function mostrarModalContribuciones() {
                                 document.getElementById('bodyContributionsModal').innerHTML = body;
                                 modal.show();
                             } else {
-                                notificaLateral('Todavía no tienes contribuciones.');
+                                notificaLateral();
                             }
                         }
                         estadoBotones([], true);

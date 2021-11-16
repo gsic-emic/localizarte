@@ -291,6 +291,16 @@ function registroUsuario() {
         campo.className = 'form-control';
         campo.value = '';
     });
+
+    const cbPolPriv = document.getElementById('cbPoliPriv');
+    btRegistroEnviar.disabled = true;
+    
+    cbPolPriv.onchange =  (ev) => {
+        ev.preventDefault();
+        btRegistroEnviar.disabled = !cbPolPriv.checked;
+        //cbPolPriv.checked = !cbPolPriv.checked;
+    };
+
     const mensajes = {
         registroMail: translate.mInicioMail1[language],
         registroMailYaRegistrado: translate.mNuevoUsuario1[language],
