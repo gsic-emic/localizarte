@@ -49,21 +49,21 @@ async function uidYaRegistrado(uid) {
         return false;
 }
 
-async function dameColeccionUsuario(email) {
+/*async function dameColeccionUsuario(email) {
     conectaBD();
     const documento = await dameDocumentoRapida({ email: email });
     if (documento && documento.uid)
         return documento.uid;
     else
         return null;
-}
+}*/
 
-async function dameDocumentoRapida(objetoABuscar) {
+async function dameDocumentoRapida(objetoABuscar) { // vg objetoABusar = { uid: uid }
     conectaBD();
     return await client.db(Config.nombreBD).collection('rapida').findOne(objetoABuscar);
 }
 
-async function dameCorreoSiProfe(token) {
+/*async function dameCorreoSiProfe(token) {
     conectaBD();
     const documento = await client.db(Config.nombreBD).collection('rapida').findOne({ sesion: token });
     let email = null;
@@ -78,21 +78,21 @@ async function dameCorreoSiProfe(token) {
             return null;
         }
     }
-}
+}*/
 
-async function dameDatosDeColeccion(coleccion) {
+/*async function dameDatosDeColeccion(coleccion) {
     return dameTareaDeColeccion('datos', coleccion);
-}
+}*/
 
 async function dameDocumentoDeColeccion(idDoc, coleccion) {
     conectaBD();
     return await client.db(Config.nombreBD).collection(coleccion).findOne({ _id: idDoc });
 }
 
-async function dameTareaDeColeccion(tarea, coleccion) {
+/*async function dameTareaDeColeccion(tarea, coleccion) {
     conectaBD();
     return await client.db(Config.nombreBD).collection(coleccion).findOne({ idTarea: tarea });
-}
+}*/
 
 async function correoVerificado(uid, verificado) {
     const update = {
@@ -122,8 +122,8 @@ module.exports = {
     correoVerificado,
     dameDocumentoRapida,
     //dameColeccionUsuario,
-    dameDatosDeColeccion,
-    dameTareaDeColeccion,
+    //dameDatosDeColeccion,
+    //dameTareaDeColeccion,
     dameDocumentoDeColeccion,
     //abreSesion,
     //cierraSesion,

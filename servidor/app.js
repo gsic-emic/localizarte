@@ -2,13 +2,13 @@ const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const morgan = require('morgan');
+//const morgan = require('morgan');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const serviceAcount = require('./util/localizarte-752d0-firebase-adminsdk-vukyk-36b20d136a.json');
 
 const winston = require('./util/winston');
-const resolver = require('./routes/resolver');
+const resolver = require('./resources/resolver');
 
 const app = express();
 
@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/app', resolver);
+app.use('/', resolver);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAcount)

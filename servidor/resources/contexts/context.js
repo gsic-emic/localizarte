@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con el recurso "contexto".
  * autor: Pablo García Zarza
- * version: 20210615
+ * version: 20211109
  */
 
 const Http = require('http');
@@ -28,6 +28,7 @@ const Queries = require('../../util/queries');
 const Auxiliar = require('../../util/auxiliar');
 const Configuracion = require('../../util/config');
 const { dameDocumentoRapida } = require('../../util/bd');
+const winston = require('../../util/winston');
 
 /**
  * Método para controlar las consultas que hagan los usuarios para obtener la información de
@@ -59,6 +60,7 @@ function creaIri(a, b, c) {
  */
 function dameContexto(req, res) {
   try {
+    const start = Date.now();
     const iri = creaIri(req.params.a, req.params.b, req.params.c);
     if (iri) {
       if (typeof iri === 'string') {
@@ -73,19 +75,26 @@ function dameContexto(req, res) {
             if (resultados.length > 0) {
               resultados = resultados.pop();
               resultados.ctx = iri;
-              res.json(resultados);
-            } else { res.status(404).send('El contexto no existe en el repositorio'); }
+              winston.info(Mustache.render(
+                'getPOI || {{{iri}}} || {{{time}}}',
+                {
+                  iri: iri,
+                  time: Date.now() - start
+                }
+              ));
+              Auxiliar.logHttp(req, res, 200, 'getPOIL', start).json(resultados);
+            } else { Auxiliar.logHttp(req, res, 404, 'getPOILE', start).send('El contexto no existe en el repositorio'); }
           });
         };
         Http.request(options, consulta).end();
       } else {
-        res.status(400).send('La IRI se tiene que proporcionar como un string');
+        Auxiliar.logHttp(req, res, 400, 'getPOILE', start).send('La IRI se tiene que proporcionar como un string');
       }
     } else {
-      res.status(400).send('El cuerpo del mensaje debe tener un JSONObject del tipo {"iri":"idContexto"}');
+      Auxiliar.logHttp(req, res, 400, 'getPOILE', start).send('El cuerpo del mensaje debe tener un JSONObject del tipo {"iri":"idContexto"}');
     }
   } catch (e) {
-    res.sendStatus(500);
+    Auxiliar.logHttp(req, res, 500, 'getPOILE').end();
   }
 }
 
@@ -97,6 +106,7 @@ function dameContexto(req, res) {
  */
 async function eliminaContexto(req, res) {
   try {
+    const start = Date.now();
     const token = req.headers['x-tokenid'];
     admin.auth().verifyIdToken(token)
       .then(async decodedToken => {
@@ -145,38 +155,46 @@ async function eliminaContexto(req, res) {
                                     responseB.on('end', () => {
                                       resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(chunks).toString());
                                       if (resultados.length > 0) {
-                                        res.sendStatus(200);
-                                      } else res.status(503).send('El repositorio no puede eliminar el contexto');
+                                        winston.info(Mustache.render(
+                                          'deletePOI || {{{uid}}} || {{{idPOI}}} || {{{time}}}',
+                                          {
+                                            uid: uid,
+                                            idPOI: iri,
+                                            time: Date.now() - start
+                                          }
+                                        ));
+                                        Auxiliar.logHttp(req, res, 200, 'deletePOIL', start).end();
+                                      } else Auxiliar.logHttp(req, res, 503, 'deletePOILE', start).send('El repositorio no puede eliminar el contexto');
                                     });
                                   };
                                   Http.request(options, borrado).end();
                                 } else {
-                                  res.status(401).send('No puedes eliminar un POI si no eres el creador');
+                                  Auxiliar.logHttp(req, res, 401, 'deletePOILE', start).send('No puedes eliminar un POI si no eres el creador');
                                 }
-                              } else { res.status(404).send('La IRI no existe en el repositorio o no es un contexto'); }
+                              } else { Auxiliar.logHttp(req, res, 404, 'deletePOILE', start).send('La IRI no existe en el repositorio o no es un contexto'); }
                             });
                           };
                           Http.request(options, consulta).end();
-                        } else { res.status(403).send(Mustache.render('No se puede eliminar porque tiene {{{nTareas}}} tareas asociadas', { nTareas: resultados.nTareas })); }
+                        } else { Auxiliar.logHttp(req, res, 403, 'deletePOILE', start).send(Mustache.render('No se puede eliminar porque tiene {{{nTareas}}} tareas asociadas', { nTareas: resultados.nTareas })); }
                       });
                     };
                     Http.request(options, consultaPrevia).end();
-                  } else { res.status(400).send('El cuerpo del mensaje debe tener un JSONObject del tipo {"iri":"idContexto"}.'); }
-                } else { res.status(401).send('El usuario no tiene rol de docente'); }
+                  } else { Auxiliar.logHttp(req, res, 400, 'deletePOILE', start).send('El cuerpo del mensaje debe tener un JSONObject del tipo {"iri":"idContexto"}.'); }
+                } else { Auxiliar.logHttp(req, res, 401, 'deletePOILE', start).send('El usuario no tiene rol de docente'); }
               })
               .catch(error => {
                 console.error(error);
-                res.status(500).send('Error al recuperar el rol del usuario');
+                Auxiliar.logHttp(req, res, 500, 'deletePOILE', start).send('Error al recuperar el rol del usuario');
               });
-          } else { res.status(400).send('El correo del usuario no se ha verificado'); }
-        } else { res.status(400).send('No se ha podido decodificar el token'); }
+          } else { Auxiliar.logHttp(req, res, 400, 'deletePOILE', start).send('El correo del usuario no se ha verificado'); }
+        } else { Auxiliar.logHttp(req, res, 400, 'deletePOILE', start).send('No se ha podido decodificar el token'); }
       })
       .catch(error => {
         console.error(error);
-        res.sendStatus(500);
+        Auxiliar.logHttp(req, res, 500, 'deletePOILE', start).end();
       });
   } catch (e) {
-    res.sendStatus(500);
+    Auxiliar.logHttp(req, res, 500, 'deletePOILE').end();
   }
 }
 
@@ -188,6 +206,7 @@ async function eliminaContexto(req, res) {
  */
 async function actualizaContexto(req, res) {
   try {
+    const start = Date.now();
     const token = req.headers['x-tokenid'];
     admin.auth().verifyIdToken(token)
       .then(async decodedToken => {
@@ -219,13 +238,11 @@ async function actualizaContexto(req, res) {
                             if (Object.keys(actual).length == Object.keys(resultados).length) {
                               for (const enviado in actual) {
                                 if (!resultados[enviado] || resultados[enviado] != actual[enviado]) {
-                                  res.status(400).send('Los datos actuales no coinciden con los del repositorio');
                                   iguales = false;
                                   break;
                                 }
                               }
                             } else {
-                              res.status(400).send('Los datos actuales no coinciden con los del repositorio');
                               iguales = false;
                             }
                             if (iguales) {
@@ -269,40 +286,50 @@ async function actualizaContexto(req, res) {
                                 responseB.on('end', () => {
                                   resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(chunks).toString());
                                   if (resultados.length > 0) {
-                                    res.sendStatus(200);
-                                  } else res.status(503).send('El repositorio no puede eliminar el contexto');
+                                    winston.info(Mustache.render(
+                                      'putPOI || {{{uid}}} || {{{idPOI}}} || {{{actu}}} || {{{mod}}} || {{{time}}}',
+                                      {
+                                        uid: uid,
+                                        idPOI: iri,
+                                        actu: JSON.stringify(actual),
+                                        mod: JSON.stringify(modificados),
+                                        time: Date.now() - start
+                                      }
+                                    ));
+                                    Auxiliar.logHttp(req, res, 200, 'putPOIL', start).end();
+                                  } else Auxiliar.logHttp(req, res, 503, 'putPOILE', start).send('El repositorio no puede eliminar el contexto');
                                 });
                               };
                               Http.request(options, borrado).end();
-                            }
+                            } else { Auxiliar.logHttp(req, res, 400, 'putPOILE', start).send('Los datos actuales no coinciden con los del repositorio'); }
                           } else {
-                            res.status(403).send('El POI pertenece a otro usuario. No se puede modificar.');
+                            Auxiliar.logHttp(req, res, 403, 'putPOILE', start).send('El POI pertenece a otro usuario. No se puede modificar.');
                           }
                         } else {
-                          res.status(404).send('El contexto no existe en el repositorio');
+                          Auxiliar.logHttp(req, res, 404, 'putPOILE', start).send('El contexto no existe en el repositorio');
                         }
                       });
                     };
                     Http.request(options, consulta).end();
 
                   } else {
-                    res.status(400).send('Se tiene que enviar un JSON en el cuerpo que contenta la etiqueta actual y modificados. También se tiene que indicar el token de sesión.');
+                    Auxiliar.logHttp(req, res, 400, 'putPOILE', start).send('Se tiene que enviar un JSON en el cuerpo que contenta la etiqueta actual y modificados. También se tiene que indicar el token de sesión.');
                   }
                 }
               })
               .catch(error => {
                 console.error(error);
-                res.status(500).send('Error al recuperar el rol del usuario');
+                Auxiliar.logHttp(req, res, 500, 'putPOILE', start).send('Error al recuperar el rol del usuario');
               });
-          } else { res.status(403).send('El usuario no tiene rol de docente'); }
-        } else { res.status(500).send('Problemas con el token enviado'); }
+          } else { Auxiliar.logHttp(req, res, 403, 'putPOILE', start).send('El usuario no tiene rol de docente'); }
+        } else { Auxiliar.logHttp(req, res, 500, 'putPOILE', start).send('Problemas con el token enviado'); }
       })
       .catch(error => {
         console.error(error);
-        res.status(500).send('Problemas con la decodificación del token.');
+        Auxiliar.logHttp(req, res, 500, 'putPOILE', start).send('Problemas con la decodificación del token.');
       });
   } catch (e) {
-    res.sendStatus(500);
+    Auxiliar.logHttp(req, res, 500, 'putPOILE').end();
   }
 }
 

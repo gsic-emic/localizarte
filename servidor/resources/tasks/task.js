@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con el recurso "tarea".
  * autor: Pablo García Zarza
- * version: 20211019
+ * version: 20211109
  */
 
 const Http = require('http');
@@ -28,6 +28,7 @@ const Auxiliar = require('../../util/auxiliar');
 const Queries = require('../../util/queries');
 const Configuracion = require('../../util/config');
 const { dameDocumentoRapida } = require('../../util/bd');
+const winston = require('../../util/winston');
 
 function creaIri(a, b) {
   if (a && b) {
@@ -48,6 +49,7 @@ function creaIri(a, b) {
  */
 function dameTarea(req, res) {
   try {
+    const start = Date.now();
     const iri = creaIri(req.params.a, req.params.b);
     if (iri) {
       const options = Auxiliar.creaOptions(Queries.todaInfo(iri));
@@ -61,16 +63,23 @@ function dameTarea(req, res) {
           if (resultados.length > 0) {
             resultados = resultados.pop();
             resultados.task = iri;
-            res.json(resultados);
-          } else res.status(404).send('La tarea no existe en el repositorio');
+            winston.info(Mustache.render(
+              'getTask || {{{iri}}} || {{{time}}}',
+              {
+                iri: iri,
+                time: Date.now() - start
+              }
+            ));
+            Auxiliar.logHttp(req, res, 200, 'getTaskL', start).json(resultados);
+          } else Auxiliar.logHttp(req, res, 404, 'getTaskLE', start).send('La tarea no existe en el repositorio');
         });
       };
       Http.request(options, consulta).end();
     } else {
-      res.sendStatus(400, 'El cliente no ha enviado una IRI válida');
+      Auxiliar.logHttp(req, res, 400, 'getTaskLE', start).send('El cliente no ha enviado una IRI válida');
     }
   } catch (e) {
-    res.sendStatus(500, 'Excepción capturada en el servidor');
+    Auxiliar.logHttp(req, res, 500, 'getTaskLE').send('Excepción capturada en el servidor');
   }
 }
 
@@ -83,6 +92,7 @@ function dameTarea(req, res) {
  */
 async function actualizaTarea(req, res) {
   try {
+    const start = Date.now();
     admin.auth().verifyIdToken(req.headers['x-tokenid'])
       .then(async decodedToken => {
         const { body } = req;
@@ -115,7 +125,6 @@ async function actualizaTarea(req, res) {
                               }
                             }
                           } else {
-                            res.status(400).send('Los datos actuales no coinciden con los del repositorio');
                             iguales = false
                           }
                           if (iguales) {
@@ -153,44 +162,54 @@ async function actualizaTarea(req, res) {
                               responseB.on('end', () => {
                                 result = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(datos).toString());
                                 if (result && result.length > 0) {
-                                  res.sendStatus(200);
+                                  winston.info(Mustache.render(
+                                    'putTask || {{{uid}}} || {{{idTask}}} || {{{actu}}} || {{{mod}}} || {{{time}}}',
+                                    {
+                                      uid: uid,
+                                      idTask: iri,
+                                      actu: JSON.stringify(body.actual),
+                                      mod: JSON.stringify(body.modificados),
+                                      time: Date.now() - start
+                                    }
+                                  ));
+                                  Auxiliar.logHttp(req, res, 200, 'putTaskLE', start).end();
                                 } else {
-                                  res.sendStatus(503);
+                                  Auxiliar.logHttp(req, res, 503, 'putTaskLE', start).end();
                                 }
                               });
                             };
                             Http.request(options, consulta).end();
                           } else {
-                            res.status(400).send('Los datos que el usuario ha enviado no son los almacenados en el repositorio');
+                            Auxiliar.logHttp(req, res, 400, 'putTaskLE', start).send('Los datos que el usuario ha enviado no son los almacenados en el repositorio');
                           }
                         } else {
-                          res.status(403).send('La tarea pertenece a otro usuario. No se puede modificar.');
+                          Auxiliar.logHttp(req, res, 403, 'putTaskLE', start).send('La tarea pertenece a otro usuario. No se puede modificar.');
                         }
                       } else {
-                        res.status(404).send('La tarea no se encuentra en el repositorio de triplas.');
+                        Auxiliar.logHttp(req, res, 404, 'putTaskLE', start).send('La tarea no se encuentra en el repositorio de triplas.');
                       }
                     });
                   };
                   Http.request(options, consulta).end();
                 } else {
-                  res.status(403).send('El usuario no tiene rol de docente');
+                  Auxiliar.logHttp(req, res, 403, 'putTaskLE', start).send('El usuario no tiene rol de docente');
                 }
               })
               .catch(error => {
                 console.error(error);
-                res.status(500).send('Error al recuperar el rol del usuario');
+                Auxiliar.logHttp(req, res, 500, 'putTaskLE', start).send('Error al recuperar el rol del usuario');
               });
-          } else { res.status(400).send('El email no está verificado.'); }
-        } else { res.status(400).send('Se debe enviar un JSON en el cuerpo con los valores actuales y los que se desea modificar'); }
+          } else { Auxiliar.logHttp(req, res, 400, 'putTaskLE', start).send('El email no está verificado.'); }
+        } else { Auxiliar.logHttp(req, res, 400, 'putTaskLE', start).send('Se debe enviar un JSON en el cuerpo con los valores actuales y los que se desea modificar'); }
       })
       .catch(error => {
         console.error(error);
-        res.status(500).send('Problemas con la decodificación del token.');
+        Auxiliar.logHttp(req, res, 500, 'putTaskLE', start).send('Problemas con la decodificación del token.');
       });
 
   } catch (e) {
     console.log(e);
-    res.sendStatus(500);
+    Auxiliar.logHttp(req, res, 500, 'putTaskLE').end();
   }
 }
 
@@ -202,6 +221,7 @@ async function actualizaTarea(req, res) {
  */
 async function eliminaTarea(req, res) {
   try {
+    const start = Date.now();
     const iri = creaIri(req.params.a, req.params.b);
     if (iri) {
       admin.auth().verifyIdToken(req.headers['x-tokenid'])
@@ -236,38 +256,46 @@ async function eliminaTarea(req, res) {
                               responseB.on('end', () => {
                                 resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(datos).toString());
                                 if (resultados.length > 0) {
-                                  res.sendStatus(200);
+                                  winston.info(Mustache.render(
+                                    'deleteTask || {{{uid}}} || {{{idTask}}} || {{{time}}}',
+                                    {
+                                      uid: uid,
+                                      idTask: iri,
+                                      time: Date.now() - start
+                                    }
+                                  ));
+                                  Auxiliar.logHttp(req, res, 200, 'deleteTaskL', start).end();
                                 } else {
-                                  res.sendStatus(503);
+                                  Auxiliar.logHttp(req, res, 503, 'deleteTaskLE', start).end();
                                 }
                               });
                             };
                             Http.request(options, consulta).end();
                           } else {
-                            res.status(403).send('La tarea pertenece a otro usuario. No se puede eliminar.');
+                            Auxiliar.logHttp(req, res, 403, 'deleteTaskLE', start).send('La tarea pertenece a otro usuario. No se puede eliminar.');
                           }
                         } else {
-                          res.status(404).send('La tarea no existe en el repositorio de triplas');
+                          Auxiliar.logHttp(req, res, 404, 'deleteTaskLE', start).send('La tarea no existe en el repositorio de triplas');
                         }
                       });
                     };
                     Http.request(options, consulta).end();
-                  } else { res.status(403).send('El usuario no tiene rol de docente'); }
+                  } else { Auxiliar.logHttp(req, res, 403, 'deleteTaskLE', start).send('El usuario no tiene rol de docente'); }
                 })
                 .catch(error => {
                   console.error(error);
-                  res.status(500).send('Error al recuperar el rol del usuario');
+                  Auxiliar.logHttp(req, res, 500, 'deleteTaskLE', start).send('Error al recuperar el rol del usuario');
                 });
             }
-          } else { res.status(400).send('No se ha podido decodificar el token.'); }
+          } else { Auxiliar.logHttp(req, res, 400, 'deleteTaskLE', start).send('No se ha podido decodificar el token.'); }
         })
         .catch(error => {
           console.error(error);
-          res.sendStatus(500);
+          Auxiliar.logHttp(req, res, 500, 'deleteTaskLE', start).end();
         });
-    } else { res.status(400).send('En el cuerpo de la petición tiene que existir un JSON con el parámetro iri.'); }
+    } else { Auxiliar.logHttp(req, res, 400, 'deleteTaskLE', start).send('En el cuerpo de la petición tiene que existir un JSON con el parámetro iri.'); }
   } catch (e) {
-    res.sendStatus(500);
+    Auxiliar.logHttp(req, res, 500, 'deleteTaskLE').end();
   }
 }
 

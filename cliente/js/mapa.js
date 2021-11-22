@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión inicial del mapa
  * autor: Pablo García Zarza
- * version: 20211026
+ * version: 20211112
  */
 
 /** Zonas descargadas */
@@ -57,6 +57,8 @@ let markers = null;
 /** Popovers */
 let popoverTriggerList;
 let popoverList;
+/** Tooltips */
+let tooltipTriggerList, tooltipList;
 
 let tokenSesion;
 let rol;
@@ -69,11 +71,13 @@ const spinnerCentro = document.getElementById('divSpinner');
 
 let answers;
 
+let language;
+
 
 inicio();
 
 /**
- * Función para iniciar el cliente. La creación de esta función está motivada para 
+ * Función para iniciar el cliente. La creación de esta función está motivada para
  * capturar las posibles excepciones que pudieran ocurrir.
  */
 function inicio() {
@@ -82,6 +86,14 @@ function inicio() {
     answers = [];
     popup = null;
     faltan = 0;
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/language
+    if (/^es\b/.test(navigator.language)) {
+        setLanguage('es');
+    } else {
+        setLanguage('en');
+    }
+
     map = L.map('mapa',
         {
             zoomControl: false,
@@ -112,17 +124,17 @@ function inicio() {
         attribution: '&copy; <a target="_blank" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
     }).addTo(map);*/
 
-    /*L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckp5n8o6z0hwm18mnwan8zm0l/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3ExMWcxajQwMTN4MnVsYTJtMmdpOXc2In0.S9rtoLY8TYoI-4D8oy8F8A', {
+    L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckvpj1ed92f7u14phfhfdvkor/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3ExMWcxajQwMTN4MnVsYTJtMmdpOXc2In0.S9rtoLY8TYoI-4D8oy8F8A', {
         maxZoom: 20,
         minZoom: 3,
         attribution: '&copy; <a target="_blank" href="https://www.mapbox.com/about/maps/">Mapbox</a> | &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" >OpenStreetMap</a> contributors'
-    }).addTo(map);*/
+    }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    /*L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         minZoom: 3,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    }).addTo(map);*/
 
     /*L.tileLayer('', {
         maxZoom: 20,
@@ -131,7 +143,7 @@ function inicio() {
     }).addTo(map);*/
 
     //Posición inicial
-    map.setView(posicionCyL, 4.5);//18
+    map.setView(posicionCyL, 8);//espa, 4.5
 
     // El mapa se ve desplazado
     map.on('moveend', () => {
@@ -149,14 +161,19 @@ function inicio() {
 
     // Pulsación con el botón derecho del ratón o tap largo
     map.on('contextmenu', (pos) => {
-        if(rol !== null && rol > 0){
+        if (rol !== null && rol > 0) {
             creacionNuevoContexto(pos);
         }
     });
 
     popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-      return new bootstrap.Popover(popoverTriggerEl)
+        return new bootstrap.Popover(popoverTriggerEl)
+    });
+
+    tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
     });
 
     tokenSesion = null;
@@ -166,8 +183,8 @@ function inicio() {
     app = firebase.initializeApp(firebaseConfig);
     auth = app.auth();
     analytics = app.analytics();
-    auth.languageCode = 'es';
-    if(auth && auth.currentUser) {
+    auth.languageCode = language;
+    if (auth && auth.currentUser) {
         recuperaDatosUsuarioServidor(null, null, true);
     }
 }
@@ -175,7 +192,7 @@ function inicio() {
 
 
 /**
- * Función para obtener la posición del usuario. La primera pulsación activa el seguimiento. 
+ * Función para obtener la posición del usuario. La primera pulsación activa el seguimiento.
  * Una vez activado el seguimiento: si el mapa está descentrado con una pulsación lo centra;
  * si está centrado deja de obtener la posición del usuario.
  */
@@ -229,13 +246,28 @@ function seguir() {
 
 function cambiaVistaProfesor() {
     rol = rol * -1;
-    if(rol > 0){
+    if (rol > 0) {
         document.getElementById('swVistaProfesor').checked = true;
         document.getElementById('labelVistaProfesor').className = "form-check-label colorActivo";
-        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();">Contribuciones</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
+        document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+            '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();" id="contributionsNavBar">{{{contribuciones}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();" id="signOutNavBar">{{{signOut}}}</a></li>',
+            {
+                actualLanguage: language.toUpperCase(),
+                contribuciones: translate.contributionsNavBar[language],
+                userData: translate.userDataNavBar[language],
+                signOut: translate.signOutNavBar[language]
+            });
     } else {
         document.getElementById('swVistaProfesor').checked = false;
         document.getElementById('labelVistaProfesor').className = "form-check-label";
-        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
+        document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+            '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();" id="answersNavBar">{{{respuestas}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();" id="signOutNavBar">{{{signOut}}}</a></li>',
+            {
+                actualLanguage: language.toUpperCase(),
+                respuestas: translate.answersNavBar[language],
+                userData: translate.userDataNavBar[language],
+                signOut: translate.signOutNavBar[language],
+            }
+        );
     }
 }

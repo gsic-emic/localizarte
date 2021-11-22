@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones auxiliares utilizadas en el cliente de LocalizARTE.
  * autor: Pablo García Zarza
- * version: 20211019
+ * version: 20211112
  */
 
 /**
@@ -263,4 +263,231 @@ function conversionTipoTareaCS(valor) {
         default:
             return null;
     }
+}
+
+function translateInterface() {
+    if (language !== 'es' && language !== 'en') {
+        language = 'en';
+    }
+
+    const contentHTML = [
+        document.getElementById('infoNavBar'),
+        document.getElementById('signUpNavBar'),
+        document.getElementById('signInNavBar'),
+        document.getElementById('signOutNavBar'),
+        document.getElementById('contributionsNavBar'),
+        document.getElementById('answersNavBar'),
+        document.getElementById('userDataNavBar'),
+        document.getElementById('dropdownLanguage'),
+        document.getElementById('modalInfoTitulo'),
+        document.getElementById('modalInfoQueEsLocalizarte0'),
+        document.getElementById('modalInfoQueEsLocalizarte1'),
+        document.getElementById('modalInfoDatosAbiertos0'),
+        document.getElementById('modalInfoDatosAbiertos1'),
+        document.getElementById('modalInfoDatosAbiertos2'),
+        document.getElementById('modalInfoGSIC0'),
+        document.getElementById('modalInfoGSIC1'),
+        document.getElementById('modalPOIAdministracionPOI'),
+        document.getElementById('agregarTarea'),
+        document.getElementById('modificarPI'),
+        document.getElementById('eliminarPI'),
+        document.getElementById('enlaceLicenciaImagenPuntoInteres'),
+        document.getElementById('aceptaBorrar'),
+        document.getElementById('cerrarBorrar'),
+        document.getElementById('modalNuevoPuntoInteresTitle'),
+        document.getElementById('modalNuevoPuntoInteresIdentificadorUnico'),
+        document.getElementById('modalNuevoPuntoInteresDescription'),
+        document.getElementById('modalNuevoPuntoInteresFuentes'),
+        document.getElementById('modalNuevoPuntoInteresVariasFuentes'),
+        document.getElementById('latitudNPI'),
+        document.getElementById('longitudNPI'),
+        document.getElementById('imagenNPILabel'),
+        document.getElementById('licenciaNPILabel'),
+        document.getElementById('modalNuevoPuntosInteresCamposObligatorios'),
+        document.getElementById('enviarNPI'),
+        document.getElementById('selectTipoRespuestaLabel'),
+        document.getElementById('selectTipoRespuestaEnunciado'),
+        document.getElementById('selectTipoRespuestaVF'),
+        document.getElementById('selectTipoRespuestaMcq'),
+        document.getElementById('selectTipoRespuestaTexto'),
+        document.getElementById('selectTipoRespuestaShortText'),
+        document.getElementById('selectTipoRespuestaPhoto'),
+        document.getElementById('selectTipoRespuestaPhotoText'),
+        document.getElementById('selectTipoRespuestaMultiPhotos'),
+        document.getElementById('selectTipoRespuestaMultiPhotosText'),
+        document.getElementById('selectTipoRespuestaVideo'),
+        document.getElementById('selectTipoRespuestaSR'),
+        document.getElementById('selectTipoRespuestaVideoText'),
+        document.getElementById('tituloNTLabel'),
+        document.getElementById('tituloNTExplica'),
+        document.getElementById('textAsociadoNTLabel'),
+        document.getElementById('verdaderoNTDivLabel'),
+        document.getElementById('rbVFVNTVLabel'),
+        document.getElementById('rbVFFNTLabel'),
+        document.getElementById('rVMCQLabel'),
+        document.getElementById('rD1MCQLabel'),
+        document.getElementById('rD2MCQLabel'),
+        document.getElementById('rD1MCQLabel'),
+        document.getElementById('cbEspacioDivLabel'),
+        document.getElementById('rbEspacio1Label'),
+        document.getElementById('rbEspacio2Label'),
+        document.getElementById('rbEspacio3Label'),
+        document.getElementById('modalNuevaTareaObligatorios'),
+        document.getElementById('enviarNT'),
+        document.getElementById('modalIniciaSesionTitle'),
+        document.getElementById('inicioMailLabel'),
+        document.getElementById('inicioPassLabel'),
+        document.getElementById('cambiarpass'),
+        document.getElementById('inicioEnviar'),
+        document.getElementById('registroMailLabel'),
+        document.getElementById('registroPassLabel'),
+        document.getElementById('registroNombreLabel'),
+        document.getElementById('registroApellidoLabel'),
+        document.getElementById('registroEnviar'),
+        document.getElementById('modalConfirmarCierreTitle'),
+        document.getElementById('modalConfirmarCierreAsk'),
+        document.getElementById('aceptaCerrarSesion'),
+        document.getElementById('lblnotasRealizaTareaLabel'),
+        document.getElementById('mcqOpcionesRealizaTareaLabel'),
+        document.getElementById('vFOpcionesRealizaTareaLabel'),
+        document.getElementById('vF1RealizaTareaLabel'),
+        document.getElementById('vF2RealizaTareaLabel'),
+        document.getElementById('lblSinRealizarFoto'),
+        document.getElementById('finalizarTarea'),
+        document.getElementById('labelVistaProfesor'),
+        document.getElementById('newLinkURLLabel'),
+        document.getElementById('newLinkURLInvalid'),
+        document.getElementById('newLinkTextLabel'),
+        document.getElementById('newLinkTextInvalid'),
+        document.getElementById('newLinkModalCancelar'),
+        document.getElementById('newLinkModalInsertar'),
+        document.getElementById('cbPoliPrivLabel'),
+        document.getElementById('navbarItemVersion'),
+    ];
+
+    const placeHolders = [
+        document.getElementById('tituloNPI'),
+        document.getElementById('descrNPI'),
+        document.getElementById('fuentesNPI'),
+        document.getElementById('licenciaNPI'),
+        document.getElementById('tituloNT'),
+        document.getElementById('textoAsociadoNT'),
+        document.getElementById('rVMCQ'),
+        document.getElementById('rD1MCQ'),
+        document.getElementById('rD2MCQ'),
+        document.getElementById('rD3MCQ'),
+        document.getElementById('tbnotasRealizaTarea'),
+        document.getElementById('newLinkURL'),
+        document.getElementById('newLinkText'),
+    ];
+
+    const popovers = [
+        document.getElementById('cbEspacioDivPopover'),
+    ];
+
+    const tooltips = [
+        document.getElementById('btInsertarLinkNPI'),
+        document.getElementById('btInsertarLinkNT'),
+    ];
+
+    contentHTML.forEach(element => {
+        try {
+            element.innerHTML = translate[element.id][language];
+        } catch (error) {
+            console.error('contentHTML', error);
+        }
+    });
+    placeHolders.forEach(element => {
+        try {
+            element.placeholder = translate[element.id][language];
+        } catch (error) {
+            console.error('placeHolder', error);
+        }
+    });
+
+    popovers.forEach(element => {
+        try {
+            element.setAttribute('data-bs-content', translate[element.id][language]);
+        } catch (error) {
+            console.error('popover', error);
+        }
+    });
+
+    tooltips.forEach(element => {
+        try {
+            element.setAttribute('data-bs-original-title', translate[element.id][language]);
+        } catch (error) {
+            console.error('tooltip', error);
+        }
+    });
+
+}
+
+function setLanguage(lng) {
+    language = ((lng === 'es') ? 'es' : 'en');
+    translateInterface();
+}
+
+function insertarLink(textArea) {
+    const linkModal = new bootstrap.Modal(document.getElementById('newLinkModal'));
+    const insertar = document.getElementById('newLinkModalInsertar');
+    const cancelar = document.getElementById('newLinkModalCancelar');
+    const cuadroEnlace = document.getElementById('newLinkURL');
+    const cuadroTexto = document.getElementById('newLinkText');
+    const cuadros = [cuadroEnlace, cuadroTexto];
+
+    cuadros.forEach(cuadro => {
+        cuadro.className = 'form-control';
+        cuadro.value = '';
+    });
+
+    insertar.onclick = (ev) => {
+        ev.preventDefault();
+        let todoOk = true;
+        cuadros.forEach(cuadro => {
+            if (!cuadro || !cuadro.value || cuadro.value.trim() === '') {
+                todoOk = false;
+                cuadro.className = 'form-control is-invalid';
+            } else {
+                if (cuadro.id === 'newLinkURL' && !validURL(cuadro.value.trim())) {
+                    todoOk = false;
+                    cuadro.className = 'form-control is-invalid';
+                } else {
+                    cuadro.className = 'form-control is-valid';
+                }
+            }
+        });
+
+        if (todoOk) {
+            let texto, url;
+            cuadros.forEach(cuadro => {
+                switch (cuadro.id) {
+                    case 'newLinkURL':
+                        url = cuadro.value.trim();
+                        break;
+                    case 'newLinkText':
+                        texto = cuadro.value.trim();
+                        break;
+                    default:
+                        break;
+                }
+            });
+            textArea.value = mustache.render(
+                '{{{anterior}}}<a href="{{{enlace}}}">{{{texto}}}</a>',
+                {
+                    anterior: textArea.value,
+                    enlace: url,
+                    texto: texto
+                }
+            );
+            linkModal.hide();
+        }
+    };
+
+    cancelar.onclick = (ev) => {
+        ev.preventDefault();
+        linkModal.hide();
+    };
+
+    linkModal.show();
 }
