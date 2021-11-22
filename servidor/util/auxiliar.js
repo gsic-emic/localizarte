@@ -17,7 +17,7 @@ limitations under the License.
 /**
 * Funciones auxiliares.
 * autor: Pablo García Zarza
-* version: 20211021
+* version: 20211109
 */
 
 /**
@@ -29,6 +29,7 @@ const URI = require("uri-js");
 const Mustache = require('mustache');
 
 const Configuracion = require('./config');
+const winston = require('./winston');
 
 /** Equivalencias cliente al servidor */
 const equivalencias = {
@@ -465,6 +466,22 @@ function existeObjeto(objeto) {
   return typeof objeto === 'object' && objeto !== null;
 }
 
+function logHttp(_req, _res, statusCode, label, start) {
+  _res.status(statusCode);
+  winston.http(Mustache.render(
+    '{{{label}}} || {{{statusCode}}} || {{{path}}} {{{method}}} {{{ip}}} || {{{time}}}',
+    {
+      label: label,
+      statusCode: statusCode,
+      path: _req.originalUrl,
+      method: _req.method,
+      ip: _req.ip,
+      time: Date.now() - start,
+    }
+  ));
+  return _res;
+}
+
 module.exports = {
   creaOptions,
   creaOptionsAuth,
@@ -482,4 +499,5 @@ module.exports = {
   compruebaEspacios,
   existeObjeto,
   validIRI,
+  logHttp,
 };

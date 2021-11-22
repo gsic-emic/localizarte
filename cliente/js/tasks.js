@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Funciones para la gestión de las tareas.
  * autor: Pablo García Zarza
- * version: 20211026
+ * version: 20211112
  */
 
 function tareasContexto(iriContexto, poi) {
@@ -40,14 +40,14 @@ function tareasContexto(iriContexto, poi) {
                 case 204:
                     return [];
                 case 400:
-                    notificaLateralError('No se ha enviado el identificador del POI.');
+                    notificaLateralError(translate.errorNoIDPOI[language]);
                     return null;
                 case 500:
-                    notificaLateralError('Error interno del servidor');
+                    notificaLateralError(translate.errorInternoServidor[language]);
                     return null;
                 default:
                     notificaLateralError(mustache.render(
-                        'Error desconocido: {{{status}}}',
+                        'Error: {{{status}}}',
                         { status: respuesta.status })
                     );
                     return null;
@@ -55,6 +55,7 @@ function tareasContexto(iriContexto, poi) {
         })
         .then(resultados => {
             if (resultados && modalOpen(document.getElementById('puntoInteres'))) {
+                
                 if (auth && auth.currentUser) {
                     analytics.logEvent('getTasks', {
                         idObject: iriContexto,
@@ -67,7 +68,7 @@ function tareasContexto(iriContexto, poi) {
                 }
                 const espacioTareas = document.getElementById('espacioTareas');
                 if (resultados.length === 0) {
-                    espacioTareas.innerHTML = '<h6>POI sin tareas asociadas</h6>';
+                    espacioTareas.innerHTML = mustache.render('<h6>{{{msg}}}</h6>', { msg: translate.poiSinTareas[language] });
                 } else {
                     let ids = Math.trunc(window.performance.now() * 1000000000);
                     const mostrarAdmin = (rol !== null && rol > 0);
@@ -111,37 +112,37 @@ function tareasContexto(iriContexto, poi) {
                         let textoAT;
                         switch (resultado.aT) {
                             case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotos':
-                                textoAT = 'Realiza varias fotografías';
+                                textoAT = translate.textoAT0[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/multiplePhotosAndText':
-                                textoAT = 'Realiza varias fotografías y responde a una pregunta'
+                                textoAT = translate.textoAT1[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/noAnswer':
-                                textoAT = 'Información';
+                                textoAT = translate.textoAT2[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/photo':
-                                textoAT = 'Realiza una fotografía';
+                                textoAT = translate.textoAT3[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/photoAndText':
-                                textoAT = 'Realiza una fotografía y responde una pregunta';
+                                textoAT = translate.textoAT4[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/shortText':
-                                textoAT = 'Responde brevemente a una pregunta';
+                                textoAT = translate.textoAT5[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/text':
-                                textoAT = 'Responde a una pregunta';
+                                textoAT = translate.textoAT6[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/video':
-                                textoAT = 'Graba un vídeo';
+                                textoAT = translate.textoAT7[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/mcq':
-                                textoAT = 'Selecciona la respuesta correcta';
+                                textoAT = translate.textoAT8[language];
                                 break;
                             case 'https://casuallearn.gsic.uva.es/answerType/trueFalse':
-                                textoAT = '¿Verdadero o falso?';
+                                textoAT = translate.textoAT9[language];
                                 break;
                             default:
-                                textoAT = 'Tipo de pregunta desconocido';
+                                textoAT = translate.textoAT10[language];
                                 break;
                         }
                         resultado.title = mustache.render('{{{textoAT}}}{{#title}} - {{{title}}}{{/title}}', { textoAT: textoAT, title: resultado.title });
@@ -174,8 +175,17 @@ function tareasContexto(iriContexto, poi) {
                         }
                     });
                     const salida = mustache.render(
-                        '{{#resultados}}{{#muestra}}<div id="{{{idh}}}" class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{{id}}}" aria-expanded="false" aria-controls="{{{id}}}"><img class="px-3" src="{{{icon}}}" style="witdth:40;height:40">{{{title}}}</button></h2><div id="{{{id}}}" class="accordion-collapse collapse" aria-labelledby="{{{idh}}}" data-bs-parent="#acordeon"><div class="accordion-body"><div class="d-md-flex flex-md-row py-1 row g-3"><div class="row pb-2"><p>{{{aTR}}}</p></div>{{#mostrarAdmin}}<div class="row py-1  text-white rounded fondoPrimario g-2"><div class="row justify-content"><h6>Gestión de la tarea</h6></div><div class="row g-1 align-items-center justify-content-around my-1"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-warning" onclick="modalPOI.hide(); modificarTarea({{{idf}}})">Modificar tarea</button></div><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-danger" onclick="modalPOI.hide(); eliminaTareaModal({{{idf}}})">Eliminar tarea</button></div></div></div>{{/mostrarAdmin}}<div class="row g-1 py-2"><div class="col my-1 text-center"><button class="btn btn-success"{{#noPuedeRealizar}} disabled>{{#esProfe}}Desactiva vista docente{{/esProfe}}{{^esProfe}}Identifícate para realizar la tarea{{/esProfe}}{{/noPuedeRealizar}}{{^noPuedeRealizar}}{{#cerca}} onclick="modalPOI.hide(); realizaTarea({{{idf}}})">Realizar tarea{{/cerca}}{{^cerca}} disabled>Acércate para realizar la tarea{{/cerca}}{{/noPuedeRealizar}}</button></div></div></div></div></div></div>{{/muestra}}{{/resultados}}',
-                        { resultados: resultados }
+                        '{{#resultados}}{{#muestra}}<div id="{{{idh}}}" class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{{id}}}" aria-expanded="false" aria-controls="{{{id}}}"><img class="px-3" src="{{{icon}}}" style="witdth:40;height:40">{{{title}}}</button></h2><div id="{{{id}}}" class="accordion-collapse collapse" aria-labelledby="{{{idh}}}" data-bs-parent="#acordeon"><div class="accordion-body"><div class="d-md-flex flex-md-row py-1 row g-3"><div class="row pb-2"><p>{{{aTR}}}</p></div>{{#mostrarAdmin}}<div class="row py-1  text-white rounded fondoPrimario g-2"><div class="row justify-content"><h6>{{{gestionTarea}}}</h6></div><div class="row g-1 align-items-center justify-content-around my-1"><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-warning" onclick="modalPOI.hide(); modificarTarea({{{idf}}})">{{{modificarTarea}}}</button></div><div class="col my-1 d-flex justify-content-center"><button class="btn btn-outline-danger" onclick="modalPOI.hide(); eliminaTareaModal({{{idf}}})">{{{borrarTarea}}}</button></div></div></div>{{/mostrarAdmin}}<div class="row g-1 py-2"><div class="col my-1 text-center"><button class="btn btn-success"{{#noPuedeRealizar}} disabled>{{#esProfe}}{{{debesDesactivarDocente}}}{{/esProfe}}{{^esProfe}}{{{debesIdentificarte}}}{{/esProfe}}{{/noPuedeRealizar}}{{^noPuedeRealizar}}{{#cerca}} onclick="modalPOI.hide(); realizaTarea({{{idf}}})">{{{resolverTarea}}}{{/cerca}}{{^cerca}} disabled>{{{acercateParaRealizar}}}{{/cerca}}{{/noPuedeRealizar}}</button></div></div></div></div></div></div>{{/muestra}}{{/resultados}}',
+                        {
+                            resultados: resultados,
+                            gestionTarea: translate.gestionTarea[language],
+                            modificarTarea: translate.modificarTarea[language],
+                            borrarTarea: translate.borrarTarea[language],
+                            debesDesactivarDocente: translate.debesDesactivarDocente[language],
+                            debesIdentificarte: translate.debesIdentificarte[language],
+                            resolverTarea: translate.resolverTarea[language],
+                            acercateParaRealizar: translate.acercateParaRealizar[language]
+                        }
                     );
                     espacioTareas.innerHTML = mustache.render(
                         '<div class="accordion" id="acordeon">{{{salida}}}</div>',
@@ -244,16 +254,16 @@ function realizaTarea(idTarea) {
                             switch (tarea.aT) {
                                 case 'shortText':
                                 case 'text':
-                                    document.getElementById('lblnotasRealizaTarea').innerHTML = 'Indica tu respuesta';
-                                    document.getElementById('tbnotasRealizaTarea').placeholder = 'Mi respuesta es...';
+                                    document.getElementById('lblnotasRealizaTarea').innerHTML = translate.miRespuesta0[language];
+                                    document.getElementById('tbnotasRealizaTarea').placeholder = translate.miRespuesta1[language];
                                     break;
                                 case 'photo':
                                     document.getElementById('contenendorCamara').removeAttribute('hidden');
                                     document.getElementById('finalizarTarea').setAttribute('disabled', 'true');
                                     break;
                                 case 'photoAndText':
-                                    document.getElementById('lblnotasRealizaTarea').innerHTML = 'Indica tu respuesta';
-                                    document.getElementById('tbnotasRealizaTarea').placeholder = 'Mi respuesta es...';
+                                    document.getElementById('lblnotasRealizaTarea').innerHTML = translate.miRespuesta0[language];
+                                    document.getElementById('tbnotasRealizaTarea').placeholder = translate.miRespuesta1[language];
                                     document.getElementById('contenendorCamara').removeAttribute('hidden');
                                     document.getElementById('finalizarTarea').setAttribute('disabled', 'true');
                                     break;
@@ -284,7 +294,7 @@ function realizaTarea(idTarea) {
                                     break;
                                 default:
                                     muestraModal = false;
-                                    notificaLateralError('Tipo de tarea no soportado.');
+                                    notificaLateralError(translate.tipoTareaNoSoportado[language]);
                                     break;
                             }
                             if (muestraModal) {
@@ -450,7 +460,13 @@ function realizaTarea(idTarea) {
                                                             case 400:
                                                                 return response.text();
                                                             default:
-                                                                return `Error ${response.status} al enviar la respuesta`;
+                                                                return mustache.render(
+                                                                    '{{{errorEnviarRespuesta}}} {{{codigo}}}',
+                                                                    {
+                                                                        errorEnviarRespuesta: translate.errorEnviarRespuesta[language],
+                                                                        codigo: response.status
+                                                                    }
+                                                                );
                                                         }
                                                     })
                                                     .then(datos => {
@@ -459,27 +475,35 @@ function realizaTarea(idTarea) {
                                                             switch (tarea.aT) {
                                                                 case 'mcq':
                                                                     if (respuesta.choAns === tarea.correctMcq) {
-                                                                        notificaLateral('¡Respuesta correcta!<br>Respuesta almacenada.');
+                                                                        notificaLateral(translate.respuestaCorrecta[language]);
                                                                     } else {
                                                                         notificaLateralError(mustache.render(
-                                                                            'Respuesta errónea :_(<br>La correcta era {{{correcta}}}.<br>Respuesta almacenada.',
-                                                                            { correcta: tarea.correctMcq.toLowerCase() }
+                                                                            '{{{erronea}}}<br>{{{correctaEra}}} {{{correcta}}}',
+                                                                            {
+                                                                                erronea: translate.respuestaIncorrecta[translate],
+                                                                                correcta: tarea.correctMcq.toLowerCase(),
+                                                                                correctaEra: translate.respuestaCorrectaEra[language]
+                                                                            }
                                                                         ));
                                                                     }
                                                                     break;
                                                                 case 'trueFalse':
                                                                     //Tengo que comprobar que un rb esté marcado de los de vf
                                                                     if (respuesta.choAns.toLowerCase() === tarea.rE.toLowerCase()) {
-                                                                        notificaLateral('¡Respuesta correcta!<br>Respuesta almacenada.');
+                                                                        notificaLateral(translate.respuestaCorrecta[language]);
                                                                     } else {
                                                                         notificaLateralError(mustache.render(
-                                                                            'Respuesta errónea :_(<br>Tenías que haber seleccionado {{{correcta}}}.<br>Respuesta almacenada.',
-                                                                            { correcta: (tarea.rE === 'False') ? 'falso' : 'verdadero' }
+                                                                            '{{{respuestaIncorrecta}}}<br>{{{respuestaCorrectaEra}}} {{{correcta}}}',
+                                                                            {
+                                                                                respuestaIncorrecta: translate.respuestaIncorrecta[language],
+                                                                                respuestaCorrectaEra: translate.respuestaCorrectaEra[language],
+                                                                                correcta: (tarea.rE === 'False') ? translate.falso[language] : translate.verdadero[language]
+                                                                            }
                                                                         ));
                                                                     }
                                                                     break;
                                                                 default:
-                                                                    notificaLateral('Respuesta almacenada.');
+                                                                    notificaLateral(translate.respuestaAlmacenada[language]);
                                                                     break;
                                                             }
                                                             modal.hide();
@@ -490,7 +514,7 @@ function realizaTarea(idTarea) {
                                                     });
                                             })
                                             .catch(error => {
-                                                notificaLateralError("Error al recuperar el token del usuario.");
+                                                notificaLateralError(translate.errorTokenUsuario[language]);
                                                 console.error(error);
                                                 estadoBotones(botones, true);
                                             });
@@ -503,21 +527,21 @@ function realizaTarea(idTarea) {
                             }
                         } else {
                             notificaLateralError(mustache.render(
-                                'Error recuperando la información de la tarea: {{{respuesta}}}',
-                                { respuesta: result }
+                                '{{{error}}} {{{respuesta}}}',
+                                { error: translate.errorRecuperandoTarea[language], respuesta: result }
                             ));
                         }
                     } else {
-                        notificaLateralError('Error desconocido al obtener la información de la tarea.');
+                        notificaLateralError(translate.errorDesconocidoTarea[language]);
                     }
                 })
                 .catch(error => {
-                    notificaLateralError('Error desconocido al obtener la información de la tarea.');
+                    notificaLateralError(translate.errorDesconocidoTarea[language]);
                     console.error(error);
                 });
         }
     } else {
-        notificaLateralError("No se ha encontrado la tarea a realizar en la base de datos local");
+        notificaLateralError(translate.errorTareaNoLocal[language]);
     }
 }
 
@@ -532,8 +556,8 @@ function eliminaTareaModal(idTarea) {
             return false;
         });
         let modal = new bootstrap.Modal(document.getElementById('confirmarBorrar'));
-        document.getElementById('tituloConfirmacion').innerHTML = 'Eliminación de la tarea educativa';
-        document.getElementById('mensajeConfirmacion').innerHTML = '¿Estás seguro de eliminar la tarea de aprendizaje?';
+        document.getElementById('tituloConfirmacion').innerHTML = translate.borrarTarea0[language];
+        document.getElementById('mensajeConfirmacion').innerHTML = translate.borrarTarea1[language];
         const botones = [document.getElementById('aceptaBorrar'), document.getElementById('cerrarBorrar')];
         document.getElementById('aceptaBorrar').onclick = (ev) => {
             ev.preventDefault();
@@ -560,8 +584,12 @@ function eliminaTareaModal(idTarea) {
                                 return response.text();
                             }
                             notificaLateralError(mustache.render(
-                                'No se ha podido completar el borrado: {{{status}}}',
-                                { status: response.status }));
+                                '{{{borraMsg}}} {{{status}}}',
+                                {
+                                    borraMsg: translate.deletePOI2[language],
+                                    status: response.status
+                                }
+                            ));
                             return null;
                         })
                         .then(result => {
@@ -570,7 +598,7 @@ function eliminaTareaModal(idTarea) {
                                     idObject: tarea.task,
                                     idUser: auth.currentUser.uid
                                 });
-                                notificaLateral('Tarea educativa eliminada.');
+                                notificaLateral(translate.borrarTarea2[language]);
                             }
                             modal.hide();
                             estadoBotones(botones, true);
@@ -579,8 +607,8 @@ function eliminaTareaModal(idTarea) {
                             modal.hide();
                             estadoBotones(botones, true);
                             notificaLateralError(mustache.render(
-                                'Se ha producido un error: {{{error}}}',
-                                { error: error }));
+                                '{{{fraseError}}} {{{error}}}',
+                                { fraseError: fraseError, error: error }));
                             console.error('error', error);
                         });
                 })
@@ -588,12 +616,12 @@ function eliminaTareaModal(idTarea) {
                     console.error(error);
                     modal.hide();
                     estadoBotones(botones, true);
-                    notificaLateralError('El usuario no se encuentra identificado. Inicie sesión.');
+                    notificaLateralError(translate.userNoSignIn[language]);
                 });
         };
         modal.show();
     } else {
-        notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
+        notificaLateralError(translate.errorTareaNoLocal[language]);
     }
 }
 
@@ -626,8 +654,11 @@ function modificarTarea(idTarea) {
                         return response.text();
                     default:
                         notificaLateralError(mustache.render(
-                            'Se ha producido un error al obtener la tarea del almacén. Código: {{{codigo}}}',
-                            { codigo: response.status }
+                            '{{{errorServidor}}}: {{{codigo}}}',
+                            { 
+                                errorServidor: translate.errorInternoServidor[language],
+                                codigo: response.status 
+                            }
                         ));
                         return null;
                 }
@@ -642,7 +673,7 @@ function modificarTarea(idTarea) {
                         if (tarea !== null) {
                             const modal = new bootstrap.Modal(document.getElementById('nuevaTareaModal'));
                             document.getElementById("formNT").reset();
-                            reseteaNuevaTarea('Edición de la tarea');
+                            reseteaNuevaTarea(translate.edicionTarea[language]);
 
                             const selector = document.getElementById("selectTipoRespuesta");
                             const titulo = document.getElementById("tituloNT");
@@ -748,6 +779,11 @@ function modificarTarea(idTarea) {
                                 }
                             });
 
+                            document.getElementById('btInsertarLinkNT').onclick = ev => {
+                                ev.preventDefault();
+                                insertarLink(document.getElementById('textoAsociadoNT'));
+                            };
+
                             let botones = [document.getElementById("enviarNT")];
 
                             document.getElementById("enviarNT").onclick = (ev) => {
@@ -820,8 +856,10 @@ function modificarTarea(idTarea) {
                                                             return response.text();
                                                         default:
                                                             notificaLateralError(mustache.render(
-                                                                'Se ha producido un error desconocido: {{{status}}}',
-                                                                { status: response.status }
+                                                                '{{{fraseError}}} {{{status}}}',
+                                                                { 
+                                                                    fraseError: translate.fraseError[language],
+                                                                    status: response.status }
                                                             ));
                                                             return null;
                                                     }
@@ -834,7 +872,7 @@ function modificarTarea(idTarea) {
                                                                 idUser: auth.currentUser.uid
                                                             });
                                                             modal.hide();
-                                                            notificaLateral('Tarea educativa actualizada');
+                                                            notificaLateral(translate.tareaActualizada[language]);
                                                         } else {
                                                             notificaLateralError(resultado);
                                                         }
@@ -845,16 +883,18 @@ function modificarTarea(idTarea) {
                                                 })
                                                 .catch(error => {
                                                     notificaLateralError(mustache.render(
-                                                        'Se ha producido un error al actualizar el POI: {{{error}}}',
-                                                        { error: error }));
+                                                        '{{{fraseError}}} {{{error}}}',
+                                                        { 
+                                                            fraseError: translate.fraseError[language], 
+                                                            error: error }));
                                                     console.error('error', error);
                                                     estadoBotones(botones, true);
                                                 });
                                         })
                                         .catch(error => {
                                             notificaLateralError(mustache.render(
-                                                'Se ha producido un error al obtener la información del POI: {{{error}}}',
-                                                { error: error }));
+                                                '{{{fraseError}}}: {{{error}}}',
+                                                { fraseError: translate.fraseError[language], error: error }));
                                             console.error('error', error);
                                             estadoBotones(botones, true);
                                         });
@@ -866,7 +906,7 @@ function modificarTarea(idTarea) {
                             modal.show();
 
                         } else {
-                            notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
+                            notificaLateralError(translate.errorTareaNoLocal[language]);
                         }
                     }
                 }
@@ -874,13 +914,13 @@ function modificarTarea(idTarea) {
             .catch(error => {
                 estadoBotones([], true);
                 notificaLateralError(mustache.render(
-                    'Se ha producido un error desconocido: {{{error}}}',
-                    { error: error }
+                    '{{{fraseError}}} {{{error}}}',
+                    { fraseError: translate.fraseError[language], error: error }
                 ));
                 console.error(error);
             });
     } else {
-        notificaLateralError("No se ha encontrado la información de la tarea a modificar en local");
+        notificaLateralError(translate.errorTareaNoLocal[language]);
     }
 }
 
@@ -891,9 +931,9 @@ function reseteaRealizaTarea() {
     document.getElementById('contenendorCamara').setAttribute('hidden', 'true');
     document.getElementById('colImgRepoRealizaTarea').setAttribute('hidden', true);
     document.getElementById('imgRepoRealizaTarea').src = '';
-    document.getElementById('lblnotasRealizaTarea').innerHTML = 'Agrega alguna nota si lo deseas';
+    document.getElementById('lblnotasRealizaTarea').innerHTML = translate.tbnotasRealizaTarea[language];
     document.getElementById('tbnotasRealizaTarea').value = '';
-    document.getElementById('tbnotasRealizaTarea').placeholder = 'Pienso que...';
+    document.getElementById('tbnotasRealizaTarea').placeholder = translate.piensoQue[language];
     document.getElementById('tbnotasRealizaTarea').className = 'form-control';
     document.getElementById('foto').src = '';
     document.getElementById('lblSinRealizarFoto').setAttribute('hidden', 'true');
@@ -902,7 +942,7 @@ function reseteaRealizaTarea() {
     document.getElementById('mcqOpcionesRealizaTarea').innerHTML = '';
 }
 
-function reseteaNuevaTarea(titulo = 'Nueva tarea') {
+function reseteaNuevaTarea(titulo = translate.nuevaTarea0[language]) {
     document.getElementById("formNT").reset();
     document.getElementById("selectTipoRespuesta").className = 'form-select';
     document.getElementById("encabezadoNT").innerHTML = titulo;
@@ -947,6 +987,11 @@ function nuevaTarea(idPoi) {
                 break;
         }
     };
+
+    document.getElementById('btInsertarLinkNT').onclick = ev => {
+        ev.preventDefault();
+        insertarLink(document.getElementById('textoAsociadoNT'));
+    }
 
     const botones = [document.getElementById("enviarNT")];
     document.getElementById("enviarNT").onclick = (ev) => {
@@ -1093,7 +1138,7 @@ function recuperaValoresTextoTarea() {
                     envio[equivalencias[campo.id]] = intermedio;
                     break;
                 default:
-                    envio[equivalencias[campo.id]] = campo.value.trim();
+                    envio[equivalencias[campo.id]] = campo.value.replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim();
                     break;
             }
         }
@@ -1106,16 +1151,16 @@ function compruebaCamposNuevaTareaModal() {
     let alguno = false;
 
     const mensajes = {
-        tituloNT: 'La tarea necesita un título.',
-        textoAsociadoNT: 'La tarea necesita una descripción textual',
-        cbEspacio: 'Se tiene que seleccionar uno o más espacios para realizar la tarea',
-        selectTipoRespuesta: 'Se tiene que seleccionar un tipo de respuesta',
-        verdaderoNTDiv: 'Selecciona la opción verdadera',
-        rVMCQ: 'Escribe la respuesta correcta',
-        rD1MCQ: 'Proporciona un distractor',
-        rD2MCQ: 'Proporciona un distractor',
-        rD3MCQ: 'Proporciona un distractor',
-        cbEspacioDiv: 'Selecciona al menos un espacio donde realizar la tarea',
+        tituloNT: translate.mNuevaTarea1[language],
+        textoAsociadoNT: translate.mNuevaTarea2[language],
+        cbEspacio: translate.mNuevaTarea3[language],
+        selectTipoRespuesta: translate.mNuevaTarea4[language],
+        verdaderoNTDiv: translate.mNuevaTarea5[language],
+        rVMCQ: translate.mNuevaTarea6[language],
+        rD1MCQ: translate.mNuevaTarea7[language],
+        rD2MCQ: translate.mNuevaTarea7[language],
+        rD3MCQ: translate.mNuevaTarea7[language],
+        cbEspacioDiv: translate.mNuevaTarea8[language],
     }
     const selectValido = [
         'tRVF',

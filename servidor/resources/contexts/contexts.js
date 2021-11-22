@@ -17,16 +17,18 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con la colección "contextos".
  * autor: Pablo García Zarza
- * version: 20211021
+ * version: 20211109
  */
 
 const Http = require('http');
 const admin = require('firebase-admin');
+const Mustache = require('mustache');
 
 const Queries = require('../../util/queries');
 const Auxiliar = require('../../util/auxiliar');
 const Configuracion = require('../../util/config');
 const { dameDocumentoRapida } = require('../../util/bd');
+const winston = require('../../util/winston');
 
 /**
  * Método para obtener los contextos de una zona. Como queries el cliente deberá proporcionar la
@@ -38,6 +40,7 @@ const { dameDocumentoRapida } = require('../../util/bd');
  */
 function obtenContextos(req, res) {
   try {
+    const start = Date.now();
     const lado = 0.0254;
     const { lat } = req.query;
     const { long } = req.query;
@@ -59,15 +62,34 @@ function obtenContextos(req, res) {
               Buffer.concat(chunks).toString(),
             );
             if (resultados && resultados.length > 0) {
-              res.json(resultados);
-            } else { res.sendStatus(204); }
+              winston.info(Mustache.render(
+                'getPOIZone || {{{lat}}} - {{{lng}}} || {{{nPOI}}} || {{{time}}}',
+                {
+                  lat: lat,
+                  lng: long,
+                  nPOI: resultados.length,
+                  time: Date.now() - start
+                }
+              ));
+              Auxiliar.logHttp(req, res, 200, 'getPOIZoneL', start).json(resultados);
+            } else { 
+              winston.info(Mustache.render(
+                'getPOIZone || {{{lat}}} - {{{lng}}} || 0 || {{{time}}}',
+                {
+                  lat: lat,
+                  lng: long,
+                  time: Date.now() - start
+                }
+              ));
+              Auxiliar.logHttp(req, res, 204, 'getPOIZoneL', start).end();
+            }
           });
         };
         Http.request(options, consulta).end();
-      } else { res.status(400).send('La latitud y la longitud deben ser números válidos.'); }
-    } else { res.status(400).send('Se tiene que enviar como query la posición más al noroeste de la cuadrícula: URL/contexts?lat=<lat>&long=<long>'); }
+      } else { Auxiliar.logHttp(req, res, 400, 'getPOIZoneLE', start).send('La latitud y la longitud deben ser números válidos.'); }
+    } else { Auxiliar.logHttp(req, res, 400, 'getPOIZoneLE', start).send('Se tiene que enviar como query la posición más al noroeste de la cuadrícula: URL/contexts?lat=<lat>&long=<long>'); }
   } catch (e) {
-    res.sendStatus(500);
+    Auxiliar.logHttp(req, res, 500, 'getPOIZoneLE').end();
   }
 }
 
@@ -83,6 +105,7 @@ function obtenContextos(req, res) {
  */
 async function nuevoContexto(req, res) {
   try {
+    const start = Date.now();
     const token = req.headers['x-tokenid'];
     admin.auth().verifyIdToken(token)
       .then(async decodedToken => {
@@ -157,38 +180,47 @@ async function nuevoContexto(req, res) {
                                 responseI.on('end', () => {
                                   resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(chunks).toString());
                                   if (resultados.length > 0) {
+                                    winston.info(Mustache.render(
+                                      'postPOI || {{{uid}}} || {{{idPOI}}} || {{{body}}} || {{{time}}}',
+                                      {
+                                        uid: uid,
+                                        idPOI: iri,
+                                        body: JSON.stringify(body.datos),
+                                        time: Date.now() - start
+                                      }
+                                    ));
                                     res.location(iri);
-                                    res.status(201).send(JSON.stringify({ ctx: iri }));
-                                  } else res.status(503).send('El repositorio no es capaz de insertar el nuevo contexto');
+                                    Auxiliar.logHttp(req, res, 201, 'postPOIL', start).send(JSON.stringify({ ctx: iri }));
+                                  } else Auxiliar.logHttp(req, res, 503, 'postPOILE', start).send('El repositorio no es capaz de insertar el nuevo contexto');
                                 });
                               };
                               Http.request(options, insercion).end();
-                            } else { res.status(409).send('Se produce un conflicto con el nombre del contexto y la posición puesto que ya existe en el repositorio'); }
+                            } else { Auxiliar.logHttp(req, res, 409, 'postPOILE', start).send('Se produce un conflicto con el nombre del contexto y la posición puesto que ya existe en el repositorio'); }
                           });
                         };
                         Http.request(options, consulta).end();
-                      } else { res.status(400).send('La latitud y la longitud deben ser números válidos. Los strings no pueden estar vacíos'); }
-                    } else { res.status(400).send('Se deben enviar los siguientes campos en el cuerpo de la petición como un JSONObject: "lat", "long", "titulo", "autor", "descr".'); }
-                  } else { res.status(403).send('El usuario no tiene rol de docente'); }
+                      } else { Auxiliar.logHttp(req, res, 400, 'postPOILE', start).send('La latitud y la longitud deben ser números válidos. Los strings no pueden estar vacíos'); }
+                    } else { Auxiliar.logHttp(req, res, 400, 'postPOILE', start).send('Se deben enviar los siguientes campos en el cuerpo de la petición como un JSONObject: "lat", "long", "titulo", "autor", "descr".'); }
+                  } else { Auxiliar.logHttp(req, res, 403, 'postPOILE', start).send('El usuario no tiene rol de docente'); }
                 })
                 .catch(error => {
                   console.error(error);
-                  res.status(500).send('Error al recuperar la información de la base de datos');
+                  Auxiliar.logHttp(req, res, 500, 'postPOILE', start).send('Error al recuperar la información de la base de datos');
                 });
-            } else { res.status(400).send('Se tienen que enviar los datos del nuevo contexto'); }
-          } else { res.status(403).send('El email no está verificado'); }
-        } else { res.status(400).send('Error en la decodificación del token'); }
+            } else { Auxiliar.logHttp(req, res, 400, 'postPOILE', start).send('Se tienen que enviar los datos del nuevo contexto'); }
+          } else { Auxiliar.logHttp(req, res, 403, 'postPOILE', start).send('El email no está verificado'); }
+        } else { Auxiliar.logHttp(req, res, 400, 'postPOILE', start).send('Error en la decodificación del token'); }
       })
       .catch(error => {
         console.error(error);
-        res.status(500).send('Error al decodificar el token');
+        Auxiliar.logHttp(req, res, 500, 'postPOILE', start).send('Error al decodificar el token');
       });
   } catch (e) {
-    res.sendStatus(500);
+    Auxiliar.logHttp(req, res, 500, 'postPOILE').end();
   }
 }
 
-module.exports = { 
-  obtenContextos, 
-  nuevoContexto 
+module.exports = {
+  obtenContextos,
+  nuevoContexto
 };

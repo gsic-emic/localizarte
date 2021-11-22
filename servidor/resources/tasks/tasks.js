@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Gestión de peticiones relacionadas con la colección "tareas".
  * autor: Pablo García Zarza
- * version: 20210615
+ * version: 20211109
  */
 
 const Http = require('http');
@@ -28,6 +28,7 @@ const Queries = require('../../util/queries');
 const Auxiliar = require('../../util/auxiliar');
 const Configuracion = require('../../util/config');
 const { dameDocumentoRapida } = require('../../util/bd');
+const winston = require('../../util/winston');
 
 /**
  * Método para obtener las tareas incluidas en un contexto.
@@ -37,6 +38,7 @@ const { dameDocumentoRapida } = require('../../util/bd');
  */
 function dameTareas(req, res) {
   try {
+    const start = Date.now();
     let { context } = req.query;
     if (context) {
       context = context.trim();
@@ -77,16 +79,32 @@ function dameTareas(req, res) {
                 salida.push(resultado);
               }
             });
-
-            res.json(salida);
+            winston.info(Mustache.render(
+              'getTasksPOI || {{{poi}}} || {{{nTasks}}} || {{{time}}}',
+              {
+                poi: context,
+                nTasks: salida.length,
+                time: Date.now() - start
+              }
+            ));
+            Auxiliar.logHttp(req, res, 200, 'getTasksPOIL', start).json(salida);
           }
-          else res.sendStatus(204);
+          else {
+            winston.info(Mustache.render(
+              'getTasksPOI || {{{poi}}} || 0 || {{{time}}}',
+              {
+                poi: context,
+                time: Date.now() - start
+              }
+            ));
+            Auxiliar.logHttp(req, res, 204, 'getTasksPOIL', start).end();
+          }
         });
       };
       Http.request(options, consulta).end();
-    } else { res.status(400).send('Se tiene que enviar el identificador de un contexto como parámetro: URL/tasks?constest=<IRIcontext>'); }
+    } else { Auxiliar.logHttp(req, res, 400, 'getTasksPOILE', start).send('Se tiene que enviar el identificador de un contexto como parámetro: URL/tasks?constest=<IRIcontext>'); }
   } catch (error) {
-    res.sendStatus(500);
+    Auxiliar.logHttp(req, res, 500, 'getTasksPOILE').end();
   }
 }
 
@@ -99,6 +117,7 @@ function dameTareas(req, res) {
  */
 async function creaTarea(req, res) {
   try {
+    const start = Date.now();
     let { body } = req;
     if (body && body.datos) {
       const token = req.headers['x-tokenid'];
@@ -193,23 +212,32 @@ async function creaTarea(req, res) {
                                         respIns.on('end', () => {
                                           resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(datos).toString());
                                           if (resultados.length > 0) {
+                                            winston.info(Mustache.render(
+                                              'postTask || {{{uid}}} || {{{idTask}}} || {{{body}}} || {{{time}}}',
+                                              {
+                                                uid: uid,
+                                                idTask: iri,
+                                                body: JSON.stringify(body),
+                                                time: Date.now() - start
+                                              }
+                                            ));
                                             res.location(iri);
-                                            res.status(201).send(JSON.stringify({ iri: iri }));
-                                          } else { res.status(503).send('El repositorio no ha podido almacenar la nueva tarea'); }
+                                            Auxiliar.logHttp(req, res, 201, 'postTaskL', start).send(JSON.stringify({ iri: iri }));
+                                          } else { Auxiliar.logHttp(req, res, 503, 'postTaskLE', start).send('El repositorio no ha podido almacenar la nueva tarea'); }
                                         });
                                       };
                                       Http.request(options, consulta).end();
-                                    } else { res.status(409).send('El identificador de la tarea ya se está utilizando en el repositorio'); }
+                                    } else { Auxiliar.logHttp(req, res, 409, 'postTaskLE', start).send('El identificador de la tarea ya se está utilizando en el repositorio'); }
                                   });
                                 };
                                 Http.request(options, consulta).end();
-                              } else { res.status(400).send('El contexto al que se intenta asociar la tarea no existe o no dispone de título'); }
-                            } else { res.status(400).send('El contexto al que se intenta asociar la tarea no existe'); }
+                              } else { Auxiliar.logHttp(req, res, 400, 'postTaskLE', start).send('El contexto al que se intenta asociar la tarea no existe o no dispone de título'); }
+                            } else { Auxiliar.logHttp(req, res, 400, 'postTaskLE', start).send('El contexto al que se intenta asociar la tarea no existe'); }
                           });
                         };
                         Http.request(options, consulta).end();
                       } else {
-                        res.status(400).send(Mustache.render(
+                        Auxiliar.logHttp(req, res, 400, 'postTaskLE', start).send(Mustache.render(
                           'El tipo de respuesta y espacio tienen que ser soportados por el sistema.\nTipos respuesta: {{{aT}}}\nEspacios: {{{spa}}}',
                           {
                             aT: Auxiliar.tipoRespuetasSoportados.toString(),
@@ -217,23 +245,23 @@ async function creaTarea(req, res) {
                           }
                         ));
                       }
-                    } else { res.status(400).send('La petición tiene que tener los siguientes campos en el cuerpo de la petición: hasConstext, titulo, aTR, , tR, autor, espacio. No pueden estar vacíos.'); }
-                  } else { res.status(400).send('La petición tiene que tener los siguientes campos en el cuerpo de la petición: hasConstext, titulo, aTR, , tR, autor'); }
-                } else { res.status(403).send('El usuario tiene rol de docente'); }
+                    } else { Auxiliar.logHttp(req, res, 400, 'postTaskLE', start).send('La petición tiene que tener los siguientes campos en el cuerpo de la petición: hasConstext, titulo, aTR, , tR, autor, espacio. No pueden estar vacíos.'); }
+                  } else { Auxiliar.logHttp(req, res, 400, 'postTaskLE', start).send('La petición tiene que tener los siguientes campos en el cuerpo de la petición: hasConstext, titulo, aTR, , tR, autor'); }
+                } else { Auxiliar.logHttp(req, res, 403, 'postTaskLE', start).send('El usuario tiene rol de docente'); }
               })
               .catch(error => {
                 console.error(error);
-                res.status(500).send('Error al recuperar el rol de la base de datos.');
+                Auxiliar.logHttp(req, res, 500, 'postTaskLE', start).send('Error al recuperar el rol de la base de datos.');
               });
-          } else { res.status(403).send('El correo no está verificado'); }
+          } else { Auxiliar.logHttp(req, res, 403, 'postTaskLE', start).send('El correo no está verificado'); }
         })
         .catch(error => {
           console.error(error);
-          res.status(400).send('Error con el token enviado');
+          Auxiliar.logHttp(req, res, 400, 'postTaskLE', start).send('Error con el token enviado');
         });
-    } else { res.status(400).send('Se tienen que enviar los datos de la tarea'); }
+    } else { Auxiliar.logHttp(req, res, 400, 'postTaskLE', start).send('Se tienen que enviar los datos de la tarea'); }
   } catch (e) {
-    res.status(500).send('Se ha capturado una excepción en la creación de la tarea en el servidor');
+    Auxiliar.logHttp(req, res, 500, 'postTaskLE').send('Se ha capturado una excepción en la creación de la tarea en el servidor');
   }
 }
 

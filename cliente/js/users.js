@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Gestión de los usuarios en el cliente de LocalizARTE.
  * autor: Pablo García Zarza
- * version: 20211018
+ * version: 20211112
  */
 
 function inicioSesionUsuario() {
@@ -35,9 +35,9 @@ function inicioSesionUsuario() {
         campo.value = '';
     });
     const mensajes = {
-        inicioMail: 'Se necesita una dirección de correo',
-        inicioMailFormatoMal: 'Se necesita una dirección de correo válida',
-        inicioPass: 'Se necesita una contraseña',
+        inicioMail: translate.mInicioMail0[language],
+        inicioMailFormatoMal: translate.mInicioMail1[language],
+        inicioPass: translate.mInicioMail2[language],
     };
     const equivalencias = {
         inicioMail: 'email',
@@ -70,7 +70,7 @@ function inicioSesionUsuario() {
                 campo.className = 'form-control';
             });
             modal.hide();
-            notificaLateral('Si la cuenta existe se ha enviado un email para que puedas cambiar la contraseña.');
+            notificaLateral(translate.mInicioMail2[language]);
             auth.sendPasswordResetEmail(campo.value).then(() => { }).catch(() => { });
         }
         estadoBotones(botones, true);
@@ -132,7 +132,7 @@ function inicioSesionUsuario() {
                         auth.currentUser.sendEmailVerification();
                         estadoBotones(botones, true);
                         modal.hide();
-                        notificaLateralError('Verifica la dirección de correo antes de iniciar sesión. Te hemos vuelto a enviar un correo de confirmación.');
+                        notificaLateralError(translate.mVerificaCorreo[language]);
                         cerrarSesionFirebase(true);
                     }
                 })
@@ -141,7 +141,7 @@ function inicioSesionUsuario() {
                         case 'auth/user-not-found':
                         case 'auth/wrong-password':
                             estadoBotones(botones, true);
-                            notificaLateralError('Error en la dirección de correo o en la contraseña.');
+                            notificaLateralError(translate.errorCorreoContra[language]);
                             camposObligatorios.forEach(campo => {
                                 campo.value = '';
                                 campo.placeholder = mensajes[campo.id];
@@ -152,7 +152,7 @@ function inicioSesionUsuario() {
                         default:
                             estadoBotones(botones, true);
                             modal.hide();
-                            notificaLateralError('Error desconocido.');
+                            notificaLateralError(translate.fraseError[language]);
                             break;
                     }
                 });
@@ -188,13 +188,13 @@ function recuperaDatosUsuarioServidor(modal = null, botones = [], silencio = fal
                         case 404:
                             cerrarSesionFirebase(silencio);
                             if (!silencio) {
-                                notificaLateralError('No se ha encontrado al usuario');
+                                notificaLateralError(translate.errorUserNotFound[language]);
                             }
                             return null;
                         default:
                             cerrarSesionFirebase(silencio)
                             if (!silencio) {
-                                notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
+                                notificaLateralError(mustache.render('{{{fraseError}}}: {{{codigo}}}', {  fraseError: translate.fraseError[language],codigo: response.status }));
                             }
                             return null;
                     }
@@ -205,8 +205,9 @@ function recuperaDatosUsuarioServidor(modal = null, botones = [], silencio = fal
                         rol = result.rol;
                         if (!silencio) {
                             notificaLateral(mustache.render(
-                                'Hola de nuevo {{{nombre}}}',
+                                '{{{hola}}} {{{nombre}}}',
                                 {
+                                    hola: translate.hola[language],
                                     nombre: dUser.name
                                 }));
                         }
@@ -215,11 +216,26 @@ function recuperaDatosUsuarioServidor(modal = null, botones = [], silencio = fal
                             if (!document.getElementById('swVistaProfesor').checked) {
                                 document.getElementById('swVistaProfesor').checked = true;
                             }
-                            document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();">Contribuciones</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
+                            document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+                                '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();" id="contributionsNavBar">{{{contribuciones}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();" id="signOutNavBar">{{{signOut}}}</a></li>',
+                                {
+                                    actualLanguage: language.toUpperCase(),
+                                    contribuciones: translate.contributionsNavBar[language],
+                                    userData: translate.userDataNavBar[language],
+                                    signOut: translate.signOutNavBar[language]
+                                });
 
                         } else {
                             document.getElementById('interruptorProfesor').setAttribute('hidden', 'true');
-                            document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();">Respuestas</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();">Datos del usuario</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();">Cerrar sesión</a></li>';
+                            document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+                                '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();" id="answersNavBar">{{{respuestas}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();" id="signOutNavBar">{{{signOut}}}</a></li>',
+                                {
+                                    actualLanguage: language.toUpperCase(),
+                                    respuestas: translate.answersNavBar[language],
+                                    userData: translate.userDataNavBar[language],
+                                    signOut: translate.signOutNavBar[language],
+                                }
+                            );
                         }
                     }
                     estadoBotones(botones, true);
@@ -248,9 +264,9 @@ function recuperaDatosUsuarioServidor(modal = null, botones = [], silencio = fal
 
 function registroUsuario() {
     const modal = new bootstrap.Modal(document.getElementById('nuevoUsuarioModal'));
-    document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = 'Nuevo usuario';
+    document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = translate.mNuevoUsuario[language];
     const btRegistroEnviar = document.getElementById('registroEnviar');
-    btRegistroEnviar.innerHTML = 'Registrar';
+    btRegistroEnviar.innerHTML = translate.registroEnviar[language];
     const botones = [btRegistroEnviar];
     const campos = [
         document.getElementById('registroMail'),
@@ -265,7 +281,7 @@ function registroUsuario() {
     camposObligatorios.forEach(campo => {
         campo.disabled = false;
     });
-    document.getElementById('camposObligatoriosRegistroLabel').innerHTML = '* Campos obligatorios';
+    document.getElementById('camposObligatoriosRegistroLabel').innerHTML = translate.modalNuevoPuntosInteresCamposObligatorios[language];
     const camposOpcionales = [
         document.getElementById('registroNombre'),
         document.getElementById('registroApellido')
@@ -275,13 +291,23 @@ function registroUsuario() {
         campo.className = 'form-control';
         campo.value = '';
     });
+
+    const cbPolPriv = document.getElementById('cbPoliPriv');
+    btRegistroEnviar.disabled = true;
+    
+    cbPolPriv.onchange =  (ev) => {
+        ev.preventDefault();
+        btRegistroEnviar.disabled = !cbPolPriv.checked;
+        //cbPolPriv.checked = !cbPolPriv.checked;
+    };
+
     const mensajes = {
-        registroMail: 'Se necesita una dirección de correo válida',
-        registroMailYaRegistrado: 'Dirección de correo utilizada previamente',
-        registroPass: 'Se necesita una contraseña',
-        registroPassCorta: 'Mínimo contraseñas de 6 caracteres',
-        registroNombre: 'Se necesita un nombre',
-        registroApellido: 'Se necesita un apellido'
+        registroMail: translate.mInicioMail1[language],
+        registroMailYaRegistrado: translate.mNuevoUsuario1[language],
+        registroPass: translate.mInicioMail2[language],
+        registroPassCorta: translate.mNuevoUsuario2[language],
+        registroNombre: translate.mNuevoUsuario3[language],
+        registroApellido: translate.mNuevoUsuario4[language]
     };
     const equivalencias = {
         registroMail: 'email',
@@ -385,7 +411,7 @@ function registroUsuario() {
                                         case 400:
                                             return response.text();
                                         default:
-                                            notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
+                                            notificaLateralError(mustache.render('{{{fraseError}}}: {{{codigo}}}', { fraseError: translate.fraseError[language], codigo: response.status }));
                                             return null;
                                     }
                                 })
@@ -396,9 +422,9 @@ function registroUsuario() {
                                         } else {
                                             auth.currentUser.sendEmailVerification();//Envío correo de verificación a la cuenta del usuario
                                             if (result.verifiedEmail)
-                                                notificaLateral('Ya estás registrado. Inicia sesión para comenzar a usar LocalizARTE');
+                                                notificaLateral(translate.mNuevoUsuario5[language]);
                                             else
-                                                notificaLateral('Se te ha enviado un correo para verificar el email. Después de verificarlo podrás identificarte.');
+                                                notificaLateral(translate.mNuevoUsuario6[language]);
                                         }
                                     }
                                     estadoBotones(botones, true);
@@ -408,13 +434,19 @@ function registroUsuario() {
                                 .catch(error => {
                                     estadoBotones(botones, true);
                                     console.error('error', error);
-                                    notificaLateralError('Se ha producido un error desconocido');
+                                    notificaLateralError(translate.fraseError[language]);
                                 });
 
                         })
                         .catch(error => {
                             estadoBotones(botones, true);
-                            notificaLateralError('Error desconocido: ' + error.code);
+                            notificaLateralError(mustache.render(
+                                '{{{fraseError}}}: {{{codigo}}}',
+                                {
+                                    fraseError: translate.fraseError[language],
+                                    codigo: error.code
+                                }
+                            ));
                             cerrarSesionFirebase(true);
                             modal.hide();
                         });
@@ -450,14 +482,15 @@ function cerrarSesionFirebase(silencio = false) {
     auth.signOut()
         .then(() => {
             if (!silencio) {
-                notificaLateral("Se ha cerrado la sesión correctamente.")
+                notificaLateral(translate.mCerrarSesion[language]);
             }
         })
         .catch((error) => {
             if (!silencio) {
                 notificaLateral(mustache.render(
-                    'Error al cerrar sesión: {{{codError}}}',
+                    '{{{fraseError}}}: {{{codError}}}',
                     {
+                        fraseError: translate.fraseError[language],
                         codError: error.status
                     }
                 ));
@@ -469,7 +502,16 @@ function cerrarSesion() {
     const modal = new bootstrap.Modal(document.getElementById('confirmarCerrar'));
     document.getElementById('aceptaCerrarSesion').onclick = ev => {
         ev.preventDefault();
-        document.getElementById('gestionUsuarioLista').innerHTML = '<li class="nav-item"><a class="nav-link" href="javascript:informacionDatos();">Información</a></li><li class="nav-item"><a class="nav-link"  href="javascript:registroUsuario();">Registro</a></li><li class="nav-item"><a class="nav-link" href="javascript:inicioSesionUsuario();">Identificación</a></li>';
+        document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+            '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:informacionDatos();" id="infoNavBar">{{{info}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:registroUsuario();" id="signUpNavBar">{{{signUpNavBar}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:inicioSesionUsuario();" id="signInNavBar">{{{signInNavBar}}}</a></li>',
+            {
+                actualLanguage: language.toUpperCase(),
+                info: translate.infoNavBar[language],
+                signUpNavBar: translate.signUpNavBar[language],
+                signInNavBar: translate.signInNavBar[language],
+            }
+        );
+
         dUser = null;
         if (rol !== 0) {
             document.getElementById('interruptorProfesor').setAttribute('hidden', true);
@@ -484,11 +526,11 @@ function cerrarSesion() {
 function gestionarCuenta() {
     const modal = new bootstrap.Modal(document.getElementById('nuevoUsuarioModal'));
     if (rol > 0) {
-        document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = 'Cuenta de docente';
+        document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = translate.mCuentaProfesor[language];
         document.getElementById('camposObligatoriosRegistroLabel').innerHTML = '';
     } else {
-        document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = 'Datos del usuario';
-        document.getElementById('camposObligatoriosRegistroLabel').innerHTML = 'Si quieres disponer de una cuenta de docente para poder crear nuevos POI y tareas educativas envía un correo electrónico a la dirección <em>localizarte@gsic.uva.es</em> para que el equipo de LocalizARTE se pueda poner en contacto contigo.';
+        document.getElementById('tituloModalnuevoUsuarioModal').innerHTML = translate.userDataNavBar[language];
+        document.getElementById('camposObligatoriosRegistroLabel').innerHTML = translate.mSolicitudCuentaProfe[language];
     }
     const campoNombre = document.getElementById('registroNombre');
     if (dUser.name !== undefined) {
@@ -508,7 +550,7 @@ function gestionarCuenta() {
     });
     const btRegistroEnviar = document.getElementById('registroEnviar');
     const botones = [btRegistroEnviar];
-    btRegistroEnviar.innerHTML = 'Actualizar';
+    btRegistroEnviar.innerHTML = translate.mActualizar[language];
     btRegistroEnviar.onclick = ev => {
         ev.preventDefault();
         estadoBotones(botones, false);
@@ -516,7 +558,7 @@ function gestionarCuenta() {
         nuevoNombre = campoNombre.value.trim();
         nuevoApellido = campoApellido.value.trim();
         if (dUser.name === nuevoNombre && dUser.surname === nuevoApellido) {
-            notificaLateralError('No has modificado ningún valor');
+            notificaLateralError(translate.mNoModificaciones[language]);
             estadoBotones(botones, true);
             modal.hide();
         } else {
@@ -551,7 +593,7 @@ function gestionarCuenta() {
                                 case 400:
                                     return response.text();
                                 default:
-                                    notificaLateralError(mustache.render('Error desconocido: {{{codigo}}}', { codigo: response.status }));
+                                    notificaLateralError(mustache.render('{{{fraseError}}}: {{{codigo}}}', { fraseError: translate.fraseError[language], codigo: response.status }));
                                     return null;
                             }
                         })
@@ -562,7 +604,7 @@ function gestionarCuenta() {
                                 } else {
                                     dUser.name = nuevoNombre;
                                     dUser.surname = nuevoApellido;
-                                    notificaLateral('Datos del usuario actualizados');
+                                    notificaLateral(translate.mDatosUsuarioActualizados[language]);
                                 }
                             }
                             estadoBotones(botones, true);
@@ -592,8 +634,4 @@ function gestionarCuenta() {
         }
     }
     modal.show();
-}
-
-function mostrarModalContribuciones() {
-    console.log('mostrarModalContribuciones()');
 }

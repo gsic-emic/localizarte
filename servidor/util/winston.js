@@ -1,29 +1,21 @@
 const winston = require('winston');
+const { combine, timestamp } = winston.format;
 
-const miformato = winston.format.printf(({level, message, timestamp}) => {return `${timestamp} [${level}] ${message}`;});
+const miformato = winston.format.printf(({ level, message, timestamp }) => { return `[[${level}]] || ${timestamp} || ${message}`; });
 
 
 const logger = winston.createLogger({
+    format: combine(
+        timestamp(),
+        miformato
+    ),
     transports: [
         new winston.transports.File(
-            { 
-                filename: './log/error.log', 
-                level: 'error' 
+            {
+                filename: './log/acciones2.log',
+                level: 'debug',
+                maxsize: 20971520,
             }),
-        new winston.transports.File(
-            { 
-                filename: './log/acciones.log',
-                level: 'info',
-                json: true,
-                maxSize: 1000000,
-                maxFiles: 10
-            }),
-        new winston.transports.File(
-            { 
-                filename: './log/peticiones.log', 
-                level: 'http',
-                json: false
-            })
     ],
     exitOnError: false,
     exceptionHandlers: [
