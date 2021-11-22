@@ -39,6 +39,15 @@ body {
     z-index: 1601; 
 }
 
+.marcadorImagen {
+    width: 48px;
+    height: 48px;;
+    border: 2px solid rgb(211, 14, 68);
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+}
+
 .imagen {
     max-width: 300px;
     max-height: 300px;

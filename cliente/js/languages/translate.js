@@ -21,7 +21,7 @@ limitations under the License.
  */
 
 const translate = {
-    infoNavBar: { 
+    infoNavBar: {
         es: "Información",
         en: "Information",
     },
@@ -707,11 +707,11 @@ const translate = {
     },
     mNuevaTarea1: {
         es: "La tarea necesita un título",
-        en: "Task need a title",
+        en: "Task needs a title",
     },
     mNuevaTarea2: {
         es: "La tarea necesita una descripción textual",
-        en: "Task need a statement",
+        en: "Task needs a statement",
     },
     mNuevaTarea3: {
         es: "Se tiene que seleccionar uno o más espacios donde se podrá realizar la tarea",
@@ -876,5 +876,9 @@ const translate = {
     mSinContribuciones: {
         es: "Todavía no tienes contribuciones",
         en: "You have not got yet contributions",
+    },
+    navbarItemVersion: {
+        es: "ALFA",
+        en: "ALPHA",
     },
 }

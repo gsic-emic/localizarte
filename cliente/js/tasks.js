@@ -55,7 +55,7 @@ function tareasContexto(iriContexto, poi) {
         })
         .then(resultados => {
             if (resultados && modalOpen(document.getElementById('puntoInteres'))) {
-                /*
+                
                 if (auth && auth.currentUser) {
                     analytics.logEvent('getTasks', {
                         idObject: iriContexto,
@@ -66,7 +66,6 @@ function tareasContexto(iriContexto, poi) {
                         idObject: iriContexto
                     });
                 }
-                */
                 const espacioTareas = document.getElementById('espacioTareas');
                 if (resultados.length === 0) {
                     espacioTareas.innerHTML = mustache.render('<h6>{{{msg}}}</h6>', { msg: translate.poiSinTareas[language] });
@@ -595,10 +594,10 @@ function eliminaTareaModal(idTarea) {
                         })
                         .then(result => {
                             if (result) {
-                                /*analytics.logEvent('deleteTask', {
+                                analytics.logEvent('deleteTask', {
                                     idObject: tarea.task,
                                     idUser: auth.currentUser.uid
-                                });*/
+                                });
                                 notificaLateral(translate.borrarTarea2[language]);
                             }
                             modal.hide();
@@ -868,10 +867,10 @@ function modificarTarea(idTarea) {
                                                 .then(resultado => {
                                                     if (resultado !== null) {
                                                         if (typeof resultado !== 'string') {
-                                                            /*analytics.logEvent('updateTask', {
+                                                            analytics.logEvent('updateTask', {
                                                                 idObject: tarea.task,
                                                                 idUser: auth.currentUser.uid
-                                                            });*/
+                                                            });
                                                             modal.hide();
                                                             notificaLateral(translate.tareaActualizada[language]);
                                                         } else {
@@ -1037,10 +1036,10 @@ function nuevaTarea(idPoi) {
                         .then(result => {
                             if (result) {
                                 if (typeof result !== 'string') {
-                                    /*analytics.logEvent('newTask', {
+                                    analytics.logEvent('newTask', {
                                         idObject: result.mensaje.iri,
                                         idUser: auth.currentUser.uid
-                                    });*/
+                                    });
                                     notificaLateral('Tarea creada en el POI');
                                     modal.hide();
                                 } else {

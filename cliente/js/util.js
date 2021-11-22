@@ -362,6 +362,7 @@ function translateInterface() {
         document.getElementById('newLinkModalCancelar'),
         document.getElementById('newLinkModalInsertar'),
         document.getElementById('cbPoliPrivLabel'),
+        document.getElementById('navbarItemVersion'),
     ];
 
     const placeHolders = [

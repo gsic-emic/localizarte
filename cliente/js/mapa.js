@@ -77,7 +77,7 @@ let language;
 inicio();
 
 /**
- * Función para iniciar el cliente. La creación de esta función está motivada para 
+ * Función para iniciar el cliente. La creación de esta función está motivada para
  * capturar las posibles excepciones que pudieran ocurrir.
  */
 function inicio() {
@@ -87,6 +87,7 @@ function inicio() {
     popup = null;
     faltan = 0;
 
+    // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/language
     if (/^es\b/.test(navigator.language)) {
         setLanguage('es');
     } else {
@@ -123,7 +124,7 @@ function inicio() {
         attribution: '&copy; <a target="_blank" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
     }).addTo(map);*/
 
-    L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckvpj1ed92f7u14phfhfdvkor/tiles/256/{z}/{x}/{y}@2x?access_token=YOURTOKEN', {
+    L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckvpj1ed92f7u14phfhfdvkor/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3ExMWcxajQwMTN4MnVsYTJtMmdpOXc2In0.S9rtoLY8TYoI-4D8oy8F8A', {
         maxZoom: 20,
         minZoom: 3,
         attribution: '&copy; <a target="_blank" href="https://www.mapbox.com/about/maps/">Mapbox</a> | &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" >OpenStreetMap</a> contributors'
@@ -169,7 +170,7 @@ function inicio() {
     popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl)
     });
-    
+
     tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
@@ -181,7 +182,7 @@ function inicio() {
 
     app = firebase.initializeApp(firebaseConfig);
     auth = app.auth();
-    //analytics = app.analytics();
+    analytics = app.analytics();
     auth.languageCode = language;
     if (auth && auth.currentUser) {
         recuperaDatosUsuarioServidor(null, null, true);
@@ -191,7 +192,7 @@ function inicio() {
 
 
 /**
- * Función para obtener la posición del usuario. La primera pulsación activa el seguimiento. 
+ * Función para obtener la posición del usuario. La primera pulsación activa el seguimiento.
  * Una vez activado el seguimiento: si el mapa está descentrado con una pulsación lo centra;
  * si está centrado deja de obtener la posición del usuario.
  */

@@ -140,7 +140,7 @@ function peticionZona(punto, zona) {
         })
         .then(result => {
             if (result) {
-                /*if (auth && auth.currentUser) {
+                if (auth && auth.currentUser) {
                     analytics.logEvent('getPois', {
                         lat: punto.lat,
                         lng: punto.lng,
@@ -151,7 +151,7 @@ function peticionZona(punto, zona) {
                         lat: punto.lat,
                         lng: punto.lng
                     });
-                }*/
+                }
                 let encontrado = false;
                 for (let zona of zonas) {
                     if (zona.equals(punto)) {
@@ -245,15 +245,16 @@ let lastOpenModal = 0;
  */
 function markerPoP(poi) {
     let marker;
-    if (false && poi.imagen && poi.imagen !== undefined && poi.imagen.includes('commons.wikimedia.org')) {
+    if (poi.imagen && poi.imagen !== undefined && poi.imagen.includes('commons.wikimedia.org/wiki/Special:FilePath/')) {
         let imagen = poi.imagen.replace('http://', 'https://');
         if (!imagen.includes('width=')) {
-            imagen = mustache.render('{{{imagen}}}?width=48', { imagen: imagen });
+            imagen = mustache.render('{{{imagen}}}?width=50&height=50', { imagen: imagen });
         }
         marker = L.marker(poi.posicion, {
-            icon: L.icon({
-                iconSize: [48, 48],
-                iconUrl: imagen
+            icon: L.divIcon({
+                html: mustache.render('<img src="{{{imagen}}}" class="marcadorImagen">', { imagen: imagen }),
+                className: '',
+                iconSize: [50, 50],
             })
         });
     } else {
@@ -429,10 +430,10 @@ function eliminarPI(poi) {
                     })
                     .then(result => {
                         if (result) {
-                            /*analytics.logEvent('deletePoi', {
+                            analytics.logEvent('deletePoi', {
                                 idObject: poi.ctx,
                                 idUser: auth.currentUser.uid
-                            });*/
+                            });
                             if (typeof result === 'string') {
                                 notificaLateralError(mustache.render('Error: {{{txt}}}', { txt: result }));
                             } else {
@@ -636,10 +637,10 @@ function modificarPI(poi) {
                                         .then(resultado => {
                                             if (resultado !== null) {
                                                 if (typeof resultado !== 'string') {
-                                                    /*analytics.logEvent('updatePoi', {
+                                                    analytics.logEvent('updatePoi', {
                                                         idObject: poi.ctx,
                                                         idUser: auth.currentUser.uid
-                                                    });*/
+                                                    });
                                                     //POI modificado en el servidor
                                                     //Lo elimino de la memoria local
                                                     (Object.entries(modificados)).forEach(([modK, modV]) => {
@@ -1522,10 +1523,10 @@ function peticionInfoPoi(iri, guardaPinta, modal) {
         .then(result => {
             if (result) {
                 if (guardaPinta) {
-                    /*analytics.logEvent('newPoi', {
+                    analytics.logEvent('newPoi', {
                         idObject: iri,
                         idUser: auth.currentUser.uid
-                    });*/
+                    });
                     result.posicion = L.latLng(result.lat, result.long);
                     pois.push(result);
                     pintaPOIs(map.getBounds());
