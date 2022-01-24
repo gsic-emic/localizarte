@@ -23,12 +23,14 @@ limitations under the License.
 const Http = require('http');
 const admin = require('firebase-admin');
 const Mustache = require('mustache');
+const winston = require('../../util/winston');
+const fetch = require('node-fetch');
 
 const Queries = require('../../util/queries');
 const Auxiliar = require('../../util/auxiliar');
 const Configuracion = require('../../util/config');
 const { dameDocumentoRapida } = require('../../util/bd');
-const winston = require('../../util/winston');
+const { response } = require('express');
 
 /**
  * Método para obtener los contextos de una zona. Como queries el cliente deberá proporcionar la
@@ -72,7 +74,7 @@ function obtenContextos(req, res) {
                 }
               ));
               Auxiliar.logHttp(req, res, 200, 'getPOIZoneL', start).json(resultados);
-            } else { 
+            } else {
               winston.info(Mustache.render(
                 'getPOIZone || {{{lat}}} - {{{lng}}} || 0 || {{{time}}}',
                 {
@@ -115,7 +117,7 @@ async function nuevoContexto(req, res) {
             const { body } = req;
             // Compruebo que se han enviado los datos básicos
             if (body && body.datos) {
-              const emailAutor = email;
+              const emailAutor = email.split('@')[0];
               dameDocumentoRapida({ uid: uid })
                 .then(docRapida => {
                   if (docRapida.rol > 0) {//Es profesor
@@ -167,7 +169,7 @@ async function nuevoContexto(req, res) {
                                 }
                               }
                               options = Auxiliar.creaOptionsAuth(
-                                Queries.nuevoContexto(datosContexto),
+                                Queries.nuevoContexto(datosContexto, true),
                                 Configuracion.usuarioSPARQLAuth,
                                 Configuracion.contrasenhaSPARQLAuth
                               );
@@ -195,6 +197,33 @@ async function nuevoContexto(req, res) {
                                 });
                               };
                               Http.request(options, insercion).end();
+                              //Para cuando solucione lo del post
+                              //https://nodejs.org/api/http.html#httprequestoptions-callback
+                              /*const insercion = Http.request(options, (responseI) => {
+                                chunks = [];
+                                responseI.on('data', (chunk) => {
+                                  console.log(chunk.toString());
+                                  chunks.push(chunk);
+                                });
+                                responseI.on('end', () => {
+                                  resultados = Auxiliar.procesaJSONSparql(['callret-0'], Buffer.concat(chunks).toString());
+                                  if (resultados.length > 0) {
+                                    winston.info(Mustache.render(
+                                      'postPOI || {{{uid}}} || {{{idPOI}}} || {{{body}}} || {{{time}}}',
+                                      {
+                                        uid: uid,
+                                        idPOI: iri,
+                                        body: JSON.stringify(body.datos),
+                                        time: Date.now() - start
+                                      }
+                                    ));
+                                    res.location(iri);
+                                    Auxiliar.logHttp(req, res, 201, 'postPOIL', start).send(JSON.stringify({ ctx: iri }));
+                                  } else Auxiliar.logHttp(req, res, 503, 'postPOILE', start).send('El repositorio no es capaz de insertar el nuevo contexto');
+                                });
+                              });
+                              insercion.write(Queries.nuevoContexto(datosContexto, false));
+                              insercion.end();*/
                             } else { Auxiliar.logHttp(req, res, 409, 'postPOILE', start).send('Se produce un conflicto con el nombre del contexto y la posición puesto que ya existe en el repositorio'); }
                           });
                         };
@@ -220,7 +249,155 @@ async function nuevoContexto(req, res) {
   }
 }
 
+function nPois(req, res) {
+  try {
+    const start = Date.now();
+    //const min = 0.0254;
+    const north = parseFloat(req.query.north);
+    const south = parseFloat(req.query.south);
+    const east = parseFloat(req.query.east);
+    const west = parseFloat(req.query.west);
+    if (typeof north === 'number' &&
+      typeof south === 'number' &&
+      typeof east === 'number' &&
+      typeof west === 'number' &&
+      north > south && north <= 90 && south >= -90 &&
+      east > west && east <= 180 && west >= -180) {
+      const query = Auxiliar.creaOptions(Queries.nPois(north, east, south, west));
+      fetch(Mustache.render(
+        'http://{{{host}}}:{{{port}}}{{{path}}}',
+        {
+          host: query.host,
+          port: query.port,
+          path: query.path
+        }
+      ), {
+        headers: query.headers
+      }).then(response => {
+        switch (response.status) {
+          case 200:
+            return response.text();
+          default:
+            return null;
+        }
+      }).then(response => {
+        if (response !== null) {
+          let data = Auxiliar.procesaJSONSparql(['pois'], response).pop();
+          if (data === null) {
+            data = {};
+            data.pois = 0;
+          }
+          data.latC = (north - south) / 2 + south;
+          data.longC = (east - west) / 2 + west;
+          Auxiliar.logHttp(req, res, 200, 'getNPoisL', start).send(JSON.stringify(data));
+        } else {
+          Auxiliar.logHttp(req, res, 400, 'getNPoisLE').send('Error en los valores enviados');
+        }
+      }).catch(error => {
+        console.log(error);
+        Auxiliar.logHttp(req, res, 500, 'getNPoisLE').send('Error en el procesado de los datos del punto SPARQL');
+      });
+    } else {
+      Auxiliar.logHttp(req, res, 400, 'getNPoisLE').send('Error en los valores enviados');
+    }
+  } catch (error) {
+    console.log(error);
+    Auxiliar.logHttp(req, res, 500, 'getNPoisLE').end();
+  }
+}
+
+/*async function nPois(req, res) {
+  try {
+    const start = Date.now();
+    const min = 0.0254;
+    const north = parseFloat(req.query.north);
+    const south = parseFloat(req.query.south);
+    const east = parseFloat(req.query.east);
+    const west = parseFloat(req.query.west);
+    if (typeof north === 'number' &&
+      typeof south === 'number' &&
+      typeof east === 'number' &&
+      typeof west === 'number' &&
+      north > south && north <= 90 && south >= -90 &&
+      east > west && east <= 180 && west >= -180) {
+      const difLat = north - south;
+      const difLon = Math.abs(east - west);
+      let divLat = 4, divLon = divLat;
+      while (divLat > 1) {
+        if (difLat / divLat < min)
+          --divLat;
+        else
+          break;
+      }
+      while (divLon > 1) {
+        if (difLon / divLon < min)
+          --divLon;
+        else
+          break;
+      }
+      let promises = [];
+      let requests = [];
+      let response = [];
+      for (let i = 0; i < divLon; i++) {
+        let long0 = (i * (difLon / divLon)) + west;
+        let long1 = Math.min((((i + 1) * (difLon / divLon)) + west), east);
+        for (let j = 0; j < divLat; j++) {
+          let lat0 = (j * (difLat / divLat) + south);
+          let lat1 = Math.min(((j + 1) * (difLat / divLat) + south), north);
+          const query = Auxiliar.creaOptions(Queries.nPois(lat1, long1, lat0, long0));
+          requests.push({
+            north: lat1,
+            east: long1,
+            south: lat0,
+            west: long0,
+            latC: (lat1 - lat0) / 2 + lat0,
+            lonC: (long1 - long0) / 2 + long0,
+          });
+          promises.push(fetch(Mustache.render(
+            'http://{{{host}}}:{{{port}}}{{{path}}}',
+            {
+              host: query.host,
+              port: query.port,
+              path: query.path
+            }
+          ), {
+            headers: query.headers
+          }).then(response => response.text()));
+          Promise.all(promises)
+            .then(data => {
+              let i = 0;
+              if (data.length === promises.length) {
+                data.forEach(p => {
+                  const info = Auxiliar.procesaJSONSparql(['pois'], p).pop();
+
+                  if (typeof parseInt(info.pois) === 'number') {
+                    response.push({ nPois: parseInt(info.pois), ...requests[i] });
+                  }
+                  ++i;
+                });
+                if (response.length > 0) {
+                  Auxiliar.logHttp(req, res, 200, 'getNPoisL', start).send(JSON.stringify(response));
+                } else {
+                  Auxiliar.logHttp(req, res, 204, 'getNPoisL', start).end();
+                }
+              }
+            })
+            .catch(error => {
+              console.log(error);
+              res.sendStatus(401);
+            });
+        }
+      }
+    } else {
+      Auxiliar.logHttp(req, res, 400, 'getNPoisLE').send('Error en los valores enviados');
+    }
+  } catch (e) {
+    Auxiliar.logHttp(req, res, 500, 'getNPoisLE').end();
+  }
+}*/
+
 module.exports = {
   obtenContextos,
-  nuevoContexto
+  nuevoContexto,
+  nPois,
 };

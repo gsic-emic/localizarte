@@ -30,6 +30,7 @@ const Mustache = require('mustache');
 
 const Configuracion = require('./config');
 const winston = require('./winston');
+const { data } = require("./winston");
 
 /** Equivalencias cliente al servidor */
 const equivalencias = {
@@ -202,8 +203,8 @@ const equivalencias = {
     tipo: 'uri',
   },
   categoria: {
-    prop: 'http://www.w3.org/2004/02/skos/core#Concept',
-    abr: 'skos:Concept',
+    prop: 'https://casuallearn.gsic.uva.es/ontology/hasCategory',
+    abr: 'clo:hasCategory',
     tipo: 'uri',
   },
   licencia: {
@@ -278,11 +279,47 @@ function compruebaEspacios(spa) {
 function creaOptionsAuth(query, user, pass) {
   return {
     host: Configuracion.direccionSPARQL,
-    path: `/sparql-auth?query=${query}`,
     port: Configuracion.puertoSPARQL,
-    headers: { Accept: 'application/sparql-results+json', Authorization: `Basic ${Buffer.from(`${user}:${pass}`).toString('base64')}` },
+    path: Mustache.render(
+      '/sparql-auth?query={{{data}}}',
+      { data: query }
+    ),
+    headers: { 
+      Accept: 'application/sparql-results+json', 
+      Authorization: Mustache.render(
+        'Basic {{{userPass}}}',
+        {
+          userPass: Buffer.from(Mustache.render(
+            '{{{user}}}:{{{pass}}}', 
+            {user: user, pass: pass})
+            ).toString('base64')
+        }
+      )
+    }
   };
 }
+
+/*function creaOptionsAuth(data, user, pass) {
+  return {
+    host: Configuracion.direccionSPARQL,
+    port: Configuracion.puertoSPARQL,
+    path: '/sparql-auth',
+    method: 'POST',
+    headers: { 
+      Accept: 'application/sparql-results+json',
+      'Content-Type': 'application/sparql-update', 
+      Authorization: Mustache.render(
+        'Basic {{{userPass}}}',
+        {
+          userPass: Buffer.from(Mustache.render(
+            '{{{user}}}:{{{pass}}}', 
+            {user: user, pass: pass})
+            ).toString('base64')
+        }
+      )
+    },
+  };
+}*/
 
 /**
 * Función para crear el set de datos con el que se realiza un consulta al punto SPARQL
@@ -310,7 +347,7 @@ function creaOptions(query) {
 * @param {JSONObject} resultados Respuesta obtenida del servidor
 * @returns Datos que se han obtenido del servidor correctamente formateados
 */
-function procesaJSONSparql(nombreVariables, resultados) {
+/* function procesaJSONSparql(nombreVariables, resultados) {
   const r = JSON.parse(resultados);
   const variables = r.head.vars;
   let continuaProcesado = true;
@@ -370,6 +407,214 @@ function procesaJSONSparql(nombreVariables, resultados) {
       }
     }
     return salida;
+  }
+  return null;
+} */
+function procesaJSONSparql(nombreVariables, resultados) {
+  const r = JSON.parse(resultados);
+  const variables = r.head.vars;
+  let propiedadValor = false;
+  let continuaProcesado = true;
+  for (const valor of nombreVariables.values()) {
+    if (!variables.includes(valor)) {
+      continuaProcesado = false;
+      break;
+    }
+  }
+  if (continuaProcesado) {
+    const datos = r.results.bindings;
+    const salida = [];
+    let intermedio;
+    let urisProcesadas = [];
+    if (Object.keys(nombreVariables).length == 2 && nombreVariables.includes('propiedad') && nombreVariables.includes('valor')) {
+      // TODO
+      // Para cuando pido todos los datos
+      propiedadValor = true;
+      intermedio = {};
+      let posicion;
+      let variables = [], props = [];
+      let variable = null;
+      let nuevaVariable = false;
+      for (const dato of datos) {
+        if (props.includes(dato.propiedad.value)) {
+          //Ya se tiene la abreviatura de la propiedad. Hay que modificar su contenido
+          let i = 0;
+          for (const d of props) {
+            if (d !== dato.propiedad.value) {
+              i++;
+            } else {
+              nuevaVariable = false;
+              break;
+            }
+          }
+          if (nuevaVariable !== true) {
+            //nuevaVariable = false;
+            variable = variables[i];
+            intermedio = salida.find((e, i) => {
+              if (Object.keys(e)[0] === variable) {
+                posicion = i;
+                return e;
+              }
+            });
+            //intermedio = { [variable]: intermedio };
+          }
+        } else {
+          //Se tiene que agregar una nueva propiedad. Irá al final
+          for (const d of Object.keys(equivalencias)) {
+            if (equivalencias[d].prop === dato.propiedad.value) {
+              variable = d;
+              break;
+            }
+          }
+          if (variable !== null) {
+            nuevaVariable = true;
+            props.push(dato.propiedad.value);
+            variables.push(variable);
+            intermedio = {};
+          }
+        }
+        if (variable !== null) {
+          switch (dato.valor.type) {
+            case 'literal':
+              if (typeof intermedio[variable] !== "object") {
+                intermedio[variable] = [];
+              }
+              if (dato.valor['xml:lang'] !== undefined) {
+                intermedio[variable].push(
+                  {
+                    lang: dato.valor['xml:lang'],
+                    value: dato.valor.value
+                  });
+              } else {
+                if (!intermedio[variable].includes(dato.valor.value))
+                  intermedio[variable].push(dato.valor.value);
+              }
+              break;
+            case 'typed-literal':
+              if (dato.valor.datatype !== undefined) {
+                switch (dato.valor.datatype) {
+                  case 'http://www.w3.org/2001/XMLSchema#decimal':
+                    intermedio[variable] = parseFloat(dato.valor.value);
+                    break;
+                  case 'http://www.w3.org/2001/XMLSchema#integer':
+                    intermedio[variable] = parseInt(dato.valor.value);
+                    break;
+                  default:
+                    intermedio[variable] = dato.valor.value;
+                    break;
+                }
+              } else {
+                intermedio[variable] = dato.valor.value;
+              }
+              break;
+            default:
+              intermedio[variable] = dato.valor.value;
+              break;
+          }
+        }
+        if (nuevaVariable === true) {
+          salida.push(intermedio);
+        } else {
+          salida[posicion] = intermedio;
+        }
+      }
+    } else {
+      //Distingo entre contexto y tareas para recoger su identificador único
+      const iri = ((nombreVariables.includes('ctx')) ? 'ctx' : 'task');
+      for (const dato of datos) {
+        //Descompongo en cada uno de los datos
+        let posicionSalida;
+        if (dato[iri]) {
+          //Compruebo el iri ya se había procesado para combinar los resultados
+          if (urisProcesadas.includes(dato[iri].value)) {
+            salida.some((s, index) => {
+              if (s[iri] === dato[iri].value) {
+                posicionSalida = index;
+                intermedio = s;
+                return false;
+              }
+              return true;
+            });
+          } else {
+            posicionSalida = -1;
+            intermedio = {};
+            urisProcesadas.push(dato[iri].value);
+          }
+        } else {
+          //Por si no es ni un contexto ni una tarea
+          intermedio = {};
+          posicionSalida = -1;
+        }
+        for (const variable of variables) {
+          if (dato[variable] !== undefined) {//Por los optional
+            switch (dato[variable].type) {
+              case 'literal':
+                if (intermedio[variable] === undefined) {
+                  intermedio[variable] = [];
+                }
+                if (dato[variable]['xml:lang'] !== undefined) {
+                  intermedio[variable].push(
+                    {
+                      lang: dato[variable]['xml:lang'],
+                      value: dato[variable].value
+                    });
+                } else {
+                  if (!intermedio[variable].includes(dato[variable].value))
+                    intermedio[variable].push(dato[variable].value);
+                }
+                break;
+              case 'typed-literal':
+                if (dato[variable].datatype !== undefined) {
+                  switch (dato[variable].datatype) {
+                    case 'http://www.w3.org/2001/XMLSchema#decimal':
+                      intermedio[variable] = parseFloat(dato[variable].value);
+                      break;
+                    case 'http://www.w3.org/2001/XMLSchema#integer':
+                      intermedio[variable] = parseInt(dato[variable].value);
+                      break;
+                    default:
+                      intermedio[variable] = dato[variable].value;
+                      break;
+                  }
+                } else {
+                  intermedio[variable] = dato[variable].value;
+                }
+                break;
+              default:
+                if (intermedio[variable] !== undefined) {
+                  if (typeof intermedio[variable] === 'object') {
+                    intermedio[variable].push(dato[variable].value);
+                  } else {
+                    if (intermedio[variable] !== dato[variable].value) {
+                      const aux = [];
+                      aux.push(intermedio[variable]);
+                      aux.push(dato[variable].value);
+                      intermedio[variable] = aux;
+                    }
+                  }
+                } else {
+                  intermedio[variable] = dato[variable].value;
+                }
+                break;
+            }
+          }
+        }
+        if (posicionSalida === -1) {
+          salida.push(intermedio);
+        } else {
+          salida[posicionSalida] = intermedio;
+        }
+      }
+    }
+    if (propiedadValor) {
+      const salida2 = {};
+      salida.forEach(elemento => {
+        salida2[Object.keys(elemento)] = elemento[Object.keys(elemento)];
+      });
+      return [salida2];
+    } else {
+      return salida;
+    }
   }
   return null;
 }
@@ -463,7 +708,7 @@ function validIRI(str) {
 
 
 function existeObjeto(objeto) {
-  return typeof objeto === 'object' && objeto !== null;
+  return objeto !== null && objeto !== undefined && typeof objeto === 'object';
 }
 
 function logHttp(_req, _res, statusCode, label, start) {

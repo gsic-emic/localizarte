@@ -194,7 +194,7 @@ function recuperaDatosUsuarioServidor(modal = null, botones = [], silencio = fal
                         default:
                             cerrarSesionFirebase(silencio)
                             if (!silencio) {
-                                notificaLateralError(mustache.render('{{{fraseError}}}: {{{codigo}}}', {  fraseError: translate.fraseError[language],codigo: response.status }));
+                                notificaLateralError(mustache.render('{{{fraseError}}}: {{{codigo}}}', { fraseError: translate.fraseError[language], codigo: response.status }));
                             }
                             return null;
                     }
@@ -216,18 +216,27 @@ function recuperaDatosUsuarioServidor(modal = null, botones = [], silencio = fal
                             if (!document.getElementById('swVistaProfesor').checked) {
                                 document.getElementById('swVistaProfesor').checked = true;
                             }
-                            document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+                            /*document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
                                 '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:mostrarModalContribuciones();" id="contributionsNavBar">{{{contribuciones}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();" id="signOutNavBar">{{{signOut}}}</a></li>',
                                 {
                                     actualLanguage: language.toUpperCase(),
                                     contribuciones: translate.contributionsNavBar[language],
                                     userData: translate.userDataNavBar[language],
                                     signOut: translate.signOutNavBar[language]
+                                });*/
+                            document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+                                '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"><li><a class="dropdown-item" href="#" id="langEs">ES - Español</a></li><li><a class="dropdown-item" href="#" id="langEn">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="#" id="contributionsNavBar">{{{contribuciones}}}</a></li><li class="nav-item"><a class="nav-link" href="#" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="#" id="signOutNavBar">{{{signOut}}}</a></li>',
+                                {
+                                    actualLanguage: language.toUpperCase(),
+                                    contribuciones: translate.contributionsNavBar[language],
+                                    userData: translate.userDataNavBar[language],
+                                    signOut: translate.signOutNavBar[language]
                                 });
+                                addClickEvent(['contributionsNavBar', 'userDataNavBar', 'signOutNavBar']);
 
                         } else {
                             document.getElementById('interruptorProfesor').setAttribute('hidden', 'true');
-                            document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+                            /*document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
                                 '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:mostrarModalRespuestas();" id="answersNavBar">{{{respuestas}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:gestionarCuenta();" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:cerrarSesion();" id="signOutNavBar">{{{signOut}}}</a></li>',
                                 {
                                     actualLanguage: language.toUpperCase(),
@@ -235,7 +244,17 @@ function recuperaDatosUsuarioServidor(modal = null, botones = [], silencio = fal
                                     userData: translate.userDataNavBar[language],
                                     signOut: translate.signOutNavBar[language],
                                 }
+                            );*/
+                            document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+                                '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"><li><a class="dropdown-item" href="#" id="langEs">ES - Español</a></li><li><a class="dropdown-item" href="#" id="langEn">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="#" id="answersNavBar">{{{respuestas}}}</a></li><li class="nav-item"><a class="nav-link" href="#" id="userDataNavBar">{{{userData}}}</a></li><li class="nav-item"><a class="nav-link" href="#" id="signOutNavBar">{{{signOut}}}</a></li>',
+                                {
+                                    actualLanguage: language.toUpperCase(),
+                                    respuestas: translate.answersNavBar[language],
+                                    userData: translate.userDataNavBar[language],
+                                    signOut: translate.signOutNavBar[language],
+                                }
                             );
+                            addClickEvent(['contributionsNavBar', 'userDataNavBar', 'signOutNavBar']);
                         }
                     }
                     estadoBotones(botones, true);
@@ -294,8 +313,8 @@ function registroUsuario() {
 
     const cbPolPriv = document.getElementById('cbPoliPriv');
     btRegistroEnviar.disabled = true;
-    
-    cbPolPriv.onchange =  (ev) => {
+
+    cbPolPriv.onchange = (ev) => {
         ev.preventDefault();
         btRegistroEnviar.disabled = !cbPolPriv.checked;
         //cbPolPriv.checked = !cbPolPriv.checked;
@@ -502,7 +521,7 @@ function cerrarSesion() {
     const modal = new bootstrap.Modal(document.getElementById('confirmarCerrar'));
     document.getElementById('aceptaCerrarSesion').onclick = ev => {
         ev.preventDefault();
-        document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+        /*document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
             '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"> <li><a class="dropdown-item" href="#" onclick="setLanguage(\'es\');">ES - Español</a></li><li><a class="dropdown-item" href="#" onclick="setLanguage(\'en\');">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="javascript:informacionDatos();" id="infoNavBar">{{{info}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:registroUsuario();" id="signUpNavBar">{{{signUpNavBar}}}</a></li><li class="nav-item"><a class="nav-link" href="javascript:inicioSesionUsuario();" id="signInNavBar">{{{signInNavBar}}}</a></li>',
             {
                 actualLanguage: language.toUpperCase(),
@@ -510,7 +529,17 @@ function cerrarSesion() {
                 signUpNavBar: translate.signUpNavBar[language],
                 signInNavBar: translate.signInNavBar[language],
             }
+        );*/
+        document.getElementById('gestionUsuarioLista').innerHTML = mustache.render(
+            '<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLanguage">{{{actualLanguage}}}</a><ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage"><li><a class="dropdown-item" href="#" id="langEs">ES - Español</a></li><li><a class="dropdown-item" href="#" id="langEn">EN - English</a></li></ul></li><li class="nav-item"><a class="nav-link" href="#" id="infoNavBar">{{{info}}}</a></li><li class="nav-item"><a class="nav-link" href="#" id="signUpNavBar">{{{signUpNavBar}}}</a></li><li class="nav-item"><a class="nav-link" href="#" id="signInNavBar">{{{signInNavBar}}}</a></li>',
+            {
+                actualLanguage: language.toUpperCase(),
+                info: translate.infoNavBar[language],
+                signUpNavBar: translate.signUpNavBar[language],
+                signInNavBar: translate.signInNavBar[language],
+            }
         );
+        addClickEvent(['infoNavBar', 'signUpNavBar', 'signInNavBar']);
 
         dUser = null;
         if (rol !== 0) {

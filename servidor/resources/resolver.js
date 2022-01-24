@@ -46,6 +46,7 @@ const Review = require('./users/reviews/review');
 // Paths
 const recursos = {
   contextos: '/contexts/',
+  nPois: '/contexts/nPois',
   /* contexto: '/contexts/:context', Change when the IRI of contexts and tasks are valid*/
   contexto: '/contexts/:a/:b/:c',
   tareas: '/tasks/',
@@ -72,6 +73,10 @@ const envia405 = (req, res) => {
 Ruter.route(recursos.contextos)
   .get((req, res) => Contexts.obtenContextos(req, res))
   .post((req, res) => Contexts.nuevoContexto(req, res))
+  .all(envia405);
+
+Ruter.route(recursos.nPois)
+  .get((req, res) => Contexts.nPois(req, res))
   .all(envia405);
 
 // Contexto

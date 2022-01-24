@@ -55,7 +55,7 @@ function tareasContexto(iriContexto, poi) {
         })
         .then(resultados => {
             if (resultados && modalOpen(document.getElementById('puntoInteres'))) {
-                
+                /*
                 if (auth && auth.currentUser) {
                     analytics.logEvent('getTasks', {
                         idObject: iriContexto,
@@ -65,7 +65,7 @@ function tareasContexto(iriContexto, poi) {
                     analytics.logEvent('getTasks', {
                         idObject: iriContexto
                     });
-                }
+                }*/
                 const espacioTareas = document.getElementById('espacioTareas');
                 if (resultados.length === 0) {
                     espacioTareas.innerHTML = mustache.render('<h6>{{{msg}}}</h6>', { msg: translate.poiSinTareas[language] });
@@ -78,8 +78,9 @@ function tareasContexto(iriContexto, poi) {
                         salta = false;
                         const resultado = resultados[i];
                         resultado.original = JSON.parse(JSON.stringify(resultado));
-                        let spa = [];
-                        resultado.spa.forEach(espacio => spa.push(espacio.spa));
+                        /*let spa = [];
+                        resultado.spa.forEach(espacio => spa.push(espacio.spa));*/
+                        let spa = ((typeof resultado.spa === 'string') ? [resultado.spa] : resultado.spa);
                         if (spa.includes('https://casuallearn.gsic.uva.es/space/physical') && spa.includes('https://casuallearn.gsic.uva.es/space/virtualMap')) {
                             resultado.icon = './resources/movilPortatil.svg';
                             resultado.muestra = true;
@@ -145,13 +146,13 @@ function tareasContexto(iriContexto, poi) {
                                 textoAT = translate.textoAT10[language];
                                 break;
                         }
-                        resultado.title = mustache.render('{{{textoAT}}}{{#title}} - {{{title}}}{{/title}}', { textoAT: textoAT, title: resultado.title });
+                        resultado.title = mustache.render('{{{textoAT}}}{{#title}} - {{{title}}}{{/title}}', { textoAT: textoAT, title: getValueField(resultado.title) });
 
                         resultado.id = 'b' + ids;
                         resultado.idh = 'h' + ids;
                         resultado.idf = ids;
                         ++ids;
-                        resultado.aTR = resultado.aTR.replaceAll('<a ', '<a target="_blank" ');
+                        resultado.aTR = (getValueField(resultado.aTR)).replaceAll('<a ', '<a target="_blank" ');
                         resultado.mostrarAdmin = mostrarAdmin;
                         resultado.noPuedeRealizar = noPuedeRealizar;
                         resultado.esProfe = esProfe;
@@ -160,14 +161,14 @@ function tareasContexto(iriContexto, poi) {
                     tareasPoI = [];
                     resultados.forEach(resultado => {
                         if (resultado.noPuedeRealizar && resultado.esProfe) {//Modo edición. Muestro todo y agrego al vector
-                            resultado.poiTitulo = poi.titulo;
+                            resultado.poiTitulo = getValueField(poi.titulo);
                             resultado.poiLat = poi.lat;
                             resultado.poiLong = poi.long;
                             resultado.muestra = true;
                             tareasPoI.push(resultado);
                         } else {
                             if (!resultado.noPuedeRealizar || (resultado.noPuedeRealizar && !resultado.esProfe)) {
-                                resultado.poiTitulo = poi.titulo;
+                                resultado.poiTitulo = getValueField(poi.titulo);
                                 resultado.poiLat = poi.lat;
                                 resultado.poiLong = poi.long;
                                 tareasPoI.push(resultado);
@@ -240,8 +241,8 @@ function realizaTarea(idTarea) {
                             modalPOI.hide();
                             modalPOI = null;
                             const modal = new bootstrap.Modal(document.getElementById('realizarTareaModal'));
-                            document.getElementById('tituloRealizaTarea').innerText = tareaL.title;
-                            document.getElementById('atrRealizaTarea').innerHTML = tarea.aTR;
+                            document.getElementById('tituloRealizaTarea').innerText = getValueField(tareaL.title);
+                            document.getElementById('atrRealizaTarea').innerHTML = getValueField(tarea.aTR);
                             if (tarea.thumb && tarea.thumb !== null && tarea.thumb !== undefined) {
                                 document.getElementById('imgRepoRealizaTarea').src = tarea.thumb;
                                 document.getElementById('colImgRepoRealizaTarea').removeAttribute('hidden');
@@ -594,10 +595,10 @@ function eliminaTareaModal(idTarea) {
                         })
                         .then(result => {
                             if (result) {
-                                analytics.logEvent('deleteTask', {
+                                /*analytics.logEvent('deleteTask', {
                                     idObject: tarea.task,
                                     idUser: auth.currentUser.uid
-                                });
+                                });*/
                                 notificaLateral(translate.borrarTarea2[language]);
                             }
                             modal.hide();
@@ -655,9 +656,9 @@ function modificarTarea(idTarea) {
                     default:
                         notificaLateralError(mustache.render(
                             '{{{errorServidor}}}: {{{codigo}}}',
-                            { 
+                            {
                                 errorServidor: translate.errorInternoServidor[language],
-                                codigo: response.status 
+                                codigo: response.status
                             }
                         ));
                         return null;
@@ -857,9 +858,10 @@ function modificarTarea(idTarea) {
                                                         default:
                                                             notificaLateralError(mustache.render(
                                                                 '{{{fraseError}}} {{{status}}}',
-                                                                { 
+                                                                {
                                                                     fraseError: translate.fraseError[language],
-                                                                    status: response.status }
+                                                                    status: response.status
+                                                                }
                                                             ));
                                                             return null;
                                                     }
@@ -867,10 +869,10 @@ function modificarTarea(idTarea) {
                                                 .then(resultado => {
                                                     if (resultado !== null) {
                                                         if (typeof resultado !== 'string') {
-                                                            analytics.logEvent('updateTask', {
+                                                            /*analytics.logEvent('updateTask', {
                                                                 idObject: tarea.task,
                                                                 idUser: auth.currentUser.uid
-                                                            });
+                                                            });*/
                                                             modal.hide();
                                                             notificaLateral(translate.tareaActualizada[language]);
                                                         } else {
@@ -884,9 +886,10 @@ function modificarTarea(idTarea) {
                                                 .catch(error => {
                                                     notificaLateralError(mustache.render(
                                                         '{{{fraseError}}} {{{error}}}',
-                                                        { 
-                                                            fraseError: translate.fraseError[language], 
-                                                            error: error }));
+                                                        {
+                                                            fraseError: translate.fraseError[language],
+                                                            error: error
+                                                        }));
                                                     console.error('error', error);
                                                     estadoBotones(botones, true);
                                                 });
@@ -1036,10 +1039,10 @@ function nuevaTarea(idPoi) {
                         .then(result => {
                             if (result) {
                                 if (typeof result !== 'string') {
-                                    analytics.logEvent('newTask', {
+                                    /*analytics.logEvent('newTask', {
                                         idObject: result.mensaje.iri,
                                         idUser: auth.currentUser.uid
-                                    });
+                                    });*/
                                     notificaLateral('Tarea creada en el POI');
                                     modal.hide();
                                 } else {

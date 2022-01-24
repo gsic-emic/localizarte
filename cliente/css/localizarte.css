@@ -27,7 +27,7 @@ body {
     top: 0;
     right: 0;
     left: 0;
-    background-color: #0c252d;
+    background-color: #08191F;
     z-index: 1599;
 }
 
@@ -41,11 +41,35 @@ body {
 
 .marcadorImagen {
     width: 48px;
-    height: 48px;;
+    height: 48px;
+    background-color: rgb(215, 38, 86);
     border: 2px solid rgb(211, 14, 68);
+    border-radius: 50%;
+    text-align: center;
+    line-height: 45px;
+    font-size: medium;
+    color: rgb(255, 255, 255);
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+}
+
+.marcadorDivTexto {
+    width: 48px;
+    height: 48px;
+    /*background-color: #ffffffb0;*/
+    background-color: rgb(215, 38, 86);
+    border: 2px solid rgb(211, 14, 68);
+    text-align: center;
+    color: rgb(255, 255, 255);
     border-radius: 50%;
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
+    display: block;
+}
+
+.marcadorDivTexto span {
+    line-height: 45px;
+    font-size: medium;
 }
 
 .imagen {
@@ -99,16 +123,16 @@ body {
 }
 
 .interruptorFlotante {
-    background-color: #0c252d;
+    background-color: #08191F;
     color: white;
 }
 
 .fondoPrimario {
-    background-color: #0c252d;
+    background-color: #08191F;
 }
 
 .colorActivo {
-    color: #3388ff;
+    color: #70ACFF;
 }
 
 @media screen and (max-width: 450px) {

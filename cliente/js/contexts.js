@@ -71,7 +71,7 @@ function calculaZonasParaDescargar(zona) {
  * oeste.
  * @returns Punto desde que se tendría que comprobar las zonas
  */
-function puntoInicio(puntos) {
+function puntoInicio(puntos, lado = 0.0254) {
     let s = [];
     let esquina, gradosMax;
     for (let i = 0; i < 2; i++) {
@@ -102,11 +102,15 @@ function puntoInicio(puntos) {
  * @returns Número de cuadrículas en vertical y horizontal que se muestran en el mapa
  * desde la posición inicial.
  */
-function cuadriculas(noroeste, sureste) {
+function cuadriculas(noroeste, sureste, lado = 0.0254) {
     return {
         cv: Math.ceil((noroeste.lat - sureste.lat) / lado),
         ch: Math.ceil((sureste.lng - noroeste.lng) / lado),
     };
+}
+
+function ladoTesela(zum) {
+    return 3.0625 * Math.max(1, maxZoom - zum) - 24;
 }
 
 /**
@@ -140,7 +144,7 @@ function peticionZona(punto, zona) {
         })
         .then(result => {
             if (result) {
-                if (auth && auth.currentUser) {
+                /*if (auth && auth.currentUser) {
                     analytics.logEvent('getPois', {
                         lat: punto.lat,
                         lng: punto.lng,
@@ -151,7 +155,7 @@ function peticionZona(punto, zona) {
                         lat: punto.lat,
                         lng: punto.lng
                     });
-                }
+                }*/
                 let encontrado = false;
                 for (let zona of zonas) {
                     if (zona.equals(punto)) {
@@ -193,6 +197,9 @@ function peticionZona(punto, zona) {
  */
 function pintaPOIs(zona) {
     if (faltan <= 0) {
+        if (teselas) {
+            teselas.clearLayers();
+        }
         if (markers) {
             markers.clearLayers();
         } else {
@@ -217,10 +224,10 @@ function pintaPOIs(zona) {
                         return L.divIcon({
                             html: mustache.render('<div><span>{{{numeroHijos}}}</span></div>', { numeroHijos: numeroHijos }),
                             className: mustache.render('marker-cluster marker-cluster-{{{tipo}}}', { tipo: tipo }),
-                            iconSize: new L.Point(40, 40)
+                            iconSize: new L.Point(48, 48)
                         });
                     },
-                    maxClusterRadius: 50
+                    maxClusterRadius: 55
                 }
             );
         }
@@ -245,108 +252,121 @@ let lastOpenModal = 0;
  */
 function markerPoP(poi) {
     let marker;
-    if (poi.imagen && poi.imagen !== undefined && poi.imagen.includes('commons.wikimedia.org/wiki/Special:FilePath/')) {
-        let imagen = poi.imagen.replace('http://', 'https://');
-        if (!imagen.includes('width=')) {
-            imagen = mustache.render('{{{imagen}}}?width=50&height=50', { imagen: imagen });
+    let intermedio = getValueField(poi.titulo);
+    if (intermedio !== null) {
+        intermedio = intermedio.replace(/[^A-Z]/g, "");
+        const iniciales = intermedio.substring(0, Math.min(3, intermedio.length));
+        if (poi.imagen && poi.imagen !== undefined && (getValueField(poi.imagen)).includes('commons.wikimedia.org/wiki/Special:FilePath/')) {
+            let imagen = (getValueField(poi.imagen)).replace('http://', 'https://');
+            if (!imagen.includes('width=')) {
+                imagen = mustache.render('{{{imagen}}}?width=50&height=50', { imagen: imagen });
+            }
+            marker = L.marker(poi.posicion, {
+                icon: L.divIcon({
+                    html: mustache.render('<img src="{{{imagen}}}" class="marcadorImagen" alt="{{{iniciales}}}">', { imagen: imagen, iniciales: iniciales }),
+                    className: '',
+                    iconSize: [48, 48],
+                })
+            });
+        } else {
+            //marker = L.marker(poi.posicion, { icon: iconoMarcadores });
+            marker = L.marker(poi.posicion, {
+                icon: L.divIcon({
+                    html: mustache.render('<div class="marcadorDivTexto"><span>{{{iniciales}}}</span></div>', { iniciales: iniciales }),
+                    className: '',
+                    iconSize: [48, 48]
+                })
+            });
         }
-        marker = L.marker(poi.posicion, {
-            icon: L.divIcon({
-                html: mustache.render('<img src="{{{imagen}}}" class="marcadorImagen">', { imagen: imagen }),
-                className: '',
-                iconSize: [50, 50],
-            })
+        marker.on('click', () => {
+            if (lastOpenModal + 200 < Date.now()) {
+                const puntoInteresModal = document.getElementById('puntoInteres');
+                modalPOI = new bootstrap.Modal(puntoInteresModal);
+                tareasContexto(poi.ctx, poi);
+                map.setView(poi.posicion, map.getZoom());
+                if (rol !== null && rol > 0) {
+                    document.getElementById('administracionPOI').removeAttribute('hidden');
+                } else {
+                    document.getElementById('administracionPOI').setAttribute('hidden', true);
+                }
+                const titulo = document.getElementById('tituloPuntoInteres');
+                titulo.innerText = getValueField(poi.titulo);
+                const imagen = document.getElementById('imagenPuntoInteres');
+                const pieImagen = document.getElementById('licenciaImagenPuntoInteres');
+                const enlaceLicencia = document.getElementById('enlaceLicenciaImagenPuntoInteres');
+                if (poi.thumb) {
+                    if (poi.thumb.includes('http://')) {
+                        imagen.src = poi.thumb.replace('http://', 'https://');
+                    } else {
+                        imagen.src = poi.thumb;
+                    }
+                    if (poi.thumb.includes('/Special:FilePath/')) {
+                        let aux = poi.thumb.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
+                        enlaceLicencia.setAttribute('href', aux);
+                        pieImagen.hidden = false;
+                    } else {
+                        enlaceLicencia.setAttribute('href', '#');
+                        pieImagen.hidden = true;
+                    }
+                } else {
+                    if (poi.imagen) {
+                        poi.imagen = poi.imagen.replace('http://', 'https://');
+                        if (poi.imagen.includes('commons.wikimedia.org') && !poi.imagen.includes('?width')) {
+                            imagen.src = mustache.render('{{{enlace}}}?width=300', { enlace: poi.imagen });
+                        } else {
+                            imagen.src = poi.imagen;
+                        }
+                        if (poi.imagen.includes('/Special:FilePath/')) {
+                            let aux = poi.imagen.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
+                            pieImagen.innerHTML = mustache.render(
+                                '<a class="text-decoration-underline text-muted" rel="noopener" target="_blank" href="{{{enlace}}}" id="enlaceLicenciaImagenPuntoInteres">{{{texto}}}</a>',
+                                {
+                                    enlace: aux,
+                                    texto: translate.enlaceLicenciaImagenPuntoInteres[language],
+                                }
+                            );
+                            pieImagen.hidden = false;
+                        } else {
+                            pieImagen.innerHTML = translate.licenciaNotFound[language];
+                            pieImagen.hidden = false;
+                        }
+                    } else {
+                        imagen.src = './resources/sinFoto.svg';
+                        pieImagen.hidden = true;
+                    }
+                }
+                imagen.style.display = 'inherit';
+
+                if (getValueField(poi.descr) !== null) {
+                    const descripcion = document.getElementById('descripcionPuntoInteres');
+                    descripcion.innerHTML = (getValueField(poi.descr)).replaceAll('<a ', '<a target="_blank" ');
+                }
+
+                document.getElementById('cerrarModalMarcador').onclick = () => {
+                    modalPOI.hide();
+                    cerrarPI()
+                };
+
+                document.getElementById('eliminarPI').onclick = () => {
+                    confirmarEliminacion(poi, translate.deletePOI0[language], translate.deletePOI1[language]);
+                    modalPOI.hide();
+                };
+
+                document.getElementById('modificarPI').onclick = () => {
+                    modalPOI.hide();
+                    modificarPI(poi)
+                };
+
+                document.getElementById('agregarTarea').onclick = () => {
+                    modalPOI.hide();
+                    nuevaTarea(poi.ctx);
+                }
+                lastOpenModal = Date.now();
+                modalPOI.show();
+            }
         });
-    } else {
-        marker = L.marker(poi.posicion, { icon: iconoMarcadores });
+        markers.addLayer(marker);
     }
-    marker.on('click', () => {
-        if (lastOpenModal + 200 < Date.now()) {
-            const puntoInteresModal = document.getElementById('puntoInteres');
-            modalPOI = new bootstrap.Modal(puntoInteresModal);
-            tareasContexto(poi.ctx, poi);
-            if (rol !== null && rol > 0) {
-                document.getElementById('administracionPOI').removeAttribute('hidden');
-            } else {
-                document.getElementById('administracionPOI').setAttribute('hidden', true);
-            }
-            const titulo = document.getElementById('tituloPuntoInteres');
-            titulo.innerText = poi.titulo;
-            const imagen = document.getElementById('imagenPuntoInteres');
-            const pieImagen = document.getElementById('licenciaImagenPuntoInteres');
-            const enlaceLicencia = document.getElementById('enlaceLicenciaImagenPuntoInteres');
-            if (poi.thumb) {
-                if (poi.thumb.includes('http://')) {
-                    imagen.src = poi.thumb.replace('http://', 'https://');
-                } else {
-                    imagen.src = poi.thumb;
-                }
-                if (poi.thumb.includes('/Special:FilePath/')) {
-                    let aux = poi.thumb.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
-                    enlaceLicencia.setAttribute('href', aux);
-                    pieImagen.hidden = false;
-                } else {
-                    enlaceLicencia.setAttribute('href', '#');
-                    pieImagen.hidden = true;
-                }
-            } else {
-                if (poi.imagen) {
-                    poi.imagen = poi.imagen.replace('http://', 'https://');
-                    if (poi.imagen.includes('commons.wikimedia.org') && !poi.imagen.includes('?width')) {
-                        imagen.src = mustache.render('{{{enlace}}}?width=300', { enlace: poi.imagen });
-                    } else {
-                        imagen.src = poi.imagen;
-                    }
-                    if (poi.imagen.includes('/Special:FilePath/')) {
-                        let aux = poi.imagen.replace('/Special:FilePath/', '/File:').replace('http://', 'https://');
-                        pieImagen.innerHTML = mustache.render(
-                            '<a class="text-decoration-underline text-muted" rel="noopener" target="_blank" href="{{{enlace}}}" id="enlaceLicenciaImagenPuntoInteres">{{{texto}}}</a>',
-                            {
-                                enlace: aux,
-                                texto: translate.enlaceLicenciaImagenPuntoInteres[language],
-                            }
-                        );
-                        pieImagen.hidden = false;
-                    } else {
-                        pieImagen.innerHTML = translate.licenciaNotFound[language];
-                        pieImagen.hidden = false;
-                    }
-                } else {
-                    imagen.src = './resources/sinFoto.svg';
-                    pieImagen.hidden = true;
-                }
-            }
-            imagen.style.display = 'inherit';
-
-            if (poi.descr) {
-                const descripcion = document.getElementById('descripcionPuntoInteres');
-                descripcion.innerHTML = poi.descr.replaceAll('<a ', '<a target="_blank" ');
-            }
-
-            document.getElementById('cerrarModalMarcador').onclick = () => {
-                modalPOI.hide();
-                cerrarPI()
-            };
-
-            document.getElementById('eliminarPI').onclick = () => {
-                confirmarEliminacion(poi, translate.deletePOI0[language], translate.deletePOI1[language]);
-                modalPOI.hide();
-            };
-
-            document.getElementById('modificarPI').onclick = () => {
-                modalPOI.hide();
-                modificarPI(poi)
-            };
-
-            document.getElementById('agregarTarea').onclick = () => {
-                modalPOI.hide();
-                nuevaTarea(poi.ctx);
-            }
-            lastOpenModal = Date.now();
-            modalPOI.show();
-        }
-    });
-    markers.addLayer(marker);
 }
 
 /**
@@ -430,10 +450,10 @@ function eliminarPI(poi) {
                     })
                     .then(result => {
                         if (result) {
-                            analytics.logEvent('deletePoi', {
+                            /*analytics.logEvent('deletePoi', {
                                 idObject: poi.ctx,
                                 idUser: auth.currentUser.uid
-                            });
+                            });*/
                             if (typeof result === 'string') {
                                 notificaLateralError(mustache.render('Error: {{{txt}}}', { txt: result }));
                             } else {
@@ -637,10 +657,10 @@ function modificarPI(poi) {
                                         .then(resultado => {
                                             if (resultado !== null) {
                                                 if (typeof resultado !== 'string') {
-                                                    analytics.logEvent('updatePoi', {
+                                                    /*analytics.logEvent('updatePoi', {
                                                         idObject: poi.ctx,
                                                         idUser: auth.currentUser.uid
-                                                    });
+                                                    });*/
                                                     //POI modificado en el servidor
                                                     //Lo elimino de la memoria local
                                                     (Object.entries(modificados)).forEach(([modK, modV]) => {
@@ -754,7 +774,7 @@ function peticionCrafts(lat, lng, contenidoPopup) {
             lat: lat,
             lng: lng,
             incr: incr,
-            lim: 200
+            lim: 800
         }
     );
     const direccionEs = mustache.render(
@@ -763,7 +783,7 @@ function peticionCrafts(lat, lng, contenidoPopup) {
             lat: lat,
             lng: lng,
             incr: incr,
-            lim: 200
+            lim: 800
         }
     );
 
@@ -798,30 +818,35 @@ function peticionCrafts(lat, lng, contenidoPopup) {
             console.error('error', error);
         });
 
-    fetch(direccionEs, requestOptions)
-        .then(response => {
-            switch (response.status) {
-                case 200:
-                    return response.json();
-                default:
-                    notificaLateralError(translate.errorDBpedia[language]);
-                    return null;
-            }
-        })
-        .then(result => {
-            if (result && result.results.bindings.length > 0) {
-                resultadosEs = parseadorResultadosSparql(result.head.vars, result.results.bindings);
-            } else {
-                resultadosEs = null;
-            }
-            completadoEs = true;
-            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
-        })
-        .catch(error => {
-            resultadosEn = null; completadoEn = true;
-            sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
-            console.error('error', error);
-        });
+    if (language === 'es') {
+        fetch(direccionEs, requestOptions)
+            .then(response => {
+                switch (response.status) {
+                    case 200:
+                        return response.json();
+                    default:
+                        notificaLateralError(translate.errorDBpedia[language]);
+                        return null;
+                }
+            })
+            .then(result => {
+                if (result && result.results.bindings.length > 0) {
+                    resultadosEs = parseadorResultadosSparql(result.head.vars, result.results.bindings);
+                } else {
+                    resultadosEs = null;
+                }
+                completadoEs = true;
+                sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+            })
+            .catch(error => {
+                resultadosEs = null; completadoEs = true;
+                sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+                console.error('error', error);
+            });
+    } else {
+        resultadosEs = null; completadoEs = true;
+        sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup);
+    }
 }
 
 /**
@@ -832,7 +857,7 @@ function peticionCrafts(lat, lng, contenidoPopup) {
  * @param {Boolean} completadoEn Indica si se ha completado la petición a DBpedia
  * @param {Object} resultadosEs Resultados que se han obtenido de es.DBpedia
  * @param {Boolean} completadoEs Indica si se ha completado la petición a es.DBpedia
- * @param {Object} puntoOrigen Objeto con la latitud (lat) y longitud (lng) donde ha pulstado el usuario
+ * @param {Object} puntoOrigen Objeto con la latitud (lat) y longitud (lng) donde ha pulsado el usuario
  * @param {String} contenidoPopup Frase que se está mostrando en el popup
  */
 function sugerenciasGeneralesPois(resultadosEn, completadoEn, resultadosEs, completadoEs, puntoOrigen, contenidoPopup) {
@@ -980,7 +1005,7 @@ function pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completa
                                     //const eti = l.label;
                                     lang = Object.keys(l)[0];
                                     etiqueta = Object.values(l)[0];
-                                    if (lang === 'es')
+                                    if (lang === language)
                                         return true;
                                     return false;
                                 });
@@ -991,7 +1016,7 @@ function pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completa
                                 const eti = lugar.label[index];
                                 lang = Object.keys(eti)[0];
                                 etiqueta = Object.values(eti)[0];
-                                if (lang === 'es') {
+                                if (lang === language) {
                                     break;
                                 }
                             }
@@ -1015,35 +1040,22 @@ function pintaSugerenciasPois(resultadosEn, completadoEn, resultadosEs, completa
 }
 
 function agrupaResultadosFinales(resultadosEn, resultadosEs, posicionPuntos) {
-    let salida = null, todos = [], distancias = [];
+    let todos = [];
     if (resultadosEn) {
         agregaPosicion(resultadosEn, posicionPuntos, 'en').forEach(ren => {
-            todos.push(ren);
-            distancias.push(ren.distancia);
+            if (ren.iri !== undefined && ren.label !== undefined && ren.comment !== undefined) {
+                todos.push(ren);
+            }
         });
     }
     if (resultadosEs) {
         agregaPosicion(resultadosEs, posicionPuntos, 'es').forEach(res => {
-            todos.push(res);
-            distancias.push(res.distancia);
+            if (ren.iri !== undefined && ren.label !== undefined && ren.comment !== undefined) {
+                todos.push(res);
+            }
         });
     }
-
-    if (todos.length > 0) {
-        salida = [];
-        distancias = distancias.sort((a, b) => a - b);
-        distancias.forEach(d => {
-            todos.some(t => {
-                if (t.distancia === d) {
-                    salida.push(t);
-                    return true;
-                }
-                return false;
-            });
-        });
-    }
-
-    return salida;
+    return (todos.length > 0) ? todos.sort((a, b) => a.distancia - b.distancia).slice(0, Math.min(5, todos.length)) : null;
 }
 
 function agregaPosicion(resultados, todosLosDatos, version) {
@@ -1197,7 +1209,7 @@ function modalNPI(id) {
                         if (dato.length && dato.length > 0) {//Más de un idioma
                             dato.some(d => {
                                 campo.value = Object.values(d)[0];
-                                if (Object.keys(d)[0] === 'es') {
+                                if (Object.keys(d)[0] === language) {
                                     return true;
                                 }
                                 return false;
@@ -1219,7 +1231,7 @@ function modalNPI(id) {
                         if (dato.length && dato.length > 0) {//Más de un idioma
                             dato.some(d => {
                                 campo.setAttribute('value', Object.values(d)[0]);
-                                if (Object.keys(d)[0] === 'es') {
+                                if (Object.keys(d)[0] === language) {
                                     return true;
                                 }
                                 return false;
@@ -1274,6 +1286,7 @@ function modalNPI(id) {
         });
 
         document.getElementById('cerrarModalNPI').onclick = (ev) => {
+            ev.preventDefault();
             reseteaCamposValidador(campos);
         };
 
@@ -1314,7 +1327,6 @@ function modalNPI(id) {
                                     ele = elem.trim();
                                     if (ele && ele !== '') {
                                         fu.push({
-                                            //type: (validURL(ele) ? 'url' : 'string'),
                                             fuente: ele
                                         });
                                     }
@@ -1327,16 +1339,16 @@ function modalNPI(id) {
                         case 'tituloNPI':
                         case 'descrNPI':
                             envio[idsParaServ[campoId]] = [{
-                                lang: 'es',
+                                lang: language,
                                 value: campo.value.replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim()
                             }];
                             dato = datos[nombresServ[campoId]];
                             if (dato && dato.length && dato.length > 0) {//Más de un idioma
                                 dato.some(d => {
-                                    if (Object.keys(d)[0] !== 'es') {
+                                    if (Object.keys(d)[0] !== language) {
                                         envio[idsParaServ[campoId]].push({
                                             lang: Object.keys(d)[0],
-                                            value: Object.values(d.replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim())[0]
+                                            value: d[Object.keys(d)[0]].replace(/(?:\r\n|\n\r|\r|\n)/g, '<br>').trim()
                                         });
                                     }
                                 });
@@ -1349,6 +1361,10 @@ function modalNPI(id) {
                             break;
                     }
                 });
+
+                if (datos.categories !== undefined) {
+                    envio.categorias = datos.categories;
+                }
 
                 //Envío los datos al servidor para que los agregue
                 const direccion = mustache.render(
@@ -1523,10 +1539,10 @@ function peticionInfoPoi(iri, guardaPinta, modal) {
         .then(result => {
             if (result) {
                 if (guardaPinta) {
-                    analytics.logEvent('newPoi', {
+                    /*analytics.logEvent('newPoi', {
                         idObject: iri,
                         idUser: auth.currentUser.uid
-                    });
+                    });*/
                     result.posicion = L.latLng(result.lat, result.long);
                     pois.push(result);
                     pintaPOIs(map.getBounds());
@@ -1543,4 +1559,220 @@ function peticionInfoPoi(iri, guardaPinta, modal) {
             estadoBotones([document.getElementById('enviarNPI')], true);
             console.error('error', error)
         });
+}
+
+function obtenNPOIs() {
+    if (markers) {
+        markers.clearLayers();
+    }
+    if (teselas) {
+        teselas.clearLayers();
+    }
+    const bounds = map.getBounds();
+    const currentZoom = map.getZoom();
+
+    const lT = Math.max(0.0508, window.devicePixelRatio * Math.max(bounds.getNorth() - bounds.getSouth(), bounds.getEast() - bounds.getWest()) / (maxZoom - currentZoom));
+    const pI = puntoInicio([bounds.getNorth(), bounds.getWest()], lT);
+    const nC = cuadriculas(bounds.getNorthWest(), bounds.getSouthEast(), lT);
+
+    const inicioTeselasLocal = new Date();
+    inicioTeselas = inicioTeselasLocal;
+
+    const cacheActual = (teselasCache[currentZoom] === undefined) ? [] : teselasCache[currentZoom];
+    for (let i = 0; i <= nC.ch; i++) {
+        let pLng = pI.lng + (i * lT);
+        for (let j = 0; j <= nC.cv; j++) {
+            let pLat = pI.lat - (j * lT);
+            const zT = cacheActual.find(cA => {
+                if (cA.north === pLat && cA.west === pLng) {
+                    return true;
+                }
+                return false;
+            });
+            if (zT === undefined) { //No se encuentra disponible
+                //Tengo que hacer la petición al servidor
+                const peticion = mustache.render(
+                    '{{{dirServ}}}/contexts/nPois?north={{{north}}}&east={{{east}}}&south={{{south}}}&west={{{west}}}',
+                    {
+                        dirServ: direccionServidor,
+                        north: pLat,
+                        east: pLng + lT,
+                        south: pLat - lT,
+                        west: pLng
+                    });
+                const opciones = {
+                    method: 'GET',
+                    redirect: 'follow'
+                };
+                
+                fetch(peticion, opciones)
+                    .then(response => {
+                        switch (response.status) {
+                            case 200:
+                                return response.json();
+                            default:
+                                return null;
+                        }
+                    })
+                    .then(data => {
+                        if (data !== null) {
+                            if (teselasCache[currentZoom] === undefined) {
+                                teselasCache[currentZoom] = [];
+                            }
+                            data.north = pLat;
+                            data.east = pLng + lT;
+                            data.south = pLat - lT;
+                            data.west = pLng;
+                            teselasCache[currentZoom].push(data);
+                            if (inicioTeselasLocal === inicioTeselas) {
+                                pintaNPoi(data);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+            } else {
+                //Pinto la tesea que se encuntra cacheada
+                pintaNPoi(zT);
+            }
+        }
+    }
+
+
+    /*const peticion = mustache.render(
+        '{{{dirServ}}}/contexts/nPois?north={{{north}}}&east={{{east}}}&south={{{south}}}&west={{{west}}}',
+        {
+            dirServ: direccionServidor,
+            north: bounds.getNorth(),
+            east: bounds.getEast(),
+            south: bounds.getSouth(),
+            west: bounds.getWest()
+        });
+    const opciones = {
+        method: 'GET',
+        redirect: 'follow'
+    };
+
+
+
+    fetch(peticion, opciones)
+        .then(respuesta => {
+            switch (respuesta.status) {
+                case 200:
+                    return respuesta.json();
+                default:
+                    console.error(respuesta.status);
+                    return null;
+            }
+        })
+        .then(datos => {
+            if (datos !== null) {
+                teselas = L.layerGroup().addTo(map);
+                let max = 0, min = 123456789;
+                datos.forEach(dato => {
+                    min = Math.min(min, dato.nPois);
+                    max = Math.max(max, dato.nPois);
+                });
+                const m = 0.2, M = 0.6;
+                datos.forEach(dato => {
+                    const bounds = [[dato.north, dato.west], [dato.south, dato.east]];
+                    let tesela;
+                    if (dato.nPois > 0) {
+                        const a = (M - m) / (max - min);
+                        tesela = L.rectangle(
+                            bounds,
+                            {
+                                color: '#D72656',
+                                //fillOpacity: ((0.5 / (max - min)) * dato.nPois + ((0.2 * max - 0.7 * min) / (max - min))),
+                                fillOpacity: ((a * dato.nPois) + (m - (a * min))),
+                                weight: 0
+                            });
+                        tesela.on('click', () => {
+                            ultimaPeticionNPois = 0;
+                            map.fitBounds(bounds);
+                        });
+                        //tesela.bindTooltip(mustache.render('{{{n}}}', { n: dato.nPois }), { permanent: true, direction: 'center' });
+                    } else {
+                        tesela = L.rectangle(
+                            bounds,
+                            {
+                                color: '#000000',
+                                fillOpacity: 0.5,
+                                weight: 0,
+                                interactive: false,
+                            });
+                    }
+                    teselas.addLayer(tesela);
+                });
+            }
+        })
+        .catch(error => {
+            console.error(error);
+        });*/
+}
+
+function pintaNPoi(tesela) {
+    if (teselas === null) {
+        teselas = L.layerGroup().addTo(map);
+    }
+    if (teselasM === null) {
+        teselasM = L.layerGroup().addTo(map);
+    }
+    const bounds = [[tesela.north, tesela.west], [tesela.south, tesela.east]];
+    let tMarcador = null, tTesela;
+    if (tesela.pois > 0) {
+        let tipo;
+        if (tesela.pois <= 50) {
+            tipo = '10';
+        } else {
+            if (tesela.pois <= 250) {
+                tipo = '25';
+            } else {
+                if (tesela.pois <= 500) {
+                    tipo = '50';
+                } else {
+                    tipo = '100';
+                }
+            }
+        }
+        tMarcador = L.marker([tesela.latC, tesela.longC], {
+            icon: L.divIcon({
+                html: mustache.render('<div><span>{{{numeroHijos}}}</span></div>', { numeroHijos: tesela.pois }),
+                className: mustache.render('marker-cluster marker-cluster-{{{tipo}}}', { tipo: tipo }),
+                iconSize: new L.Point(48, 48)
+            })
+        });
+        tMarcador.on('click', () => {
+            ultimaPeticionNPois = 0;
+            map.setView([tesela.latC, tesela.longC], Math.min(map.getZoom() + 1, maxZoom));
+            //map.fitBounds(bounds);
+        });
+        tTesela = L.rectangle(
+            bounds,
+            {
+                color: '#D72656',
+                fillOpacity: 0,
+                weight: 0
+            });
+        tTesela.on('click', () => {
+            ultimaPeticionNPois = 0;
+            map.setView([tesela.latC, tesela.longC], Math.min(map.getZoom() + 1, maxZoom));
+        });
+
+    } else {
+        tTesela = L.rectangle(
+            bounds,
+            {
+                color: '#000000',
+                fillOpacity: 0.5,
+                weight: 0,
+                interactive: false,
+            });
+    }
+
+    if (tMarcador !== null) {
+        teselasM.addLayer(tMarcador);
+    }
+    teselas.addLayer(tTesela);
 }
