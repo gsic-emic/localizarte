@@ -37,9 +37,10 @@ function contextosZona(puntos) {
     puntos,
   );*/
   const query = Mustache.render(
-    'SELECT ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen WHERE {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . OPTIONAL { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } FILTER ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})). } ',
+    'SELECT ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen ?dbpedia WHERE {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . OPTIONAL { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen } . OPTIONAL {?ctx rdfs:seeAlso ?dbpedia . FILTER (regex(?dbpedia, "dbpedia"))} . FILTER ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})). } ',
     puntos,
   );
+  //console.log(query);
   return encodeURIComponent(query);
 }
 

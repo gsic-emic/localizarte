@@ -60,7 +60,7 @@ function obtenContextos(req, res) {
           });
           response.on('end', () => {
             const resultados = Auxiliar.procesaJSONSparql(
-              ['ctx', 'lat', 'long', 'titulo', 'descr', 'autor', 'imagen'],
+              ['ctx', 'lat', 'long', 'titulo', 'descr', 'autor', 'imagen', 'dbpedia'],
               Buffer.concat(chunks).toString(),
             );
             if (resultados && resultados.length > 0) {

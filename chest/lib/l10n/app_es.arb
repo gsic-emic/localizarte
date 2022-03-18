@@ -1,0 +1,21 @@
+{
+    "chest": "CHEST",
+    "contribOSM": "© Colaboradores de OpenStreetMap",
+    "porHacer": "Por hacer",
+    "infoPoi": "Información del PDI",
+    "latitud": "Latitud",
+    "longitud": "Longitud",
+    "textoAT0": "Realiza varias fotografías",
+    "textoAT1": "Realiza varias fotografías y responde a una pregunta",
+    "textoAT2": "Información",
+    "textoAT3": "Realiza una fotografía",
+    "textoAT4": "Realiza una fotografía y responde una pregunta",
+    "textoAT5": "Responde brevemente a una pregunta",
+    "textoAT6": "Graba un vídeo",
+    "textoAT7": "Graba un vídeo",
+    "textoAT8": "Selecciona la respuesta correcta",
+    "textoAT9": "¿Verdadero o falso?",
+    "textoAT10": "Tipo de pregunta desconocido",
+    "serviciosLocalizacionDescativados": "Servicio de ubicación desactivado. Debes activarlos en la configuración de tu terminal.",
+    "aceptarPermisosUbicacion": "Tienes que activar el permiso de ubicación."
+}

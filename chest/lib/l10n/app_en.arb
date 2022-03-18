@@ -1,0 +1,21 @@
+{
+    "chest": "CHEST",
+    "contribOSM": "© OpenStreetMap contributions",
+    "porHacer": "TO DO",
+    "infoPoi":  "POI information",
+    "latitud": "Latitude",
+    "longitud": "Longitude",
+    "textoAT0": "Take several photos",
+    "textoAT1": "Take several photos and answer a question",
+    "textoAT2": "Information",
+    "textoAT3": "Take a photo",
+    "textoAT4": "Take a phot and answer a question",
+    "textoAT5": "Briefly answer a question",
+    "textoAT6": "Answer a question",
+    "textoAT7": "Record a video",
+    "textoAT8": "Select correct answer",
+    "textoAT9": "True or false?",
+    "textoAT10": "Unknown question type",
+    "serviciosLocalizacionDescativados": "Location services disabled. You must activate them in the configuration of your terminal.",
+    "aceptarPermisosUbicacion": "You have to accept location permission."
+}

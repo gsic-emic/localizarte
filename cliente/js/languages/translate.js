@@ -46,8 +46,8 @@ const translate = {
         en: "What is CHEST?",
     },
     modalInfoQueEsLocalizarte1: {
-        es: "CHEST (<i>Cultural Heritage Educational Semantic Tool</i>, Herramienta Semántica Educativa del Patrimonio Cultural) es una aplicación distribuida que utiliza Datos Abiertos de distintas fuentes de información para apoyar el aprendizaje ubicuo de Historia del Arte. A través de CHEST se puede <b>crear nuevo contenido</b> y <b>realizar tareas educativas</b> (usuarios registrados). Estas tareas educativas pueden estar diseñadas para ser realizadas cerca del punto de interés o desde cualquier lugar. Puedes acceder a nuestra política de privacidad utilizando <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">este enlace</a>.",
-        en: "CHEST (Cultural Heritage Educational Semantic Tool) is a distributed application that uses Open Data from different sources to support ubiquitous learning of Art History. Through CHEST you can <b>create new content</b> and <b>complete learning tasks</b> (registered users). This learning tasks can be designed to be completed near the point of interest or from any location. You can access our privacy policy using <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">this link</a>.",
+        es: "CHEST (<i>Cultural Heritage Educational Semantic Tool</i>, Herramienta Semántica Educativa del Patrimonio Cultural) es una aplicación distribuida que utiliza Datos Abiertos de distintas fuentes de información para apoyar el aprendizaje ubicuo de Historia del Arte. A través de CHEST se puede <b>crear nuevo contenido</b> y <b>realizar tareas educativas</b> (usuarios registrados). Estas tareas educativas pueden estar diseñadas para ser realizadas cerca del punto de interés o desde cualquier lugar. Puedes acceder a nuestra política de privacidad utilizando <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://chest.gsic.uva.es/privacidad\">este enlace</a>.",
+        en: "CHEST (Cultural Heritage Educational Semantic Tool) is a distributed application that uses Open Data from different sources to support ubiquitous learning of Art History. Through CHEST you can <b>create new content</b> and <b>complete learning tasks</b> (registered users). This learning tasks can be designed to be completed near the point of interest or from any location. You can access our privacy policy using <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://chest.gsic.uva.es/privacidad\">this link</a>.",
     },
     modalInfoDatosAbiertos0: {
         es: "CHEST utiliza Datos Abiertos",
@@ -58,8 +58,8 @@ const translate = {
         en: "CHEST starting data were generated in a semi-automatic way using different <b>Open Data</b> sources like <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html\">Datos Abiertos de la Junta de Castilla y León</a>, <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://wiki.dbpedia.org/\">DBpedia</a> and <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://www.wikidata.org/wiki/Wikidata:Main_Page\">Wikidata</a>.",
     },
     modalInfoDatosAbiertos2: {
-        es: "Además de estos datos, los <b>docentes</b> podrán agregar nuevos puntos de interés y tareas educativas a través de la interfaz de CHEST. Esta nueva información se almacenará, de forma transparente, como Datos Abiertos Enlazados. Puedes escribirnos a <a class=\"text-muted text-decoration-none\" href=\"mailto:localizarte@gsic.uva.es\">localizarte@gsic.uva.es</a> si deseas poder agregar nueva información a la aplicación que pueda ser utilizada por tus estudiantes.",
-        en: "In addition, <b>teachers</b> will be able to add nw points of interest and learning tasks through CHEST interface. This new information will be stored, transparently, as Linked Open Data. You can write to as at <a class=\"text-muted text-decoration-none\" href=\"mailto:localizarte@gsic.uva.es\">localizarte@gsic.uva.es</a> if you would like to be able to add new information to the application that can be used by your students.",
+        es: "Además de estos datos, los <b>docentes</b> podrán agregar nuevos puntos de interés y tareas educativas a través de la interfaz de CHEST. Esta nueva información se almacenará, de forma transparente, como Datos Abiertos Enlazados. Puedes escribirnos a <a class=\"text-muted text-decoration-none\" href=\"mailto:chest@gsic.uva.es\">chest@gsic.uva.es</a> si deseas poder agregar nueva información a la aplicación que pueda ser utilizada por tus estudiantes.",
+        en: "In addition, <b>teachers</b> will be able to add nw points of interest and learning tasks through CHEST interface. This new information will be stored, transparently, as Linked Open Data. You can write to as at <a class=\"text-muted text-decoration-none\" href=\"mailto:chest@gsic.uva.es\">chest@gsic.uva.es</a> if you would like to be able to add new information to the application that can be used by your students.",
     },
     modalInfoGSIC0: {
         es: "Una aplicación del grupo GSIC/EMIC",
@@ -387,7 +387,7 @@ const translate = {
     },
     labelVistaProfesor: {
         es: "Vista docente",
-        en: "Teacher view",
+        en: "Teacher's view",
     },
     contributionsNavBar: {
         es: "Contribuciones",
@@ -411,7 +411,7 @@ const translate = {
     },
     deletePOI1: {
         es: "¿Estás seguro de borrar el punto de interés?",
-        en: "Are you sure to delete point of interes?"
+        en: "Are you sure to delete point of interest?"
     },
     deletePOI2: {
         es: "No se ha podido completar el borrado:",
@@ -806,8 +806,8 @@ const translate = {
         en: "Teacher account",
     },
     mSolicitudCuentaProfe: {
-        es: "Si quieres disponer de una cuenta de docente para poder crear nuevos POI y tareas educativas envía un correo electrónico a la dirección <em>localizarte@gsic.uva.es</em>. El equipo de CHEST se pondrá en contacto contigo.",
-        en: "If you would like have a teacher account to add new POIs and learning tasks send an email to <em>localizarte@gsic.uva.es</em>. CHEST team will contact you."
+        es: "Si quieres disponer de una cuenta de docente para poder crear nuevos POI y tareas educativas envía un correo electrónico a la dirección <em>chest@gsic.uva.es</em>. El equipo de CHEST se pondrá en contacto contigo.",
+        en: "If you would like have a teacher account to add new POIs and learning tasks send an email to <em>chest@gsic.uva.es</em>. CHEST team will contact you."
     },
     mActualizar: {
         es: "Actualizar",
@@ -862,8 +862,8 @@ const translate = {
         en: "Insert URL",
     },
     cbPoliPrivLabel: {
-        es: "He leído y acepto la política de privacidad de CHEST contenida en <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">este sitio web</a>",
-        en: "I have read and accept CHEST's privacy policy contained in <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">this website</a>",
+        es: "He leído y acepto la política de privacidad de CHEST contenida en <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://chest.gsic.uva.es/privacidad\">este sitio web</a>",
+        en: "I have read and accept CHEST's privacy policy contained in <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://chest.gsic.uva.es/privacidad\">this website</a>",
     },
     licenciaNotFound: {
         es: "No se ha conseguido encontrar la licencia de la imagen",
@@ -881,4 +881,8 @@ const translate = {
         es: "ALFA",
         en: "ALPHA",
     },
+    masInfoEnlace: {
+        es: "<br><br>Puedes encontrar más información en <a  target=\"_blank\" href=\"{{{enlace}}}\">este enlace</a>.",
+        en: "<br><br>You can find more information on <a  target=\"_blank\" href=\"{{{enlace}}}\">this link</a>."
+    }
 }

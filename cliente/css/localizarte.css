@@ -53,10 +53,9 @@ body {
     -moz-border-radius: 50%;
 }
 
-.marcadorDivTexto {
+/*.marcadorDivTexto {
     width: 48px;
     height: 48px;
-    /*background-color: #ffffffb0;*/
     background-color: rgb(215, 38, 86);
     border: 2px solid rgb(211, 14, 68);
     text-align: center;
@@ -70,7 +69,7 @@ body {
 .marcadorDivTexto span {
     line-height: 45px;
     font-size: medium;
-}
+}*/
 
 .imagen {
     max-width: 300px;

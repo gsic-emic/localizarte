@@ -197,9 +197,9 @@ function peticionZona(punto, zona) {
  */
 function pintaPOIs(zona) {
     if (faltan <= 0) {
-        if (teselas) {
+        /*if (teselas) {
             teselas.clearLayers();
-        }
+        }*/
         if (markers) {
             markers.clearLayers();
         } else {
@@ -230,6 +230,7 @@ function pintaPOIs(zona) {
                     maxClusterRadius: 55
                 }
             );
+            map.addLayer(markers);
         }
         let poi;
         for (let i = 0; i < pois.length; i++) {
@@ -238,7 +239,7 @@ function pintaPOIs(zona) {
                 markerPoP(poi);
             }
         }
-        map.addLayer(markers);
+        //map.addLayer(markers);
     }
 }
 
@@ -272,7 +273,7 @@ function markerPoP(poi) {
             //marker = L.marker(poi.posicion, { icon: iconoMarcadores });
             marker = L.marker(poi.posicion, {
                 icon: L.divIcon({
-                    html: mustache.render('<div class="marcadorDivTexto"><span>{{{iniciales}}}</span></div>', { iniciales: iniciales }),
+                    html: mustache.render('<div class="marcadorImagen">{{{iniciales}}}</div>', { iniciales: iniciales }),
                     className: '',
                     iconSize: [48, 48]
                 })
@@ -339,7 +340,23 @@ function markerPoP(poi) {
 
                 if (getValueField(poi.descr) !== null) {
                     const descripcion = document.getElementById('descripcionPuntoInteres');
-                    descripcion.innerHTML = (getValueField(poi.descr)).replaceAll('<a ', '<a target="_blank" ');
+                    const descr = mustache.render(
+                        '{{{a}}}{{{b}}}',
+                        {
+                            a: getValueField(poi.descr).replaceAll('<a ', '<a target="_blank" '),
+                            b: () => {
+                                if(poi.dbpedia !== undefined && typeof poi.dbpedia === 'string') {
+                                    return mustache.render(
+                                        translate.masInfoEnlace[language],
+                                        {enlace: poi.dbpedia.replace('dbpedia.org/resource', 'wikipedia.org/wiki').replace('http', 'https')})
+                                } else {
+                                    return '';
+                                }
+                            }
+                        }
+                    );
+                    //descripcion.innerHTML = (getValueField(poi.descr)).replaceAll('<a ', '<a target="_blank" ');
+                    descripcion.innerHTML = descr;
                 }
 
                 document.getElementById('cerrarModalMarcador').onclick = () => {
@@ -1713,13 +1730,13 @@ function obtenNPOIs() {
 }
 
 function pintaNPoi(tesela) {
-    if (teselas === null) {
+    /*if (teselas === null) {
         teselas = L.layerGroup().addTo(map);
-    }
+    }*/
     if (teselasM === null) {
         teselasM = L.layerGroup().addTo(map);
     }
-    const bounds = [[tesela.north, tesela.west], [tesela.south, tesela.east]];
+    //const bounds = [[tesela.north, tesela.west], [tesela.south, tesela.east]];
     let tMarcador = null, tTesela;
     if (tesela.pois > 0) {
         let tipo;
@@ -1748,7 +1765,7 @@ function pintaNPoi(tesela) {
             map.setView([tesela.latC, tesela.longC], Math.min(map.getZoom() + 1, maxZoom));
             //map.fitBounds(bounds);
         });
-        tTesela = L.rectangle(
+        /*tTesela = L.rectangle(
             bounds,
             {
                 color: '#D72656',
@@ -1758,9 +1775,9 @@ function pintaNPoi(tesela) {
         tTesela.on('click', () => {
             ultimaPeticionNPois = 0;
             map.setView([tesela.latC, tesela.longC], Math.min(map.getZoom() + 1, maxZoom));
-        });
+        });*/
 
-    } else {
+    } /*else {
         tTesela = L.rectangle(
             bounds,
             {
@@ -1769,10 +1786,10 @@ function pintaNPoi(tesela) {
                 weight: 0,
                 interactive: false,
             });
-    }
+    }*/
 
     if (tMarcador !== null) {
         teselasM.addLayer(tMarcador);
     }
-    teselas.addLayer(tTesela);
+    //teselas.addLayer(tTesela);
 }
