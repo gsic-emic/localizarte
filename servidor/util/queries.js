@@ -371,7 +371,7 @@ function nuevoObjeto(datosObjeto, tipoObjeto, esQuery = true) {
     }
   }*/
   query = Mustache.render('{{{query}}}}', { query: query });
-  //console.log(query);
+  console.log(query);
   return (esQuery) ? encodeURIComponent(query) : query;
 }
 

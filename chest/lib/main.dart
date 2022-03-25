@@ -15,15 +15,27 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CHEST',
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const MyMap(),
-      theme: ThemeData(
-          primaryColor: ColorsCusto.pBlue,
-          primaryColorDark: ColorsCusto.pBlue[900],
-          primaryColorLight: ColorsCusto.pBlue[100],
-          fontFamily: "OpenSans"),
-    );
+        title: 'CHEST',
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const MyMap(),
+        theme: ThemeData(
+            primaryColor: ColorsCusto.pBlue,
+            primaryColorDark: ColorsCusto.pBlue[900],
+            primaryColorLight: ColorsCusto.pBlue[100],
+            fontFamily: "OpenSans",
+            snackBarTheme: const SnackBarThemeData(
+                backgroundColor: ColorsCusto.pBlue,
+                contentTextStyle: TextStyle(color: Colors.white)),
+            textTheme: const TextTheme(
+              bodySmall: TextStyle(fontSize: 14, color: Colors.black),
+              bodyMedium: TextStyle(fontSize: 17, color: Colors.black),
+              bodyLarge: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            appBarTheme: const AppBarTheme(
+                backgroundColor: ColorsCusto.pBlue,
+                foregroundColor: Colors.white),
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+                backgroundColor: ColorsCusto.pBlue)));
   }
 }
