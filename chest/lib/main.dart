@@ -1,6 +1,7 @@
 import 'package:chest/helpers/colors_custo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:universal_io/io.dart';
 
 import 'managers/map.dart';
 
@@ -9,17 +10,30 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  /// Contorla el idioma de la aplicación.
+  static String currentLang = "en";
+  static final List<String> langs = ["es", "en"];
+
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    //Idioma de la aplicación
+    String aux = Platform.localeName;
+    if (aux.contains("_")) {
+      aux = aux.split("_")[0];
+    }
+    if (langs.contains(aux)) {
+      currentLang = aux;
+    }
+
     return MaterialApp(
         title: 'CHEST',
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const MyMap(),
         theme: ThemeData(
+            toggleableActiveColor: ColorsCusto.pBlue,
             primaryColor: ColorsCusto.pBlue,
             primaryColorDark: ColorsCusto.pBlue[900],
             primaryColorLight: ColorsCusto.pBlue[100],
@@ -36,6 +50,11 @@ class MyApp extends StatelessWidget {
                 backgroundColor: ColorsCusto.pBlue,
                 foregroundColor: Colors.white),
             floatingActionButtonTheme: const FloatingActionButtonThemeData(
-                backgroundColor: ColorsCusto.pBlue)));
+                backgroundColor: ColorsCusto.pBlue),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(ColorsCusto.pBlue),
+                  foregroundColor: MaterialStateProperty.all(Colors.white)),
+            )));
   }
 }

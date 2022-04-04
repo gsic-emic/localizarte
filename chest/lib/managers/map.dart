@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -17,6 +16,7 @@ import 'package:location/location.dart';
 
 import '../helpers/config.dart';
 import '../helpers/zona.dart';
+import '../main.dart';
 import '../managers/poi.dart';
 import '../helpers/colors_custo.dart';
 import '../helpers/poi.dart';
@@ -34,14 +34,16 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
   final double maxZum = 19;
   final double lado = 0.0254;
   List<Marker> _myMarkers = <Marker>[];
+  List<POI> _currentPOIs = <POI>[];
   List<Marker> _myPosition = <Marker>[];
   List<TeselaPoi> lpoi = <TeselaPoi>[];
   late int faltan;
   bool userR = false;
   late user.User usuario;
   bool _cargaInicial = true;
+  bool _profe = true;
 
-  final _contributionStyle = const TextStyle(
+  final TextStyle _contributionStyle = const TextStyle(
     fontSize: 10.0,
     color: Colors.black,
     backgroundColor: Colors.black26,
@@ -73,13 +75,57 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-          tooltip: AppLocalizations.of(context)!.mUbicacion,
-          child: Icon(
-            Icons.adjust,
-            color: useLocation ? Colors.blue[300] : Colors.white,
-          ),
-          onPressed: () => locationUser()),
+      floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+                width: 200,
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                    color: ColorsCusto.pBlue,
+                    border: Border.all(color: ColorsCusto.pBlue),
+                    borderRadius: const BorderRadius.all(Radius.circular(30))),
+                child: SwitchListTile.adaptive(
+                  value: _profe,
+                  onChanged: (bool nv) => setState(() => _profe = nv),
+                  title: Text(
+                    AppLocalizations.of(context)!.vistaDocente,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: (_profe) ? Colors.blue[300] : Colors.white,
+                        fontSize: 14),
+                  ),
+                  activeColor: Colors.blue[300],
+                  inactiveTrackColor: Colors.white24,
+                )
+                /*Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Vista profe",
+                        style: TextStyle(
+                            color: (_profe) ? Colors.blue[300] : Colors.white,
+                            fontSize: 12),
+                      ),
+                      Switch.adaptive(
+                        value: _profe,
+                        onChanged: (bool nv) => setState(() => _profe = nv),
+                        activeColor: Colors.blue[300],
+                        inactiveTrackColor: Colors.white24,
+                      )
+                    ])*/
+                ),
+            FloatingActionButton(
+                tooltip: AppLocalizations.of(context)!.mUbicacion,
+                child: Icon(
+                  Icons.adjust,
+                  color: useLocation ? Colors.blue[300] : Colors.white,
+                ),
+                onPressed: () => locationUser()),
+          ]),
       appBar: AppBar(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -97,9 +143,10 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
             ? [
                 IconButton(
                   onPressed: () {
-                    usuario = User.logInUser();
-                    userR = usuario.getUsername().isNotEmpty;
-                    setState(() {});
+                    setState(() {
+                      usuario = User.logInUser();
+                      userR = usuario.getUsername().isNotEmpty;
+                    });
                   },
                   icon: const Icon(Icons.login),
                   tooltip: AppLocalizations.of(context)!.iniciarSes,
@@ -245,7 +292,7 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
             //center: LatLng(43.608, 1.443),
             zoom: 16.0,
             maxZoom: maxZum,
-            minZoom: 10,
+            minZoom: 5,
             interactiveFlags: InteractiveFlag.pinchZoom |
                 InteractiveFlag.doubleTapZoom |
                 InteractiveFlag.drag,
@@ -263,9 +310,9 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
               options: TileLayerOptions(
             minZoom: 1,
             maxZoom: 20,
-            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            /*urlTemplate:
-                    "https://api.mapbox.com/styles/v1/pablogz/ckvpj1ed92f7u14phfhfdvkor/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3Z4b3VnaTUwM2VnMzFtdjJ2Mm4zajRvIn0.q0l3ZzhT4BzKafNxdQuSQg",*/
+            /*urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",*/
+            urlTemplate:
+                "https://api.mapbox.com/styles/v1/pablogz/ckvpj1ed92f7u14phfhfdvkor/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3Z4b3VnaTUwM2VnMzFtdjJ2Mm4zajRvIn0.q0l3ZzhT4BzKafNxdQuSQg",
             subdomains: ['a', 'b', 'c'],
             backgroundColor: Colors.grey,
             attributionBuilder: (c) {
@@ -325,9 +372,17 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
   }
 
   Future<void> longPress(LatLng pos) async {
-    if (mapController.zoom >= 15) {
+    if (mapController.zoom >= 15 && _profe) {
       _animatedMapMove(pos, mapController.zoom);
-      POI poi = await showDialog(
+      await Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) => NewPoi(
+              pos, _currentPOIs, ((maxZum - mapController.zoom + 1) / 400)),
+          fullscreenDialog: true,
+        ),
+      );
+/*      POI poi = await showDialog(
           context: context,
           barrierDismissible: true,
           builder: (context) => SimpleDialog(
@@ -358,11 +413,11 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
                               child: Text(
                                 AppLocalizations.of(context)!.addPOI,
                               ),
-                              style: ButtonStyle(
+                              /*style: ButtonStyle(
                                   backgroundColor: MaterialStateProperty.all(
                                       ColorsCusto.pBlue),
                                   foregroundColor:
-                                      MaterialStateProperty.all(Colors.white)),
+                                      MaterialStateProperty.all(Colors.white)),*/
                             ))),
                     const Padding(padding: EdgeInsets.all(10)),
                     Padding(
@@ -391,6 +446,17 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
         );
         //TODO: tengo que limpiar la zona para descargar los nuevos datos del servidor
         checkMarkerType();
+      }*/
+    } else {
+      if (_profe) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context)!.aumentaZum),
+            action: SnackBarAction(
+              label: AppLocalizations.of(context)!.aumentaZumShort,
+              onPressed: () {
+                _animatedMapMove(pos, 15);
+              },
+            )));
       }
     }
   }
@@ -443,33 +509,12 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
                   POISug poiSug = POISug(dato["iri"].toString(), dato["label"],
                       dato["comment"], dato["categories"], dato["image"]);
 
-                  String currentLang = Platform.localeName;
-                  if (currentLang.contains("_")) {
-                    currentLang = currentLang.split("_")[0];
-                  }
-
                   for (NearSug ns in reducida) {
                     poi = POI.empty();
                     if (poiSug.place == ns.place) {
-                      /*List lLabel = dato["label"];
-                      String label = ns.place;
-                      for (int i = 0, tama = lLabel.length; i < tama; i++) {
-                        Map<String, dynamic> m = lLabel[i];
-                        if (m.containsKey("en")) {
-                          label = m["en"].toString();
-                        }
-                      }
-                      List lComment = dato["comment"];
-                      String comment = ns.place;
-                      for (int i = 0, tama = lComment.length; i < tama; i++) {
-                        Map<String, dynamic> m = lComment[i];
-                        if (m.containsKey("en")) {
-                          comment = m["en"].toString();
-                        }
-                      }*/
                       String label;
-                      if (poiSug.label(currentLang).isNotEmpty) {
-                        label = poiSug.label(currentLang);
+                      if (poiSug.label(MyApp.currentLang).isNotEmpty) {
+                        label = poiSug.label(MyApp.currentLang);
                       } else {
                         if (poiSug.labels.length == 1) {
                           label = poiSug.labels[0].value;
@@ -478,8 +523,8 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
                         }
                       }
                       String comment;
-                      if (poiSug.comment(currentLang).isNotEmpty) {
-                        comment = poiSug.comment(currentLang);
+                      if (poiSug.comment(MyApp.currentLang).isNotEmpty) {
+                        comment = poiSug.comment(MyApp.currentLang);
                       } else {
                         if (poiSug.comments.length == 1) {
                           comment = poiSug.comments[0].value;
@@ -487,6 +532,7 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
                           comment = "";
                         }
                       }
+                      //TODO userID
                       poi = POI(
                           ns.place,
                           ns.lat,
@@ -627,6 +673,7 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
   void checkCurrentMap(mapBounds) {
     //return;
     _myMarkers = <Marker>[];
+    _currentPOIs = <POI>[];
     if (mapBounds is LatLngBounds) {
       LatLng pI = startPointCheck(mapBounds.northWest);
       HashMap c = buildTeselas(pI, mapBounds.southEast);
@@ -702,7 +749,7 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
     })
         //.convert('https://chest.gsic.uva.es/servidor/contexts/?lat={{north}}&long={{west}}');
         .convert('{{dirAdd}}/contexts/?lat={{north}}&long={{west}}');
-    print(stringUri);
+    //print(stringUri);
 
     http.get(Uri.parse(stringUri)).then((response) {
       switch (response.statusCode) {
@@ -718,10 +765,13 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
           try {
             final POI poi = POI(p['ctx'], p['lat'], p['long'], p['titulo'],
                 p['descr'], p['autor'], p['imagen'], "", "");
+            if (p['dbpedia'] != null) {
+              poi.extraInfo = p['dbpedia'].toString();
+            }
             pois.add(poi);
           } catch (e) {
             //El poi está mal formado
-            print(e.toString());
+            //print(e.toString());
           }
         }
         faltan = (faltan > 0) ? faltan - 1 : 0;
@@ -729,27 +779,17 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
         addMarkers2Map(pois, mapBounds);
       }
     }).onError((error, stackTrace) {
-      print(error.toString());
+      //print(error.toString());
       return null;
     });
   }
 
-  void addMarkers2Map(List<POI> pois, LatLngBounds mapBounds) {
+  addMarkers2Map(List<POI> pois, LatLngBounds mapBounds) {
     List<POI> visiblePois = <POI>[];
     for (POI poi in pois) {
       if (mapBounds.contains(LatLng(poi.lat, poi.lng))) {
         visiblePois.add(poi);
-      } /*else {
-        print(Mustache(map: {
-          "n": mapBounds.north,
-          "e": mapBounds.east,
-          "s": mapBounds.south,
-          "w": mapBounds.west,
-          "lat": poi.getLat(),
-          "lng": poi.getLng(),
-          "t": poi.getTitulo()
-        }).convert("{{t}}: [{{lat}},{{lng}}] -> [[{{n}},{{w}}],[{{s}},{{e}}]]"));
-      }*/
+      }
     }
     if (visiblePois.isNotEmpty) {
       for (POI poi in visiblePois) {
@@ -761,7 +801,7 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
         if (poi.hasImagen == true &&
             poi.imagen
                 .contains('commons.wikimedia.org/wiki/Special:FilePath/')) {
-          String imagen = poi.imagen.replaceFirst('http://', 'https://');
+          String imagen = poi.imagen;
           if (!imagen.contains('width=')) {
             imagen = Mustache(map: {'url': imagen})
                 .convert('{{url}}?width=50&height=50');
@@ -792,6 +832,7 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
             height: 52,
           );
         }
+        _currentPOIs.add(poi);
         _myMarkers.add(Marker(
             width: 52,
             height: 52,
@@ -813,8 +854,9 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
                             ((useLocation)
                                 ? LatLng(currentLocation.latitude!,
                                     currentLocation.longitude!)
-                                : LatLng(0, 0))),
-                        fullscreenDialog: true,
+                                : LatLng(0, 0)),
+                            _profe),
+                        fullscreenDialog: false,
                       ),
                     );
                     mapController.move(
@@ -878,33 +920,35 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
             ld.longitude is double) {
           currentLocation = ld;
           double ac = max(ld.accuracy! / 2, 20);
-          _myPosition.add(Marker(
-              width: ac,
-              height: ac,
-              point: LatLng(ld.latitude!, ld.longitude!),
-              builder: (context) => Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(ac),
-                    color: Colors.blue[300]?.withOpacity(0.65),
-                  ),
-                  child: Center(
-                    child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: ColorsCusto.pBlue[500],
-                          border: Border.all(color: Colors.white, width: 3),
-                        )),
-                  ))));
-          setState(() {});
+          setState(() {
+            _myPosition.add(Marker(
+                width: ac,
+                height: ac,
+                point: LatLng(ld.latitude!, ld.longitude!),
+                builder: (context) => Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(ac),
+                      color: Colors.blue[300]?.withOpacity(0.65),
+                    ),
+                    child: Center(
+                      child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: ColorsCusto.pBlue[500],
+                            border: Border.all(color: Colors.white, width: 3),
+                          )),
+                    ))));
+          });
         }
       });
     } else {
       l.cancel();
-      useLocation = false;
-      _myPosition = [];
-      setState(() {});
+      setState(() {
+        useLocation = false;
+        _myPosition = [];
+      });
     }
   }
 
@@ -949,8 +993,10 @@ class _MyMap extends State<MyMap> with TickerProviderStateMixin {
       checkCurrentMap(mapController.bounds);
     } else {
       if (_myMarkers.isNotEmpty) {
-        _myMarkers = [];
-        setState(() {});
+        setState(() {
+          _myMarkers = [];
+          _currentPOIs = [];
+        });
       }
     }
   }

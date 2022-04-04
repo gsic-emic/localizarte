@@ -1,9 +1,20 @@
 import 'package:latlong2/latlong.dart';
 
 class POI {
-  late String _id, _titulo, _descr, _autor, _imagen, _fuentes, _licencia;
+  late String _id,
+      _titulo,
+      _descr,
+      _autor,
+      _imagen,
+      _fuentes,
+      _licencia,
+      _dbpedia;
   late double _lat, _long;
-  bool _timagen = false, _isEmpty = true, _isComplete = false;
+  bool _timagen = false,
+      _isEmpty = true,
+      _isComplete = false,
+      _hasExtraInfo = false;
+  double _distance = double.infinity;
 
   POI(id, lat, long, titulo, descr, autor, imagen, licencia, fuentes) {
     if (id is String) {
@@ -65,7 +76,7 @@ class POI {
       }
     }
     if (imagen is String) {
-      _imagen = imagen;
+      _imagen = imagen.replaceFirst('http://', 'https://');
       _timagen = true;
     } else {
       if (imagen != null) {
@@ -117,6 +128,7 @@ class POI {
     _imagen = "";
     _licencia = "";
     _fuentes = "";
+    _dbpedia = "";
     _timagen = false;
     _isEmpty = false;
     _isComplete = false;
@@ -148,9 +160,14 @@ class POI {
 
   String get imagen => _imagen;
   set imagen(String imagen) {
-    assert(imagen.isNotEmpty);
-    _imagen = imagen;
-    _timagen = true;
+    if (imagen.isNotEmpty) {
+      _imagen = imagen;
+      _timagen = true;
+    } else {
+      _imagen = imagen;
+      _licencia = "";
+      _timagen = false;
+    }
   }
 
   bool get hasImagen => _timagen;
@@ -183,9 +200,32 @@ class POI {
     _licencia = fuentes;
   }
 
+  double get distance => _distance;
+  setDistance(LatLng latLng) {
+    const Distance d = Distance();
+    _distance = d.as(LengthUnit.Meter, latLng, LatLng(_lat, _long));
+  }
+
   bool get isEmpty => _isEmpty;
   bool get isComplete => _isComplete;
   bool get isValid => !_isEmpty && _isComplete;
+
+  String get extraInfo => (_hasExtraInfo) ? _dbpedia : "";
+  set extraInfo(String extraInfo) {
+    if (extraInfo.trim().isNotEmpty) {
+      _dbpedia = extraInfo
+          .trim()
+          .replaceFirst('http://', 'https://')
+          .replaceFirst('dbpedia', 'wikipedia')
+          .replaceFirst('resource', 'wiki');
+      _hasExtraInfo = true;
+    } else {
+      _dbpedia = "";
+      _hasExtraInfo = false;
+    }
+  }
+
+  bool get hasExtraInfo => _hasExtraInfo;
 }
 
 class NearSug {
@@ -286,9 +326,9 @@ class POISug {
   }
   String get place => _place;
   List<PairLang> get labels => _label;
-  String label(lang) {
+  String label(String lang) {
     for (PairLang la in _label) {
-      if (la.hasLang && identical(label, la.lang)) {
+      if (la.hasLang && lang == la.lang) {
         return la.value;
       }
     }
@@ -296,9 +336,9 @@ class POISug {
   }
 
   List<PairLang> get comments => _comment;
-  String comment(lang) {
+  String comment(String lang) {
     for (PairLang la in _comment) {
-      if (lang == la.lang) {
+      if (la.hasLang && lang == la.lang) {
         return la.value;
       }
     }
@@ -319,7 +359,7 @@ class PairLang {
     _lang = "";
   }
 
-  bool get hasLang => _lang.isEmpty;
+  bool get hasLang => _lang.isNotEmpty;
   String get lang => _lang;
   String get value => _value;
 }
@@ -346,14 +386,10 @@ class Category {
     } else {
       throw Exception("Problem with label");
     }
-    if (broader is String || broader is List) {
-      if (broader is String) {
-        _broader = [broader];
-      } else {
-        _broader = [...broader];
-      }
+    if (broader is List) {
+      _broader = [...broader];
     } else {
-      throw Exception("Problem with broader");
+      _broader = [broader.toString()];
     }
   }
 
@@ -366,11 +402,13 @@ class PairImage {
   late final String _image;
   String _license = "";
   late bool hasLicense;
-  PairImage(this._image, this._license) {
+  PairImage(image, this._license) {
+    _image = image.replaceFirst('http://', 'https://');
     hasLicense = (_license.trim().isNotEmpty);
   }
 
-  PairImage.withoutLicense(this._image) {
+  PairImage.withoutLicense(image) {
+    _image = image.replaceFirst('http://', 'https://');
     hasLicense = false;
   }
 

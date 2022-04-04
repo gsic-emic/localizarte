@@ -40,8 +40,12 @@ dependencies:
   location: ^4.3.0
   http: ^0.13.4
   simple_mustache: ^2.0.0
-  cached_network_image: ^3.2.0
   flutter_speed_dial: ^5.0.0+1
+  universal_io: ^2.0.4
+  flutter_widget_from_html: ^0.8.5
+  fwfh_url_launcher: ^0.6.0
+  camera: ^0.9.4+18
+  url_launcher: ^6.0.20
 
 dev_dependencies:
   flutter_test:
