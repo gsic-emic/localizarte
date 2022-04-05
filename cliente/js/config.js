@@ -1,5 +1,7 @@
 /** Dirección del servidor */
-const direccionServidor = 'https://localizarte.gsic.uva.es/servidor';
+const direccionServidor = 'http://127.0.0.1:11110/app';
+//const direccionServidor = 'https://10.0.104.17/app';
+//const direccionServidor = 'https://localizarte.gsic.uva.es/servidor';
 /** Token para la API de LocalizARTE en CRAFTS */
 const tokenCraftLocalizarte = '6d8097f8-9fff-40a2-9043-bd57fe89bcb3';
 

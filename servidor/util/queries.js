@@ -32,10 +32,15 @@ const Auxiliar = require('./auxiliar');
  * @returns Query con la solicitud de los contextos
  */
 function contextosZona(puntos) {
-  const query = Mustache.render(
+  /*const query = Mustache.render(
     'SELECT ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen WHERE {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . OPTIONAL { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen . } FILTER ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})). FILTER ((lang(?titulo) = "es" || lang(?titulo) = "") && (lang(?descr) = "es" || lang(?descr) = ""))} ',
     puntos,
+  );*/
+  const query = Mustache.render(
+    'SELECT ?ctx ?lat ?long ?titulo ?descr ?autor ?imagen ?dbpedia WHERE {?ctx geo:lat ?lat ; geo:long ?long ; rdfs:label ?titulo ; rdfs:comment ?descr ; dc:creator ?autor . OPTIONAL { ?ctx <https://casuallearn.gsic.uva.es/property/image> ?imagen } . OPTIONAL {?ctx rdfs:seeAlso ?dbpedia . FILTER (regex(?dbpedia, "dbpedia"))} . FILTER ((xsd:decimal(?lat) > {{{sur}}}) && (xsd:decimal(?lat) <= {{{norte}}}) && (xsd:decimal(?long) >= {{{oeste}}}) && (xsd:decimal(?long) < {{{este}}})). } ',
+    puntos,
   );
+  //console.log(query);
   return encodeURIComponent(query);
 }
 
@@ -81,7 +86,7 @@ function formatoTiposDatos(tipo, valor) {
  * @param {String} tipoObjeto El tipo de objeto con el que se pretenden insertar los datos
  * @returns Query con la que realizar la consulta
  */
-function nuevoObjeto(datosObjeto, tipoObjeto) {
+function nuevoObjeto(datosObjeto, tipoObjeto, esQuery = true) {
   let query = Mustache.render(
     'WITH <http://localizarte.gsic.uva.es> INSERT {<{{{iri}}}> a <{{{tipoObjeto}}}>; ',
     {
@@ -110,7 +115,7 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
             vector = [vector];
           }
           //Con esto guardo para todos los idiomas, voy a guardar solo en español para el prototipo TODO CAMBIAR!!
-          /*vector.forEach(v => {
+          vector.forEach(v => {
             if (!Auxiliar.isEmpty(v.value.trim()) && !Auxiliar.isEmpty(v.lang.trim())) {
               if (primero) {
                 primero = false;
@@ -129,8 +134,8 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
                   idioma: v.lang
                 })
             }
-          });*/
-          vector.forEach(v => {
+          });
+          /*vector.forEach(v => {
             if (!Auxiliar.isEmpty(v.value.trim()) && !Auxiliar.isEmpty(v.lang.trim())) {
               if (v.lang === 'es') {
 
@@ -153,7 +158,7 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
                   });
               }
             }
-          });
+          });*/
           break;
         case 'fuentes':
           const { fuentes } = datosObjeto;
@@ -253,8 +258,8 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
               '{{{query}}}{{{propCategoria}}} {{{valorCategoria}}}',
               {
                 query: query,
-                propCategoria: Auxiliar.equivalencias['topic'].abr,
-                valorCategoria: formatoTiposDatos((Auxiliar.equivalencias['topic']).tipo, c.categoria)
+                propCategoria: Auxiliar.equivalencias['categoria'].abr,
+                valorCategoria: formatoTiposDatos((Auxiliar.equivalencias['categoria']).tipo, c.iri)
               }
             );
           });
@@ -283,7 +288,7 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
     }
   }
   //Agregamos inserciones extras:
-  if (sigue && (Auxiliar.existeObjeto(datosObjeto.thumbnail) || Auxiliar.existeObjeto(datosObjeto.categorias))) {
+  /*if (sigue && (Auxiliar.existeObjeto(datosObjeto.thumbnail) || Auxiliar.existeObjeto(datosObjeto.categorias))) {
     if (Auxiliar.existeObjeto(datosObjeto.thumbnail)) {
       const thumbnail = datosObjeto.thumbnail;
       query = Mustache.render(
@@ -364,10 +369,10 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
         );
       });
     }
-  }
-
+  }*/
   query = Mustache.render('{{{query}}}}', { query: query });
-  return encodeURIComponent(query);
+  console.log(query);
+  return (esQuery) ? encodeURIComponent(query) : query;
 }
 
 /**
@@ -376,8 +381,8 @@ function nuevoObjeto(datosObjeto, tipoObjeto) {
  * @param {Object} datosContexto Mapa que contendrá los datos necesarios para hacer la inserción
  * @returns Petición codificada
  */
-function nuevoContexto(datosContexto) {
-  return nuevoObjeto(datosContexto, 'https://casuallearn.gsic.uva.es/ontology/physicalSpace');
+function nuevoContexto(datosContexto, esQuery = true) {
+  return nuevoObjeto(datosContexto, 'https://casuallearn.gsic.uva.es/ontology/physicalSpace', esQuery);
 }
 
 /**
@@ -386,8 +391,8 @@ function nuevoContexto(datosContexto) {
  * @param {Object} datosTarea Datos que se desean agregar a la tarae
  * @returns Query formada para la inserción de los datos de la tarea
  */
-function nuevaTarea(datosTarea) {
-  return nuevoObjeto(datosTarea, 'https://casuallearn.gsic.uva.es/ontology/task');
+function nuevaTarea(datosTarea, esQuery = true) {
+  return nuevoObjeto(datosTarea, 'https://casuallearn.gsic.uva.es/ontology/task', esQuery);
 }
 
 /**
@@ -614,6 +619,19 @@ function numeroTareasAsociadasPOI(iriPOI) {
   return encodeURIComponent(query);
 }
 
+function nPois(north, east, south, west) {
+  const query = Mustache.render(
+    'SELECT COUNT(DISTINCT ?poi) AS ?pois WHERE {?poi a <https://casuallearn.gsic.uva.es/ontology/physicalSpace> ; geo:lat ?lat ; geo:long ?lon . filter (?lat >= {{{sur}}} && ?lat < {{{norte}}} && ?lon < {{{este}}} && ?lon >= {{{oeste}}} ) .}',
+    {
+      norte: north,
+      sur: south,
+      este: east,
+      oeste: west,
+    }
+  );
+  return encodeURIComponent(query);
+}
+
 module.exports = {
   contextosZona,
   tipoIRI,
@@ -628,4 +646,5 @@ module.exports = {
   eliminaTarea,
   actualizaValoresTareas,
   numeroTareasAsociadasPOI,
+  nPois,
 };

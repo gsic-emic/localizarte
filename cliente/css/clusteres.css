@@ -74,18 +74,22 @@
 
 .marker-cluster {
     background-clip: padding-box;
-    border-radius: 20px;
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
 }
 
 .marker-cluster div {
-    width: 30px;
-    height: 30px;
-    margin-left: 5px;
-    margin-top: 5px;
+    width: 48px;
+    height: 48px;
+    border: 2px solid rgb(211, 14, 68);
     text-align: center;
-    border-radius: 15px;
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
 }
 
 .marker-cluster span {
-    line-height: 30px;
+    line-height: 48px;
+    font-size: medium;
 }

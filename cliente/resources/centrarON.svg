@@ -58,16 +58,16 @@
        cy="286.41666"
        cx="10.583333"
        id="path821"
-       style="fill:#0c252d;fill-opacity:1;stroke-width:0.264583" />
+       style="fill:#08191F;fill-opacity:1;stroke-width:0.264583" />
     <circle
        r="5.2916665"
        cy="286.41684"
        cx="10.583524"
        id="path832"
-       style="fill:none;fill-opacity:1;stroke:#3388ff;stroke-width:1.13431;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:none;fill-opacity:1;stroke:#70ACFF;stroke-width:1.13431;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <circle
        r="2.2678571"
-       style="fill:#3388ff;fill-opacity:1;stroke:none;stroke-width:0.486293;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#70ACFF;fill-opacity:1;stroke:none;stroke-width:0.486293;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path832-1"
        cx="10.583333"
        cy="286.41666" />
@@ -77,9 +77,9 @@
        height="0.75595236"
        width="0.94494045"
        id="rect849"
-       style="fill:#3388ff;fill-opacity:1;stroke:none;stroke-width:0.19379;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#70ACFF;fill-opacity:1;stroke:none;stroke-width:0.19379;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <rect
-       style="fill:#3388ff;fill-opacity:1;stroke:none;stroke-width:0.19379;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#70ACFF;fill-opacity:1;stroke:none;stroke-width:0.19379;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect849-7"
        width="0.94494045"
        height="0.75595236"
@@ -87,7 +87,7 @@
        y="286.03867" />
     <rect
        transform="rotate(90)"
-       style="fill:#3388ff;fill-opacity:1;stroke:none;stroke-width:0.19379;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#70ACFF;fill-opacity:1;stroke:none;stroke-width:0.19379;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect849-2"
        width="0.94494045"
        height="0.75595236"
@@ -99,7 +99,7 @@
        height="0.75595236"
        width="0.94494045"
        id="rect849-2-0"
-       style="fill:#3388ff;fill-opacity:1;stroke:none;stroke-width:0.19379;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#70ACFF;fill-opacity:1;stroke:none;stroke-width:0.19379;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        transform="rotate(90)" />
   </g>
 </svg>

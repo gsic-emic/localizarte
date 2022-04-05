@@ -54,7 +54,7 @@ function dameTareas(req, res) {
             Buffer.concat(chunks).toString(),
           );
           if (resultados && resultados.length > 0) {
-            let salida = [];
+            /*let salida = [];
             let iris = [];
             resultados.forEach(resultado => {
               if (iris.includes(resultado.task)) {
@@ -78,16 +78,16 @@ function dameTareas(req, res) {
                 resultado.spa = [{ spa: resultado.spa }];
                 salida.push(resultado);
               }
-            });
+            });*/
             winston.info(Mustache.render(
               'getTasksPOI || {{{poi}}} || {{{nTasks}}} || {{{time}}}',
               {
                 poi: context,
-                nTasks: salida.length,
+                nTasks: resultados.length,
                 time: Date.now() - start
               }
             ));
-            Auxiliar.logHttp(req, res, 200, 'getTasksPOIL', start).json(salida);
+            Auxiliar.logHttp(req, res, 200, 'getTasksPOIL', start).json(resultados);
           }
           else {
             winston.info(Mustache.render(

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /**
- * Traducciones utilizadas en LocalizARTE.
+ * Traducciones utilizadas en CHEST.
  * autor: Pablo García Zarza
  * version: 20211112
  */
@@ -38,36 +38,36 @@ const translate = {
         en: "EN",
     },
     modalInfoTitulo: {
-        es: "Información de LocalizARTE",
-        en: "LocalizARTE information",
+        es: "Información de CHEST",
+        en: "CHEST information",
     },
     modalInfoQueEsLocalizarte0: {
-        es: "¿Qué es LocalizARTE?",
-        en: "What is LocalizARTE?",
+        es: "¿Qué es CHEST?",
+        en: "What is CHEST?",
     },
     modalInfoQueEsLocalizarte1: {
-        es: "LocalizARTE es una aplicación distribuida que utiliza Datos Abiertos de distintas fuentes de información para apoyar el aprendizaje ubicuo de Historia del Arte. A través de LocalizARTE se puede <b>crear nuevo contenido</b> y <b>realizar tareas educativas</b> (usuarios registrados). Estas tareas educativas pueden estar diseñadas para ser realizadas cerca del punto de interés o desde cualquier lugar. Puedes acceder a nuestra política de privacidad utilizando <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">este enlace</a>.",
-        en: "LocalizARTE is a distributed application that uses Open Data from different sources to support ubiquitous learning of Art History. Through LocalizARTE you can <b>create new content</b> and <b>complete learning tasks</b> (registered users). This learning tasks can be designed to be completed near the point of interest or from any location. You can access our privacy policy using <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">this link</a>.",
+        es: "CHEST (<i>Cultural Heritage Educational Semantic Tool</i>, Herramienta Semántica Educativa del Patrimonio Cultural) es una aplicación distribuida que utiliza Datos Abiertos de distintas fuentes de información para apoyar el aprendizaje ubicuo de Historia del Arte. A través de CHEST se puede <b>crear nuevo contenido</b> y <b>realizar tareas educativas</b> (usuarios registrados). Estas tareas educativas pueden estar diseñadas para ser realizadas cerca del punto de interés o desde cualquier lugar. Puedes acceder a nuestra política de privacidad utilizando <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://chest.gsic.uva.es/privacidad\">este enlace</a>.",
+        en: "CHEST (Cultural Heritage Educational Semantic Tool) is a distributed application that uses Open Data from different sources to support ubiquitous learning of Art History. Through CHEST you can <b>create new content</b> and <b>complete learning tasks</b> (registered users). This learning tasks can be designed to be completed near the point of interest or from any location. You can access our privacy policy using <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://chest.gsic.uva.es/privacidad\">this link</a>.",
     },
     modalInfoDatosAbiertos0: {
-        es: "LocalizARTE utiliza Datos Abiertos",
-        en: "LocalizARTE uses Open Data",
+        es: "CHEST utiliza Datos Abiertos",
+        en: "CHEST uses Open Data",
     },
     modalInfoDatosAbiertos1: {
-        es: "Los datos de partida de LocalizARTE fueron generados de manera semiautomática utilizando distintas fuentes de <b>Datos Abiertos</b> como los ofrecidos por <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html\">Datos Abiertos de la Junta de Castilla y León</a>, <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://wiki.dbpedia.org/\">DBpedia</a> y <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://www.wikidata.org/wiki/Wikidata:Main_Page\">Wikidata</a>.",
-        en: "LocalizARTE starting data were generated in a semi-automatic way using different <b>Open Data</b> sources like <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html\">Datos Abiertos de la Junta de Castilla y León</a>, <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://wiki.dbpedia.org/\">DBpedia</a> and <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://www.wikidata.org/wiki/Wikidata:Main_Page\">Wikidata</a>.",
+        es: "Los datos de partida de CHEST fueron generados de manera semiautomática utilizando distintas fuentes de <b>Datos Abiertos</b> como los ofrecidos por <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html\">Datos Abiertos de la Junta de Castilla y León</a>, <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://wiki.dbpedia.org/\">DBpedia</a> y <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://www.wikidata.org/wiki/Wikidata:Main_Page\">Wikidata</a>.",
+        en: "CHEST starting data were generated in a semi-automatic way using different <b>Open Data</b> sources like <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html\">Datos Abiertos de la Junta de Castilla y León</a>, <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://wiki.dbpedia.org/\">DBpedia</a> and <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://www.wikidata.org/wiki/Wikidata:Main_Page\">Wikidata</a>.",
     },
     modalInfoDatosAbiertos2: {
-        es: "Además de estos datos, los <b>docentes</b> podrán agregar nuevos puntos de interés y tareas educativas a través de la interfaz de LocalizARTE. Esta nueva información se almacenará, de forma transparente, como Datos Abiertos Enlazados. Puedes escribirnos a <a class=\"text-muted text-decoration-none\" href=\"mailto:localizarte@gsic.uva.es\">localizarte@gsic.uva.es</a> si deseas poder agregar nueva información a la aplicación que pueda ser utilizada por tus estudiantes.",
-        en: "In addition, <b>teachers</b> will be able to add nw points of interest and learning tasks through LocalizARTE interface. This new information will be stored, transparently, as Linked Open Data. You can write to as at <a class=\"text-muted text-decoration-none\" href=\"mailto:localizarte@gsic.uva.es\">localizarte@gsic.uva.es</a> if you would like to be able to add new information to the application that can be used by your students.",
+        es: "Además de estos datos, los <b>docentes</b> podrán agregar nuevos puntos de interés y tareas educativas a través de la interfaz de CHEST. Esta nueva información se almacenará, de forma transparente, como Datos Abiertos Enlazados. Puedes escribirnos a <a class=\"text-muted text-decoration-none\" href=\"mailto:chest@gsic.uva.es\">chest@gsic.uva.es</a> si deseas poder agregar nueva información a la aplicación que pueda ser utilizada por tus estudiantes.",
+        en: "In addition, <b>teachers</b> will be able to add nw points of interest and learning tasks through CHEST interface. This new information will be stored, transparently, as Linked Open Data. You can write to as at <a class=\"text-muted text-decoration-none\" href=\"mailto:chest@gsic.uva.es\">chest@gsic.uva.es</a> if you would like to be able to add new information to the application that can be used by your students.",
     },
     modalInfoGSIC0: {
         es: "Una aplicación del grupo GSIC/EMIC",
         en: "An application of the GSIC/EMIC research group",
     },
     modalInfoGSIC1: {
-        es: "LocalizARTE se está diseñando y desarrollando dentro del <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://gsic.uva.es\">grupo de investigación GSIC/EMIC</a>. Este grupo está formado por ingenieros y educadores de la Escuela Técnica Superior de Ingenieros de Telecomunicación, la Escuela de Ingeniería Informática y la Facultad de Educación y Trabajo Social de la <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://uva.es\">Universidad de Valladolid</a>.",
-        en: "LocalizARTE is being designed and developed by <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://www.gsic.uva.es/?lang=en\">GSIC/EMIC research group</a>. This group is made up by engineers and educators from Higher Technical School of Telecommunications Engineering, Computer Engineering School and Faculty of Education and Social Work from <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://universityofvalladolid.uva.es/\">University of Valladolid</a>.",
+        es: "CHEST se está diseñando y desarrollando dentro del <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://gsic.uva.es\">grupo de investigación GSIC/EMIC</a>. Este grupo está formado por ingenieros y educadores de la Escuela Técnica Superior de Ingenieros de Telecomunicación, la Escuela de Ingeniería Informática y la Facultad de Educación y Trabajo Social de la <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://uva.es\">Universidad de Valladolid</a>.",
+        en: "CHEST is being designed and developed by <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://www.gsic.uva.es/?lang=en\">GSIC/EMIC research group</a>. This group is made up by engineers and educators from Higher Technical School of Telecommunications Engineering, Computer Engineering School and Faculty of Education and Social Work from <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://universityofvalladolid.uva.es/\">University of Valladolid</a>.",
     },
     modalPOIAdministracionPOI : {
         es: "Administración del POI",
@@ -278,8 +278,8 @@ const translate = {
         en: "Space where task can be completed*",
     },
     cbEspacioDivPopover: {
-        es: "<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de LocalizARTE desde cualquier lugar.",
-        en: "<b>Physical</b>: task must be completed near POI location. <b>Virtual map</b>: task can be completed through LocalizARTE from any location."
+        es: "<b>Físico</b>: la tarea se tiene que realizar cerca de la posición del POI. <b>Mapa virtual</b>: la tarea puede realizarse a través de CHEST desde cualquier lugar.",
+        en: "<b>Physical</b>: task must be completed near POI location. <b>Virtual map</b>: task can be completed through CHEST from any location."
     },
     rbEspacio1Label: {
         es: "Físico",
@@ -387,7 +387,7 @@ const translate = {
     },
     labelVistaProfesor: {
         es: "Vista docente",
-        en: "Teacher view",
+        en: "Teacher's view",
     },
     contributionsNavBar: {
         es: "Contribuciones",
@@ -411,7 +411,7 @@ const translate = {
     },
     deletePOI1: {
         es: "¿Estás seguro de borrar el punto de interés?",
-        en: "Are you sure to delete point of interes?"
+        en: "Are you sure to delete point of interest?"
     },
     deletePOI2: {
         es: "No se ha podido completar el borrado:",
@@ -790,8 +790,8 @@ const translate = {
         en: "A surname is required",
     },
     mNuevoUsuario5: {
-        es: "Ya estás registrado. Inicia sesión para comenzar a usar LocalizARTE",
-        en: "You are already registered. Sign in for start to use LocalizARTE",
+        es: "Ya estás registrado. Inicia sesión para comenzar a usar CHEST",
+        en: "You are already registered. Sign in for start to use CHEST",
     },
     mNuevoUsuario6: {
         es: "Se te ha enviado un correo para verificar el email. Sigue las instrucciones de este correo",
@@ -806,8 +806,8 @@ const translate = {
         en: "Teacher account",
     },
     mSolicitudCuentaProfe: {
-        es: "Si quieres disponer de una cuenta de docente para poder crear nuevos POI y tareas educativas envía un correo electrónico a la dirección <em>localizarte@gsic.uva.es</em>. El equipo de LocalizARTE se pondrá en contacto contigo.",
-        en: "If you would like have a teacher account to add new POIs and learning tasks send an email to <em>localizarte@gsic.uva.es</em>. LocalizARTE team will contact you."
+        es: "Si quieres disponer de una cuenta de docente para poder crear nuevos POI y tareas educativas envía un correo electrónico a la dirección <em>chest@gsic.uva.es</em>. El equipo de CHEST se pondrá en contacto contigo.",
+        en: "If you would like have a teacher account to add new POIs and learning tasks send an email to <em>chest@gsic.uva.es</em>. CHEST team will contact you."
     },
     mActualizar: {
         es: "Actualizar",
@@ -862,8 +862,8 @@ const translate = {
         en: "Insert URL",
     },
     cbPoliPrivLabel: {
-        es: "He leído y acepto la política de privacidad de LocalizARTE contenida en <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">este sitio web</a>",
-        en: "I have read and accept LocalizARTE's privacy policy contained in <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://localizarte.gsic.uva.es/privacidad\">this website</a>",
+        es: "He leído y acepto la política de privacidad de CHEST contenida en <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://chest.gsic.uva.es/privacidad\">este sitio web</a>",
+        en: "I have read and accept CHEST's privacy policy contained in <a class=\"text-muted text-decoration-underline\" rel=\"noopener\" target=\"_blank\" href=\"https://chest.gsic.uva.es/privacidad\">this website</a>",
     },
     licenciaNotFound: {
         es: "No se ha conseguido encontrar la licencia de la imagen",
@@ -881,4 +881,8 @@ const translate = {
         es: "ALFA",
         en: "ALPHA",
     },
+    masInfoEnlace: {
+        es: "<br><br>Puedes encontrar más información en <a  target=\"_blank\" href=\"{{{enlace}}}\">este enlace</a>.",
+        en: "<br><br>You can find more information on <a  target=\"_blank\" href=\"{{{enlace}}}\">this link</a>."
+    }
 }

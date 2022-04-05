@@ -140,7 +140,7 @@ async function eliminaContexto(req, res) {
                                 resultados = resultados.pop();
                                 resultados.iri = iri;
                                 // Ya tenemos toda la información a eliminar
-                                if (resultados.autor === email) {
+                                if (resultados.autor[0] === email.split('@')[0]) {
                                   options = Auxiliar.creaOptionsAuth(
                                     Queries.eliminaContexto(resultados),
                                     Configuracion.usuarioSPARQLAuth,
@@ -232,7 +232,7 @@ async function actualizaContexto(req, res) {
                           resultados = resultados.pop();
                           resultados.iri = iri;
                           const { actual } = body;
-                          if (resultados.autor === email) {
+                          if (resultados.autor[0] === email.split('@')[0]) {
                             // Ahora compruebo que son iguales
                             let iguales = true;
                             if (Object.keys(actual).length == Object.keys(resultados).length) {

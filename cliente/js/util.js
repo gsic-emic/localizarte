@@ -75,37 +75,11 @@ function parseadorResultadosSparql(vars, bindings) {
  */
 function masCercanos(posicion, lugares, maximo = 5) {
     let lugaresPrima = [];
-    let distancias = [];
-    let d;
-    let salida = [];
     lugares.forEach(lugar => {
-        d = distanciaDosPuntos(posicion, lugar);
-        lugar['distancia'] = d;
-        distancias.push(d);
+        lugar.distancia = distanciaDosPuntos(posicion, lugar);
         lugaresPrima.push(lugar);
     });
-    distancias = distancias.sort((a, b) => a - b);
-
-    distancias.some(distancia => {
-        lugaresPrima.some(lugar => {
-            if (distancia === lugar['distancia']) {
-                let guarda = true;
-                salida.forEach(l => {
-                    if (l.place === lugar.place || (l.lat === lugar.lat && l.lng === lugar.lng)) {
-                        guarda = false;
-                    }
-                });
-                if (guarda) {
-                    salida.push(lugar);
-                    return true;
-                }
-            }
-        });
-        if (salida.length >= maximo) {
-            return true;
-        }
-    });
-    return salida;
+    return lugaresPrima.sort((a, b) => a.distancia - b.distancia).slice(0, Math.min(maximo, lugaresPrima.length));
 }
 
 /**
@@ -117,7 +91,8 @@ function masCercanos(posicion, lugares, maximo = 5) {
  * @returns Aproximación de la distancia en metros entre dos puntos
  */
 function distanciaDosPuntos(p1, p2) {
-    return map.distance(L.latLng(p1.lat, p1.lng), L.latLng(p2.lat, p2.lng));
+    //return map.distance(L.latLng(p1.lat, p1.lng), L.latLng(p2.lat, p2.lng));
+    return L.latLng(p1.lat, p1.lng).distanceTo(L.latLng(p2.lat, p2.lng));
 }
 
 /**
@@ -394,14 +369,14 @@ function translateInterface() {
         try {
             element.innerHTML = translate[element.id][language];
         } catch (error) {
-            console.error('contentHTML', error);
+            //console.error('contentHTML', error);
         }
     });
     placeHolders.forEach(element => {
         try {
             element.placeholder = translate[element.id][language];
         } catch (error) {
-            console.error('placeHolder', error);
+            //console.error('placeHolder', error);
         }
     });
 
@@ -409,7 +384,7 @@ function translateInterface() {
         try {
             element.setAttribute('data-bs-content', translate[element.id][language]);
         } catch (error) {
-            console.error('popover', error);
+            //console.error('popover', error);
         }
     });
 
@@ -417,7 +392,7 @@ function translateInterface() {
         try {
             element.setAttribute('data-bs-original-title', translate[element.id][language]);
         } catch (error) {
-            console.error('tooltip', error);
+            //console.error('tooltip', error);
         }
     });
 
@@ -490,4 +465,90 @@ function insertarLink(textArea) {
     };
 
     linkModal.show();
+}
+
+function addClickEvent(arrayElements) {
+    arrayElements.forEach(bt => {
+        document.getElementById(bt).addEventListener('click', ev => {
+            ev.preventDefault();
+            clicFunction(bt);
+        });
+    });
+    languageClick();
+}
+
+function clicFunction(bt) {
+    switch (bt) {
+        case 'infoNavBar':
+            informacionDatos();
+            break;
+        case 'signUpNavBar':
+            registroUsuario();
+            break;
+        case 'signInNavBar':
+            inicioSesionUsuario();
+            break;
+        case 'contributionsNavBar':
+            mostrarModalContribuciones();
+            break;
+        case 'userDataNavBar':
+            gestionarCuenta();
+            break;
+        case 'signOutNavBar':
+            cerrarSesion();
+            break;
+        case 'answersNavBar':
+            mostrarModalRespuestas();
+            break;
+        case 'interruptorProfesor':
+            cambiaVistaProfesor();
+            break;
+        case 'seguir':
+            seguir();
+            break;
+        default:
+            break;
+    }
+}
+
+function languageClick() {
+    [
+        {
+            idio: 'es',
+            aLang: 'langEs'
+        },
+        {
+            idio: 'en',
+            aLang: 'langEn'
+        }
+    ].forEach(par => {
+        document.getElementById(par.aLang).addEventListener('click', ev => {
+            ev.preventDefault();
+            setLanguage(par.idio);
+        });
+    });
+}
+
+function getValueField(input = null) {
+    if (input !== null) {
+        switch (typeof input) {
+            case 'object':
+                let bDef = undefined, valueLang = undefined;
+                input.some(element => {
+                    if (element.lang === undefined) {
+                        bDef = element;
+                    } else {
+                        if (element.lang === language) {
+                            valueLang = element.value;
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                return ((valueLang !== undefined) ? valueLang : ((bDef === undefined) ? 'NA' : bDef));
+            default:
+                return input;
+        }
+    }
+    return null;
 }

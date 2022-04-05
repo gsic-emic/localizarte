@@ -73,6 +73,16 @@ let answers;
 
 let language;
 
+let geoWatch;
+
+let teselas, teselasM;
+let teselasCache;
+
+let ultimaPeticionNPois = 0;
+let dpi;
+
+let maxZoom;
+let inicioTeselas;
 
 inicio();
 
@@ -87,6 +97,12 @@ function inicio() {
     popup = null;
     faltan = 0;
 
+    teselas = null;
+    teselasM = null;
+    teselasCache = [];
+
+    addClickEvent(['infoNavBar', 'signUpNavBar', 'signInNavBar', 'interruptorProfesor', 'seguir']);
+
     // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/language
     if (/^es\b/.test(navigator.language)) {
         setLanguage('es');
@@ -97,6 +113,7 @@ function inicio() {
     map = L.map('mapa',
         {
             zoomControl: false,
+            worldCopyJump: true
         });
     map.attributionControl.setPrefix('<a target="_blank" href="https://leafletjs.com/">Leaflet</a>');
     capaMarcadores = L.layerGroup().addTo(map);
@@ -104,37 +121,23 @@ function inicio() {
     siguiendo = false;
     indicador = null;
 
-    // Mapa cargado
-    map.on('load', () => {
-        if (map.getZoom() >= 13) {
-            calculaZonasParaDescargar(map.getBounds());
-            pintaPOIs(map.getBounds());
-        } else {
-            if (map.getZoom() < 13) {
-                if (markers) {
-                    markers.clearLayers();
-                }
-            }
-        }
-    });
-
     /*L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         maxZoom: 19,
         minZoom: 3,
         attribution: '&copy; <a target="_blank" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
     }).addTo(map);*/
 
-    L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckvpj1ed92f7u14phfhfdvkor/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3ExMWcxajQwMTN4MnVsYTJtMmdpOXc2In0.S9rtoLY8TYoI-4D8oy8F8A', {
+    /*L.tileLayer('https://api.mapbox.com/styles/v1/pablogz/ckvpj1ed92f7u14phfhfdvkor/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFibG9neiIsImEiOiJja3Z4b3VnaTUwM2VnMzFtdjJ2Mm4zajRvIn0.q0l3ZzhT4BzKafNxdQuSQg', {
         maxZoom: 20,
-        minZoom: 3,
+        minZoom: 4,
         attribution: '&copy; <a target="_blank" href="https://www.mapbox.com/about/maps/">Mapbox</a> | &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" >OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    /*L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        minZoom: 3,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
     }).addTo(map);*/
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 20,
+        minZoom: 4,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+    }).addTo(map);
 
     /*L.tileLayer('', {
         maxZoom: 20,
@@ -142,19 +145,58 @@ function inicio() {
         attribution: ''
     }).addTo(map);*/
 
-    //Posición inicial
-    map.setView(posicionCyL, 8);//espa, 4.5
+    maxZoom = map.getMaxZoom();
 
-    // El mapa se ve desplazado
-    map.on('moveend', () => {
+    // Mapa cargado
+    map.on('load', () => {
+        if (markers) {
+            markers.clearLayers();
+        }
+        if (teselas) {
+            teselas.clearLayers();
+        }
+        if (teselasM) {
+            teselasM.clearLayers();
+        }
         if (map.getZoom() >= 13) {
             calculaZonasParaDescargar(map.getBounds());
             pintaPOIs(map.getBounds());
         } else {
-            if (map.getZoom() < 13) {
+            obtenNPOIs();
+        }
+    });
+
+    //Posición inicial
+    map.setView(posicionCyL, 8);//espa, 4.5
+    //map.setView([40.7614, -73.9746], 14);
+
+    // El mapa se ve desplazado
+    map.on('moveend', () => {
+        if (map.getZoom() >= 13) {
+            if (markers) {
+                markers.clearLayers();
+            }
+            if (teselas) {
+                teselas.clearLayers();
+            }
+            if (teselasM) {
+                teselasM.clearLayers();
+            }
+            calculaZonasParaDescargar(map.getBounds());
+            pintaPOIs(map.getBounds());
+        } else {
+            if (new Date() - ultimaPeticionNPois > 500) {
                 if (markers) {
                     markers.clearLayers();
                 }
+                if (teselas) {
+                    teselas.clearLayers();
+                }
+                if (teselasM) {
+                    teselasM.clearLayers();
+                }
+                ultimaPeticionNPois = new Date();
+                obtenNPOIs();
             }
         }
     });
@@ -182,11 +224,13 @@ function inicio() {
 
     app = firebase.initializeApp(firebaseConfig);
     auth = app.auth();
-    analytics = app.analytics();
+    //analytics = app.analytics();
     auth.languageCode = language;
     if (auth && auth.currentUser) {
         recuperaDatosUsuarioServidor(null, null, true);
     }
+
+    geoWatch = null;
 }
 
 
@@ -198,42 +242,49 @@ function inicio() {
  */
 function seguir() {
     const iconoCentrar = document.getElementById('imagenSeguir');
-    if (!siguiendo) {
 
-        map.locate({
-            setView: false,
-            maxZoom: 19,
-            watch: true,
-            timeout: 120000,
-        });
-
-        map.on('locationfound', (e) => {
-            if (indicador) {
-                map.removeLayer(indicador);
-            } else {
-                iconoCentrar.src = './resources/centrarON.svg';
-                map.setView(e.latlng, 17);
+    if (geoWatch === null) {
+        geoWatch = navigator.geolocation.watchPosition(
+            position => {
+                if (indicador) {
+                    map.removeLayer(indicador);
+                } else {
+                    iconoCentrar.src = './resources/centrarON.svg';
+                    map.setView(L.latLng(position.coords.latitude, position.coords.longitude), 17);
+                }
+                indicador = L.circle(L.latLng(position.coords.latitude, position.coords.longitude), {
+                    radius: Math.max((position.coords.accuracy / 2), 10),
+                    stroke: true,
+                    opacity: 0.6,
+                    fillOpacity: 0.5,
+                }).addTo(map);
+                siguiendo = true;
+            },
+            error => {
+                if (error.code !== 3) {//TIMEOUT
+                    notificaLateralError(error.message);
+                }
+                navigator.geolocation.clearWatch(geoWatch);
+                geoWatch = null;
+                iconoCentrar.src = './resources/centrar.svg';
+                siguiendo = false;
+                if (indicador) {
+                    map.removeLayer(indicador);
+                }
+                indicador = null;
+            },
+            {
+                timeout: 90000,
+                maximumAge: 2000,
+                enableHighAccuracy: true,
             }
-            indicador = L.circle(e.latlng, {
-                radius: (e.accuracy / 2),
-                stroke: true,
-                opacity: 0.6,
-                fillOpacity: 0.5,
-            }).addTo(map);
-            siguiendo = true;
-        });
-
-        map.on('locationerror', (e) => {
-            notificaLateralError(e.message);
-            siguiendo = false;
-            indicador = null;
-            map.stopLocate();
-        });
+        );
     } else {
         if (indicador && !indicador.getLatLng().equals(map.getCenter(), 0.0001)) {//Tolero error de 10^-4 por cambios de nivel de zum etc.
-            map.setView(indicador.getLatLng(), map.getZoom());
+            map.setView(indicador.getLatLng(), 17);
         } else {
-            map.stopLocate();
+            navigator.geolocation.clearWatch(geoWatch);
+            geoWatch = null;
             iconoCentrar.src = './resources/centrar.svg';
             siguiendo = false;
             if (indicador) {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="GSIC/EMIC - Pablo García Zarza">
     <meta name="description"
-        content="LocalizARTE una aplicación para aprender historia del arte a través de distintos espacios.">
+        content="CHEST una aplicación para aprender historia del arte a través de distintos espacios.">
 
     <link rel="stylesheet" href="./libraries/bootstrap-5.0.1-dist/css/bootstrap.min.css">
 
@@ -33,16 +33,16 @@
     <meta name="msapplication-TileImage" content="./icon/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
 
-    <title>LocalizARTE</title>
+    <title>CHEST</title>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-md navbar-dark navegacion">
         <div class="container-fluid">
             <a class="navbar-brand">
-                <img src="./resources/logo.svg" alt="Logo LocalizARTE" width="28" height="28"
+                <img src="./resources/logo.svg" alt="Logo CHEST" width="28" height="28"
                     class="d-inline-block align-text-top">
-                LocalizARTE
+                CHEST
             </a>
             <div class="navbar-item">
                 <small class="navbar-text" id="navbarItemVersion"></small>
@@ -59,18 +59,18 @@
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false" id="dropdownLanguage"></a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownLanguage">
-                            <li><a class="dropdown-item" href="#" onclick="setLanguage('es');">ES - Español</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="setLanguage('en');">EN - English</a></li>
+                            <li><a class="dropdown-item" href="#" id="langEs">ES - Español</a></li>
+                            <li><a class="dropdown-item" href="#" id="langEn">EN - English</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:informacionDatos();" id="infoNavBar"></a>
+                        <a class="nav-link" href="#" id="infoNavBar"></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:registroUsuario();" id="signUpNavBar"></a>
+                        <a class="nav-link" href="#" id="signUpNavBar"></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:inicioSesionUsuario();" id="signInNavBar"></a>
+                        <a class="nav-link" href="#" id="signInNavBar"></a>
                     </li>
                 </ul>
             </div>
@@ -88,7 +88,7 @@
                 <div class="modal-body">
                     <div class="d-md-flex flex-md-row py-1 align-items-center">
                         <div class="col-md-auto order-md-1 text-center">
-                            <img class="figure-img imagen" src='./resources/logoGrande.svg' alt="Logo LocalizARTE">
+                            <img class="figure-img imagen" src='./resources/logoGrande.svg' alt="Logo CHEST">
                         </div>
                         <div class="col order-md-2 ps-3">
                             <div class="descripcion">
@@ -670,14 +670,13 @@
     </div>
 
     <div class="botonFlotante">
-        <div class="interruptorFlotante rounded-pill px-2 py-1 mb-2" id="interruptorProfesor"
-            onclick="cambiaVistaProfesor()" hidden>
+        <div class="interruptorFlotante rounded-pill px-2 py-1 mb-2" id="interruptorProfesor" hidden>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="swVistaProfesor">
                 <label class="form-check-label colorActivo" for="swVistaProfesor" id="labelVistaProfesor"></label>
             </div>
         </div>
-        <div class="text-end" id="seguir" onclick="seguir();">
+        <div class="text-end" id="seguir">
             <img src="resources/centrar.svg" id="imagenSeguir">
         </div>
     </div>
@@ -720,8 +719,8 @@
     <script src="./js/users.js" type="text/javascript"></script>
     <script src="./js/tasks.js" type="text/javascript"></script>
     <script src="./js/contexts.js" type="text/javascript"></script>
-    <script src="./js/mapa.js" type="text/javascript"></script>
     <script src="./js/info.js" type="text/javascript"></script>
+    <script src="./js/mapa.js" type="text/javascript"></script>
 </body>
 
 </html>
