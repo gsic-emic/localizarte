@@ -38,9 +38,10 @@ class MyApp extends StatelessWidget {
             primaryColorDark: ColorsCusto.pBlue[900],
             primaryColorLight: ColorsCusto.pBlue[100],
             fontFamily: "OpenSans",
-            snackBarTheme: const SnackBarThemeData(
+            snackBarTheme: SnackBarThemeData(
                 backgroundColor: ColorsCusto.pBlue,
-                contentTextStyle: TextStyle(color: Colors.white)),
+                contentTextStyle: const TextStyle(color: Colors.white),
+                actionTextColor: Colors.blue[300]),
             textTheme: const TextTheme(
               bodySmall: TextStyle(fontSize: 14, color: Colors.black),
               bodyMedium: TextStyle(fontSize: 17, color: Colors.black),

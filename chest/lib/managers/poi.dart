@@ -124,7 +124,8 @@ class InfoPOI extends StatelessWidget {
           : (poi.hasExtraInfo)
               ? (FloatingActionButton.extended(
                   onPressed: () async {
-                    if (!await launch(poi.extraInfo)) {
+                    print(poi.extraInfo);
+                    if (!await launch(Uri.parse(poi.extraInfo).toString())) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content:
                             Text(AppLocalizations.of(context)!.noLanzarURL),

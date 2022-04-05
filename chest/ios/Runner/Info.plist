@@ -50,9 +50,9 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string></string>
 	<key>LSApplicationQueriesSchemes</key>
-		<array>
-  			<string>https</string>
-  			<string>http</string>
-		</array>
+	<array>
+		<string>https</string>
+		<string>http</string>
+	</array>
 </dict>
 </plist>
